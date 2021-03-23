@@ -1,0 +1,117 @@
+// Place your key bindings in this file to override the defaults
+[
+    // **** Terminal ****     
+    // When in the editor, ru nthe selected text in the terminal
+    {
+        "key": "ctrl+enter",
+        "command": "workbench.action.terminal.runSelectedText",
+        "when": "editorTextFocus"
+    },
+    // Toggle to terminal focus    
+    {
+        "key": "ctrl+`",
+        "command": "workbench.action.terminal.focus"
+    },
+    // Toggle to editor focus    
+    {
+        "key": "ctrl+`",
+        "command": "workbench.action.focusActiveEditorGroup",
+        "when": "terminalFocus"
+    },
+    // cycle to next terminal session    
+    {
+        "key": "ctrl+]",
+        "command": "workbench.action.terminal.focusNext",
+        "when": "terminalFocus"
+    },
+    // cycle to prev terminal session    
+    {
+        "key": "ctrl+[",
+        "command": "workbench.action.terminal.focusPrevious",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+m",
+        "command": "markdown.showPreviewToSide",
+        "when": "!notebookEditorFocused && editorLangId == 'markdown'"
+    },
+    // **** Git ****    
+    // Open file's a diff mode
+    {
+        "key": "alt+g",
+        "command": "git.openChange",
+        "when": "!isInDiffEditor && editorTextFocus"
+    },
+    // Open a file from its diff mode
+    {
+        "key": "alt+g",
+        "command": "git.openFile",
+        "when": "isInDiffEditor && editorTextFocus"
+    },
+    {
+        "key": "ctrl+alt+p",
+        "command": "git.push",
+    },
+    // open git source control side window
+    {
+        "key": "ctrl+shift+g",
+        "command": "workbench.view.scm",
+        "when": "!gitlens:disabled && config.gitlens.keymap == 'chorded'"
+    },
+    // when focus is in source control sidebar, allow to stage all
+    {
+        "key": "ctrl+a",
+        "command": "git.stageAll",
+        "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
+    },
+    // Stage selected file when Source Control is open
+    {
+        "key": "ctrl+s",
+        "command": "git.stage",
+        "when": "sideBarFocus && activeViewlet == 'workbench.view.scm'"
+    },
+    {
+        "key": "ctrl+shift+s",
+        "command": "git.unstage",
+        "when": "sideBarFocus && activeViewlet == 'workbench.view.scm'"
+    },
+    {
+        "key": "ctrl+r",
+        "command": "git.revertChange",
+        "when": "sideBarFocus && activeViewlet == 'workbench.view.scm'"
+    },
+    // When in diff, allow for single line staging/unstaging and reverts
+    {
+        "key": "ctrl+s",
+        "command": "git.stageSelectedRanges",
+        "when": "isInDiffEditor && editorTextFocus"
+    },
+    {
+        "key": "ctrl+shift+s",
+        "command": "git.unstageSelectedRanges",
+        "when": "isInDiffEditor && editorTextFocus"
+    },
+    {
+        "key": "ctrl+r",
+        "command": "git.revertSelectedRanges",
+        "when": "isInDiffEditor && editorTextFocus"
+    },
+    // **** Open Settings ****    
+    {
+        "key": "ctrl+,",
+        "command": "workbench.action.openSettingsJson"
+    },
+    {
+        "key": "ctrl+shift+z",
+        "command": "workbench.action.closeActiveEditor"
+    },
+    {
+        "key": "ctrl+w",
+        "command": "workbench.action.terminal.kill",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "ctrl+w",
+        "command": "-workbench.action.closeActiveEditor"
+    },
+]

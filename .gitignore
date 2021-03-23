@@ -1,0 +1,4 @@
+tags
+*.netrwhist
+**/.ionide
+.zshrc.zwc

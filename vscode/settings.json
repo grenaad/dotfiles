@@ -1,0 +1,46 @@
+{
+    // Git
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+
+    // Vim and general editor
+    "vim.easymotion": true,
+    "editor.lineNumbers": "relative",
+    "vim.easymotionMarkerForegroundColorOneChar": "yellow",
+    "editor.suggestSelection": "first",
+
+    // vscode specific
+    "telemetry.enableTelemetry": false,
+    "vim.sneak": true,
+    "code-runner.enableAppInsights": false,
+    "rest-client.enableTelemetry": false,
+    "telemetry.enableCrashReporter": false,
+    "settingsSync.keybindingsPerPlatform": false,
+
+    // Terminal
+    "terminal.integrated.fontFamily": "MesloLGS NF",
+    "terminal.integrated.shell.linux": "/bin/zsh",
+
+    "editor.fontFamily": "MesloLGS NF",
+
+    // Python
+    "python.languageServer": "Pylance",
+
+    // General
+    "json.maxItemsComputed": 10000,
+    "workbench.editorAssociations": [
+        {
+            "viewType": "jupyter-notebook",
+            "filenamePattern": "*.ipynb"
+        }
+    ],
+    "java.project.importOnFirstTimeStartup": "automatic",
+    "files.exclude": {
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
+    },
+    // "terminal.integrated.inheritEnv": false,
+}
