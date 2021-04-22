@@ -25,6 +25,7 @@ winget install Microsoft.dotnet
 winget install TeamViewer.TeamViewer
 winget install Zotero.Zotero
 winget install Microsoft.WindowsTerminal
+winget install LibreOffice.LibreOffice
 ```
 
 # Install packages using choco
