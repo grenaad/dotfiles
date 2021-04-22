@@ -2,10 +2,12 @@
 Create `projects` in Win User dir, then `ln -s /mnt/c/Users/ice/projects ~/projects` from wsl2.
 Git clone this repo in `~/projects`
 
+``` cmd
+mklink /h "C:\Users\ice\AppData\Roaming\Code - Insiders\User\keybindings.json" "C:\Users\ice\projects\dotfiles\vscode\keybindings.json" 
+mklink /h "C:\Users\ice\AppData\Roaming\Code - Insiders\User\settings.json" "C:\Users\ice\projects\dotfiles\vscode\settings.json" 
+```
+
 ``` bash
-mkdir /mnt/c/Users/ice/AppData/Roaming/Code\ -\ Insiders/User
-ln -s ~/projects/dotfiles/vscode/keybindings.json /mnt/c/Users/ice/AppData/Roaming/Code\ -\ Insiders/User/keybindings.json
-ln -s ~/projects/dotfiles/vscode/settings.json /mnt/c/Users/ice/AppData/Roaming/Code\ -\ Insiders/User/settings.json
 cat ~/projects/dotfiles/vscode/extensions.txt | xargs -n 1 code-insiders --install-extension
 ```
 
