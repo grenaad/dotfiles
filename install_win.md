@@ -24,10 +24,12 @@ winget install WinDirStat.WinDirStat
 winget install SumatraPDF.SumatraPDF
 winget install Python.Python
 winget install Microsoft.dotnet
-winget install TeamViewer.TeamViewer
+winget install TeamViewer.TeamViewer --force
 winget install Zotero.Zotero
 winget install Microsoft.WindowsTerminal
 winget install LibreOffice.LibreOffice
+winget install Valve.Steam
+winget install ElectronicArts.EADesktop
 ```
 
 # Install packages using choco
