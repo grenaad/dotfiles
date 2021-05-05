@@ -14,6 +14,7 @@ cat ~/projects/dotfiles/vscode/extensions.txt | xargs -n 1 code-insiders --insta
 # Install packages using winget
 ``` powershell
 winget install Microsoft.VisualStudioCodeInsiders.User-x64
+winget install Microsoft.AzureDataStudio
 winget install Mozilla.Firefox
 winget install Google.Chrome --force
 winget install BraveSoftware.BraveBrowser

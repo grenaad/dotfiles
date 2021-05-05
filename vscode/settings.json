@@ -13,8 +13,6 @@
     // vscode specific
     "telemetry.enableTelemetry": false,
     "vim.sneak": true,
-    "code-runner.enableAppInsights": false,
-    "rest-client.enableTelemetry": false,
     "telemetry.enableCrashReporter": false,
     "settingsSync.keybindingsPerPlatform": false,
 
@@ -35,7 +33,6 @@
             "filenamePattern": "*.ipynb"
         }
     ],
-    "java.project.importOnFirstTimeStartup": "automatic",
     "files.exclude": {
         "**/.classpath": true,
         "**/.project": true,
@@ -43,4 +40,9 @@
         "**/.factorypath": true
     },
     // "terminal.integrated.inheritEnv": false,
+    "files.associations": {
+        "*.mqh":"cpp",
+        "*.mq4":"cpp",
+        "*.mq5":"cpp"
+    }
 }
