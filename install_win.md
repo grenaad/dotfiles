@@ -13,6 +13,7 @@ cat ~/projects/dotfiles/vscode/extensions.txt | xargs -n 1 code-insiders --insta
 
 # Install packages using winget
 ``` powershell
+winget install Microsoft.WindowsTerminal
 winget install Microsoft.VisualStudioCodeInsiders.User-x64
 winget install Microsoft.AzureDataStudio
 winget install Mozilla.Firefox
@@ -27,7 +28,6 @@ winget install Python.Python
 winget install Microsoft.dotnet
 winget install TeamViewer.TeamViewer --force
 winget install Zotero.Zotero
-winget install Microsoft.WindowsTerminal
 winget install LibreOffice.LibreOffice
 winget install Valve.Steam
 winget install ElectronicArts.EADesktop
