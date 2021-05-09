@@ -4,15 +4,19 @@ sudo apt update
 
 ############# General Packages ############### 
 
+# Terminal only
 sudo apt install -y \
 zsh \
 neovim \
 ffmpeg \
 fzf \
-gnome-tweaks \
-mpv \
 ranger \
-python3-pip \
+python3-pip
+
+# GUI
+sudo apt install -y \
+mpv \
+gnome-tweaks \
 libnotify-bin \
 snapd \
 guake \
@@ -91,12 +95,17 @@ sdk install kotlin
 sudo apt install -y docker.io
 sudo usermod -aG docker $USER
 
-# To install kubectl or gloud
+# To install kubectl and google-cloud-sdk
 # https://cloud.google.com/sdk/docs/quickstart#deb
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-sudo apt-get update && sudo apt-get install kubectl gloud
+
+sudo apt install -y \
+kubectl \
+google-cloud-sdk
+
 gcloud init
+
 
 # Install kubectx and kubens. switch between Kubernetes contexts/namespaces
 sudo mkdir /opt/kubectx/
