@@ -35,14 +35,58 @@
     ],
     "files.exclude": {
         "**/.classpath": true,
+        "**/.factorypath": true,
         "**/.project": true,
         "**/.settings": true,
-        "**/.factorypath": true
+        "**/obj": true
     },
     // "terminal.integrated.inheritEnv": false,
     "files.associations": {
         "*.mqh":"cpp",
         "*.mq4":"cpp",
         "*.mq5":"cpp"
+    },
+    "search.exclude": {
+        "**/obj": true
+    },
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.profiles.linux": {
+
+        "zsh": {
+            "path": "zsh"
+        },
+        "bash": {
+            "path": "bash"
+        },
+    },
+    "terminal.integrated.profiles.osx": {
+
+        "zsh": {
+            "path": "zsh"
+        },
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+        },
+    },
+    "terminal.integrated.profiles.windows": {
+
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        },
+        "Command Prompt": {
+            "path": [
+                "${env:windir}\\Sysnative\\cmd.exe",
+                "${env:windir}\\System32\\cmd.exe"
+            ],
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "Git Bash": {
+            "source": "Git Bash"
+        }
     }
 }
