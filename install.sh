@@ -64,6 +64,7 @@ zsh
 # Using Code Insider
 
 wget -O code-insiders https://code.visualstudio.com/sha/download?build=insider&os=linux-deb-x64
+sudo apt update
 sudo apt install code-insiders
 
 cat ~/projects/dotfiles/vscode/extensions.txt | xargs -n 1 code-insiders --install-extension
@@ -95,17 +96,19 @@ sdk install kotlin
 sudo apt install -y docker.io
 sudo usermod -aG docker $USER
 
-# To install kubectl and google-cloud-sdk
+# To install google-cloud-sdk
 # https://cloud.google.com/sdk/docs/quickstart#deb
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
-
-sudo apt install -y \
-kubectl \
-google-cloud-sdk
+sudo apt install -y google-cloud-sdk
 
 gcloud init
 
+# To install kubectl
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
 
 # Install kubectx and kubens. switch between Kubernetes contexts/namespaces
 sudo mkdir /opt/kubectx/
