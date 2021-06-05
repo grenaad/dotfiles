@@ -13,7 +13,7 @@ sh -c 'notify-send -t 7000 --icon=mpv "Playing video" "$(xclip -selection clipbo
 ## Bluetooth
 
 To allow bluetooth device to auto connect:
-`bluetoothctl trust 19:2C:48:CF:7A:2D`
+`bluetoothctl trust EC:81:93:9A:30:9F`
 
 Can also add shortcut
 ``` bash
