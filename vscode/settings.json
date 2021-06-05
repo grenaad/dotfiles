@@ -27,12 +27,9 @@
 
     // General
     "json.maxItemsComputed": 10000,
-    "workbench.editorAssociations": [
-        {
-            "viewType": "jupyter-notebook",
-            "filenamePattern": "*.ipynb"
-        }
-    ],
+    "workbench.editorAssociations": {
+        "*.ipynb": "jupyter-notebook"
+    },
     "files.exclude": {
         "**/.classpath": true,
         "**/.factorypath": true,
@@ -88,5 +85,7 @@
         "Git Bash": {
             "source": "Git Bash"
         }
-    }
+    },
+    "security.workspace.trust.untrustedFiles": "open",
+    "terminal.integrated.shellArgs.windows": null
 }

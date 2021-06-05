@@ -26,6 +26,9 @@ onedrive
 
 sudo pip3 install youtube-dl
 
+# For WSL2
+ln -s /mnt/c/Users/ice/projects ~/projects
+
 ############### ZSH ###############  
 
 # Create a zsh config file that source settings in this projects
