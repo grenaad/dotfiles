@@ -32,6 +32,7 @@ winget install LibreOffice.LibreOffice
 winget install Valve.Steam
 winget install ElectronicArts.EADesktop
 winget install Oracle.VirtualBox
+winget install VMware.WorkstationPlayer
 ```
 
 # Install packages using choco
