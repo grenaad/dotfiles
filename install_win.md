@@ -31,6 +31,7 @@ winget install Zotero.Zotero
 winget install LibreOffice.LibreOffice
 winget install Valve.Steam
 winget install ElectronicArts.EADesktop
+winget install Oracle.VirtualBox
 ```
 
 # Install packages using choco
