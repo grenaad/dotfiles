@@ -10,6 +10,7 @@ zsh \
 neovim \
 ffmpeg \
 fzf \
+bat \
 ranger \
 python3-pip
 
