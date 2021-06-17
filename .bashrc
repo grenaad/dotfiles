@@ -21,6 +21,7 @@ alias jupyterlab_docker='docker run -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -v $H
 alias jupyterlab='jupyter lab --LabApp.token='
 alias java_config='sudo update-alternatives --config java'
 alias portainer="docker run -d -p 9000:9000 --restart always -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer"
+alias bat="batcat" # batcat if you are on Debian or Ubuntu
 # accces with http://localhost:9000 
 
 # kubernetes
