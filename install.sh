@@ -88,6 +88,15 @@ source ~/.sdkman/bin/sdkman-init.sh # init in this terminal
 sdk install gradle
 sdk install kotlin
 
+
+############### Chrome driver ############### 
+
+sudo mkdir /opt/chromedriver/
+sudo wget  "https://chromedriver.storage.googleapis.com/91.0.4472.101/chromedriver_linux64.zip" -P /opt/chromedriver/
+sudo unzip /opt/chromedriver/chromedriver_linux64.zip -d /opt/chromedriver/
+sudo chmod +x /opt/chromedriver/chromedriver
+sudo ln -s /opt/chromedriver/chromedriver /usr/local/bin/chromedriver 
+
 ############### Kernel-based Virtual Machine (KVM) ############### 
 
 # sudo apt purge qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virtinst virt-manager
