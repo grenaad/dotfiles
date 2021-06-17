@@ -81,7 +81,7 @@ sh <(curl -sSf https://downloads.nordcdn.com/apps/linux/install.sh)
 
 ############### Kotlin sdk ###############  
 
-sudo apt install -y default-jdk
+sudo apt install -y unzip zip default-jdk
 export SDKMAN_DIR=~/.sdkman && curl -s "https://get.sdkman.io" | bash
 source ~/.sdkman/bin/sdkman-init.sh # init in this terminal
 sdk install gradle
@@ -103,6 +103,7 @@ sudo usermod -aG docker $USER
 # https://cloud.google.com/sdk/docs/quickstart#deb
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
 curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+sudo apt-get update
 sudo apt install -y google-cloud-sdk
 
 gcloud init
