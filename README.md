@@ -13,11 +13,11 @@ sh -c 'notify-send -t 7000 --icon=mpv "Playing video" "$(xclip -selection clipbo
 ## Bluetooth
 
 To allow bluetooth device to auto connect:
-`bluetoothctl trust EC:81:93:9A:30:9F`
+`bluetoothctl trust C4:30:18:DA:A5:16`
 
 Can also add shortcut
 ``` bash
-sh -c 'notify-send -t 1 -h int:transient:1 --icon=mpv "Connecting bluetooth devices"; bluetoothctl connect EC:81:93:9A:30:9F'
+sh -c 'notify-send -t 1 -h int:transient:1 --icon=mpv "Connecting bluetooth devices"; bluetoothctl connect C4:30:18:DA:A5:16'
 ```
 
 Add bluetooth settings `/etc/bluetooth/main.conf`
