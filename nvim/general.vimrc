@@ -35,10 +35,10 @@
 
 " ###### General Vim Settings ###### 
 
-	let mapleader = "\<Space>"  
+	let mapleader = "\<BS>"  
 
 	" yank to system clipboard
-	set clipboard=unnamedplus
+	set clipboard+=unnamedplus
 
 	set encoding=utf-8
 	set number! relativenumber! " toggle hybrid line numbers
@@ -47,3 +47,16 @@
 	" Show the current file path in the window title
 	set title
 	set titlestring=%{hostname()}\ \ %F\ \ %{strftime('%Y-%m-%d\ %H:%M',getftime(expand('%')))}
+
+	" " Copy to clipboard
+	vnoremap  <leader>y  "+y
+	nnoremap  <leader>Y  "+yg_
+	nnoremap  <leader>y  "+y
+	nnoremap  <leader>yy  "+yy
+
+	" " Paste from clipboard
+	nnoremap <leader>p "+p
+	nnoremap <leader>P "+P
+	vnoremap <leader>p "+p
+	vnoremap <leader>P "+P
+

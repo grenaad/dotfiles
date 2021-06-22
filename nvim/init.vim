@@ -19,6 +19,7 @@ Plug 'preservim/nerdtree'
 " Git
 Plug 'tpope/vim-fugitive'
 Plug 'vim-airline/vim-airline' " Display git branch on bottom
+Plug 'stsewd/fzf-checkout.vim' " Opens a window to checkout a branch
 
 call plug#end()
 

@@ -24,10 +24,19 @@
 	endfunction
 
 " ## NERDTree ##
-
 	" If another buffer tries to replace NERDTree, put it in the other window, and bring back NERDTree.
 	autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
 	    \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 
 	nnoremap <C-S-e> :NERDTreeFocus<CR>
+
+" ## Git ##
+" 	fzf checkout
+	let g:fzf_layout = {'window': {'width': 0.8, 'height': 0.8}}
+	let $FZF_DEFAULT_OPTS='--reverse'
+
+"	fugitive
+	nmap <leader>gs : Git<CR> # Git status
+	nmap <leader>gf : diffget //2<CR> # use the left diff
+	nmap <leader>gj : diffget //3<CR> # use the right diff
 

@@ -1,5 +1,8 @@
 # Dot Files
 
+## Vim cheat sheet
+https://gist.github.com/tuxfight3r/0dca25825d9f2608714b
+
 ## Setup
 clone repo into `~/projects/`, Run `install.sh` to setup
 
