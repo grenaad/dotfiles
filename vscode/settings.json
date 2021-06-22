@@ -18,7 +18,6 @@
 
     // Terminal
     "terminal.integrated.fontFamily": "MesloLGS NF",
-    "terminal.integrated.shell.linux": "/bin/zsh",
 
     "editor.fontFamily": "MesloLGS NF",
 
@@ -87,10 +86,21 @@
         }
     },
     "security.workspace.trust.untrustedFiles": "open",
-    "terminal.integrated.shellArgs.windows": null,
     "editor.tabSize": 8,
     "editor.cursorStyle": "line",
     "editor.insertSpaces": false,
     "editor.wordSeparators": "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-",
-    "editor.wordWrap": "off"
+    "editor.wordWrap": "off",
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [
+            80
+        ],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": false
+    }
 }
