@@ -47,6 +47,11 @@ function convert_vid () {
 	ffmpeg -i $1 -vcodec libx264 -acodec aac $2.mp4
 }
 
+# convert_vid inputfile outputfile
+function convert_audio () {
+	ffmpeg -i $1 -acodec aac $2.aac
+}
+
 function vimz() {
 	vim "$(fzf)"
 }

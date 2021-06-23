@@ -35,7 +35,7 @@
 
 " ###### General Vim Settings ###### 
 
-	" let mapleader = "\<BS>"  
+	" let mapleader="\<BS>"  
 
 	" yank to system clipboard
 	set clipboard+=unnamedplus

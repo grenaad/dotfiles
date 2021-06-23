@@ -39,12 +39,18 @@
 	let $FZF_DEFAULT_OPTS='--reverse'
 
 "	fugitive
-	nmap <leader>gs: Git<CR> # Git status
-	nmap <leader>gf: diffget //2<CR> # use the left diff
-	nmap <leader>gj: diffget //3<CR> # use the right diff
+	nmap <leader>gs : Git<CR> # Git status
+	nmap <leader>gf : diffget //2<CR> # use the left diff
+	nmap <leader>gj : diffget //3<CR> # use the right diff
 
 " ## FZF ##
 " https://www.youtube.com/watch?v=on1AzaZzQ7k
 " https://www.chrisatmachine.com/Neovim/08-fzf/
 	nnoremap <C-p> :FZF<CR>
+
+" ## Vim Rooter ###
+	" To specify how to identify a project's root directory:
+	let g:rooter_patterns = ['Rakefile', 'requirements.txt', 'Cargo.toml', '.git/', '.gitignore', 'README.md']
+	" resolve symbolic links. To resolve links
+	let g:rooter_resolve_links = 1
 
