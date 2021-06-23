@@ -23,6 +23,11 @@ snapd \
 guake \
 onedrive
 
+# Install ripgrep
+wget -O TEMP_DEB 'https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb' &&
+sudo dpkg -i TEMP_DEB
+rm -f TEMP_DEB
+
 # 'libnotify-bin' package contains bin 'notify-send'
 
 sudo pip3 install youtube-dl

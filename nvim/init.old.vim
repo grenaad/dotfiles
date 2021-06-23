@@ -240,7 +240,7 @@ call plug#end()
 	nnoremap <leader>h :vertical resize -5<cr>
 	nnoremap <leader>j :resize +5<cr>
 	nnoremap <leader>k :resize -5<cr>
-	nnoremap <leader>l :vertical resize +5<cr>
+	noremap <leader>l :vertical resize +5<cr>
 	
 	noremap <leader>w :w<CR> " Save the current buffer using the leader key
 	noremap <leader>e :wq<CR> " Save and exit Vim using the leader key

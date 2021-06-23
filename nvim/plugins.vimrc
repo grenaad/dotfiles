@@ -6,6 +6,9 @@
 	nmap <silent> [g <Plug>(coc-diagnostic-prev)
 	nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
+	" rename variable
+	nmap <F2> <Plug>(coc-rename)
+
 	" Remap keys for gotos
 	nmap <silent> gd <Plug>(coc-definition)
 	nmap <silent> gy <Plug>(coc-type-definition)
@@ -36,7 +39,13 @@
 	let $FZF_DEFAULT_OPTS='--reverse'
 
 "	fugitive
-	nmap <leader>gs : Git<CR> # Git status
-	nmap <leader>gf : diffget //2<CR> # use the left diff
-	nmap <leader>gj : diffget //3<CR> # use the right diff
+	nmap <leader>gs: Git<CR> # Git status
+	nmap <leader>gf: diffget //2<CR> # use the left diff
+	nmap <leader>gj: diffget //3<CR> # use the right diff
 
+" ## FZF ##
+" https://www.youtube.com/watch?v=on1AzaZzQ7k
+" https://www.chrisatmachine.com/Neovim/08-fzf/
+	nnoremap <C-p> :FZF<CR>
+
+ 

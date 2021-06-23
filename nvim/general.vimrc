@@ -48,13 +48,16 @@
 	set title
 	set titlestring=%{hostname()}\ \ %F\ \ %{strftime('%Y-%m-%d\ %H:%M',getftime(expand('%')))}
 
-	" " Copy to clipboard
-	vnoremap  <leader>y  "+y
-	nnoremap  <leader>Y  "+yg_
-	nnoremap  <leader>y  "+y
-	nnoremap  <leader>yy  "+yy
+	nnoremap <A-g> :Gvdiffsplit!<CR>
+	nnoremap <C-n> :nohlsearch<CR> " Clears search results by pressing CTRL+n
 
-	" " Paste from clipboard
+	" Copy to clipboard
+	vnoremap <leader>y  "+y
+	nnoremap <leader>Y  "+yg_
+	nnoremap <leader>y  "+y
+	nnoremap <leader>yy  "+yy
+
+	" Paste from clipboard
 	nnoremap <leader>p "+p
 	nnoremap <leader>P "+P
 	vnoremap <leader>p "+p
