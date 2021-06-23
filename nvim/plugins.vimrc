@@ -31,7 +31,7 @@
 	autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
 	    \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 
-	nnoremap <C-S-e> :NERDTreeFocus<CR>
+	nnoremap <C-e> :NERDTreeFocus<CR>
 
 " ## Git ##
 " 	fzf checkout
@@ -48,4 +48,3 @@
 " https://www.chrisatmachine.com/Neovim/08-fzf/
 	nnoremap <C-p> :FZF<CR>
 
- 
