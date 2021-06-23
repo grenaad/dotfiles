@@ -57,3 +57,7 @@
 	" resolve symbolic links. To resolve links
 	let g:rooter_resolve_links = 1
 
+" ## NERDComment ###
+	nnoremap <C-_> :call NERDComment(0,"toggle")<CR>
+	vnoremap <C-_> :call NERDComment(0,"toggle")<CR>
+
