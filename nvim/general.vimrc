@@ -51,6 +51,8 @@
 	nnoremap <A-g> :Gvdiffsplit!<CR>
 	nnoremap <C-n> :nohlsearch<CR> " Clears search results by pressing CTRL+n
 
+	set shortmess+=A " don't give annoying message about swap file found
+
 	" Copy to clipboard
 	vnoremap <leader>y  "+y
 	nnoremap <leader>Y  "+yg_

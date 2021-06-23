@@ -6,14 +6,16 @@ Plug 'neoclide/coc.nvim', {'branch': 'release'}
 let g:fzf_install = 'yes | ./install'
 Plug 'junegunn/fzf', { 'do': g:fzf_install }
 
+" Text editing
+Plug 'scrooloose/nerdcommenter' " Comment functions so powerful, no comment necessary.
 Plug 'tpope/vim-surround' " Provides mappings to change surroundings in pairs.
 Plug 'jiangmiao/auto-pairs' " Insert or delete brackets, parens, quotes in pair
-Plug 'airblade/vim-rooter' " set the working directory automatically 
 
 " Icons for Nerd Font
 Plug 'ryanoasis/vim-devicons'
 
 " Navigation
+Plug 'airblade/vim-rooter' " set the working directory automatically 
 Plug 'preservim/nerdtree'
 
 " Git
