@@ -40,7 +40,7 @@
 
 "	fugitive
 	nmap <leader>gs : Git<CR> # Git status
-	nmap <leader>gp : Git Push<CR> # Git push
+	nmap <leader>gp : Git push<CR> # Git push
 
 	nmap <leader>gf : diffget //2<CR> # use the left diff
 	nmap <leader>gj : diffget //3<CR> # use the right diff
