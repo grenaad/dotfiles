@@ -23,6 +23,9 @@ Plug 'tpope/vim-fugitive'
 Plug 'vim-airline/vim-airline' " Display git branch on bottom
 Plug 'stsewd/fzf-checkout.vim' " Opens a window to checkout a branch
 
+" Kotlin syntax higlighting
+Plug 'udalov/kotlin-vim'
+
 call plug#end()
 
 source ~/projects/dotfiles/nvim/plugins.vimrc

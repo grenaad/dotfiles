@@ -1,6 +1,6 @@
 " ## COC ##
 	set statusline^=%{coc#status()}
-	let g:coc_global_extensions = ['coc-omnisharp', 'coc-fsharp', 'coc-pyright', 'coc-java', 'coc-json']
+	let g:coc_global_extensions = ['coc-omnisharp', 'coc-fsharp', 'coc-pyright', 'coc-java', 'coc-json', 'coc-kotlin', 'coc-groovy']
 
 	"Use `[g` and `]g` to navigate diagnostics
 	nmap <silent> [g <Plug>(coc-diagnostic-prev)
