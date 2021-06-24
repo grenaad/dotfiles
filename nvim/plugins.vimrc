@@ -31,12 +31,13 @@
 	autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
 	    \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 
-	nnoremap <C-e> :NERDTreeFocus<CR>
+	nnoremap <C-e> :NERDTreeToggle<CR>
 
 " ## Git ##
 " 	fzf checkout
 	let g:fzf_layout = {'window': {'width': 0.8, 'height': 0.8}}
 	let $FZF_DEFAULT_OPTS='--reverse'
+	nnoremap <leader>gc : GCheckout<CR>
 
 "	fugitive
 	nmap <leader>gs : Git<CR> # Git status

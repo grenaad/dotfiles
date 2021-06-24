@@ -72,7 +72,7 @@ function thermal() {
 ###### Environment Variables ######
 
 # using 'bat' with color as a preview for 'fzf'
-export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
+export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'batcat --color=always --style=header,grid --line-range :300 {}'"
 # dotnet core, opt out of dotnet telemetry data
 export DOTNET_CLI_TELEMETRY_OPTOUT='true' 
 # History Size
