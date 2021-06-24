@@ -1,6 +1,6 @@
 " ## COC ##
 	set statusline^=%{coc#status()}
-	let g:coc_global_extensions = ['coc-omnisharp', 'coc-fsharp', 'coc-python', 'coc-java', 'coc-json']
+	let g:coc_global_extensions = ['coc-omnisharp', 'coc-fsharp', 'coc-pyright', 'coc-java', 'coc-json']
 
 	"Use `[g` and `]g` to navigate diagnostics
 	nmap <silent> [g <Plug>(coc-diagnostic-prev)
@@ -32,7 +32,7 @@
 	    \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 
 	nnoremap <C-e> :NERDTreeToggle<CR>
-
+	let NERDTreeWinSize = 40
 " ## Git ##
 " 	fzf checkout
 	let g:fzf_layout = {'window': {'width': 0.8, 'height': 0.8}}
