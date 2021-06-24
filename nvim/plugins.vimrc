@@ -6,8 +6,27 @@
 	nmap <silent> [g <Plug>(coc-diagnostic-prev)
 	nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
+	" Use <c-space> to trigger completion.
+	inoremap <silent><expr> <c-space> coc#refresh()
+
+	" Use <cr> to confirm completion 
+	inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+
+	" Use <Tab> and <S-Tab> to navigate the completion list:
+	inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+	inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+
 	" rename variable
 	nmap <F2> <Plug>(coc-rename)
+
+	" Fix autofix problem of current line
+	nmap <F6> <Plug>(coc-fix-current)
+
+	" Remap for format selected region
+	"nmap <F3> <Plug>(coc-format-selected)
+
+	" Remap for do codeAction of current line
+	nmap <C-,> <Plug>(coc-codeaction)
 
 	" Remap keys for gotos
 	nmap <silent> gd <Plug>(coc-definition)
@@ -33,6 +52,7 @@
 
 	nnoremap <C-e> :NERDTreeToggle<CR>
 	let NERDTreeWinSize = 40
+
 " ## Git ##
 " 	fzf checkout
 	let g:fzf_layout = {'window': {'width': 0.8, 'height': 0.8}}

@@ -53,6 +53,9 @@
 
 	set shortmess+=A " don't give annoying message about swap file found
 
+	" Open new split panes to right and bottom, which feels more natural than Vim’s default:
+	set splitbelow splitright
+
 	" Copy to clipboard
 	vnoremap <leader>y  "+y
 	nnoremap <leader>Y  "+yg_
