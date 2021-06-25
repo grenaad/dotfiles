@@ -17,6 +17,10 @@ Plug 'ryanoasis/vim-devicons'
 " Navigation
 Plug 'airblade/vim-rooter' " set the working directory automatically 
 Plug 'preservim/nerdtree'
+Plug 'nvim-lua/popup.nvim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'nvim-telescope/telescope.nvim'
+Plug 'nvim-telescope/telescope-fzy-native.nvim'
 
 " Git
 Plug 'tpope/vim-fugitive'
@@ -26,7 +30,12 @@ Plug 'stsewd/fzf-checkout.vim' " Opens a window to checkout a branch
 " Kotlin syntax higlighting
 Plug 'udalov/kotlin-vim'
 
+Plug 'gruvbox-community/gruvbox'
+
 call plug#end()
+
+colorscheme gruvbox
+highlight Normal guibg=None
 
 source ~/projects/dotfiles/nvim/plugins.vimrc
 source ~/projects/dotfiles/nvim/general.vimrc

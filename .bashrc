@@ -1,5 +1,6 @@
 ###### Alias  ######
 
+alias nvim="~/nvim.appimage"
 alias r="ranger"
 alias vim="nvim"
 alias ga="git add"

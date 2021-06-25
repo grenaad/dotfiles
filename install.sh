@@ -7,12 +7,12 @@ sudo apt update
 # Terminal only
 sudo apt install -y \
 zsh \
-neovim \
 ffmpeg \
 fzf \
 bat \
 ranger \
 python3-pip
+#neovim \
 
 # GUI
 sudo apt install -y \
@@ -22,6 +22,11 @@ libnotify-bin \
 snapd \
 guake \
 onedrive
+
+# Install neovim 0.5, used by telescope plugin
+wget -P ~ https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage
+chmod u+x ~/nvim.appimage
+echo 'alias nvim="nvim.appimage"' >> ~/.bashrc
 
 # Install ripgrep
 wget -O TEMP_DEB 'https://github.com/BurntSushi/ripgrep/releases/download/13.0.0/ripgrep_13.0.0_amd64.deb' &&
@@ -187,7 +192,7 @@ nvm install --lts
 
 ############# NeoVim ############### 
 
-# requires nodejs for the coc plugin
+# Requires nodejs for the coc plugin
 
 # Install the plugin manager for `Neovim
 sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
