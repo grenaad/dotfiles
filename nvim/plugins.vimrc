@@ -1,49 +1,68 @@
-" ## COC ##
-	set statusline^=%{coc#status()}
-	let g:coc_global_extensions = ['coc-omnisharp', 'coc-fsharp', 'coc-pyright', 'coc-java', 'coc-json', 'coc-kotlin', 'coc-groovy']
+" ##  LSP config
+" LSP config (the mappings used in the default file don't quite work right)
+" default commands
+" https://www.chrisatmachine.com/Neovim/27-native-lsp/
+nnoremap <silent> gd <cmd>lua vim.lsp.buf.definition()<CR>
+nnoremap <silent> gD <cmd>lua vim.lsp.buf.declaration()<CR>
+nnoremap <silent> gr <cmd>lua vim.lsp.buf.references()<CR>
+nnoremap <silent> gi <cmd>lua vim.lsp.buf.implementation()<CR>
+nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
+nnoremap <silent> <C-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
+nnoremap <silent> <C-n> <cmd>lua vim.lsp.diagnostic.goto_prev()<CR>
+nnoremap <silent> <C-p> <cmd>lua vim.lsp.diagnostic.goto_next()<CR>
 
-	"Use `[g` and `]g` to navigate diagnostics
-	nmap <silent> [g <Plug>(coc-diagnostic-prev)
-	nmap <silent> ]g <Plug>(coc-diagnostic-next)
+" auto-format
+autocmd BufWritePre *.js lua vim.lsp.buf.formatting_sync(nil, 100)
+autocmd BufWritePre *.jsx lua vim.lsp.buf.formatting_sync(nil, 100)
+autocmd BufWritePre *.py lua vim.lsp.buf.formatting_sync(nil, 100)
 
-	" Use <c-space> to trigger completion.
-	inoremap <silent><expr> <c-space> coc#refresh()
 
-	" Use <cr> to confirm completion 
-	inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
+"" ## COC ##
+	"set statusline^=%{coc#status()}
+	"let g:coc_global_extensions = ['coc-omnisharp', 'coc-fsharp', 'coc-pyright', 'coc-java', 'coc-json', 'coc-kotlin', 'coc-groovy']
 
-	" Use <Tab> and <S-Tab> to navigate the completion list:
-	inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
-	inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+	""Use `[g` and `]g` to navigate diagnostics
+	"nmap <silent> [g <Plug>(coc-diagnostic-prev)
+	"nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
-	" rename variable
-	nmap <F2> <Plug>(coc-rename)
+	"" Use <c-space> to trigger completion.
+	"inoremap <silent><expr> <c-space> coc#refresh()
 
-	" Fix autofix problem of current line
-	nmap <F6> <Plug>(coc-fix-current)
+	"" Use <cr> to confirm completion 
+	"inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
 
-	" Remap for format selected region
-	"nmap <F3> <Plug>(coc-format-selected)
+	"" Use <Tab> and <S-Tab> to navigate the completion list:
+	"inoremap <expr> <Tab> pumvisible() ? "\<C-n>" : "\<Tab>"
+	"inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
 
-	" Remap for do codeAction of current line
-	nmap <C-,> <Plug>(coc-codeaction)
+	"" rename variable
+	"nmap <F2> <Plug>(coc-rename)
 
-	" Remap keys for gotos
-	nmap <silent> gd <Plug>(coc-definition)
-	nmap <silent> gy <Plug>(coc-type-definition)
-	nmap <silent> gi <Plug>(coc-implementation)
-	nmap <silent> gr <Plug>(coc-references)
+	"" Fix autofix problem of current line
+	"nmap <F6> <Plug>(coc-fix-current)
 
-	" Show documentation in preview window
-	nnoremap <silent> gh :call <SID>show_documentation()<CR>
+	"" Remap for format selected region
+	""nmap <F3> <Plug>(coc-format-selected)
 
-	function! s:show_documentation()
-	  if (index(['vim','help'], &filetype) >= 0)
-	    execute 'h '.expand('<cword>')
-	  else
-	    call CocAction('doHover')
-	  endif
-	endfunction
+	"" Remap for do codeAction of current line
+	"nmap <C-,> <Plug>(coc-codeaction)
+
+	"" Remap keys for gotos
+	"nmap <silent> gd <Plug>(coc-definition)
+	"nmap <silent> gy <Plug>(coc-type-definition)
+	"nmap <silent> gi <Plug>(coc-implementation)
+	"nmap <silent> gr <Plug>(coc-references)
+
+	"" Show documentation in preview window
+	"nnoremap <silent> gh :call <SID>show_documentation()<CR>
+
+	"function! s:show_documentation()
+	  "if (index(['vim','help'], &filetype) >= 0)
+		"execute 'h '.expand('<cword>')
+	  "else
+		"call CocAction('doHover')
+	  "endif
+	"endfunction
 
 " ## NERDTree ##
 	" If another buffer tries to replace NERDTree, put it in the other window, and bring back NERDTree.

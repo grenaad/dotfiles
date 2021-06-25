@@ -1,7 +1,10 @@
 " #### Plugins ####
 call plug#begin('~/.vim/plugged')
 
-Plug 'neoclide/coc.nvim', {'branch': 'release'} 
+Plug 'neovim/nvim-lspconfig'
+Plug 'hrsh7th/nvim-compe'
+
+"Plug 'neoclide/coc.nvim', {'branch': 'release'} 
 
 let g:fzf_install = 'yes | ./install'
 Plug 'junegunn/fzf', { 'do': g:fzf_install }
@@ -40,4 +43,8 @@ highlight Normal guibg=None
 
 source ~/projects/dotfiles/nvim/plugins.vimrc
 source ~/projects/dotfiles/nvim/general.vimrc
+
+luafile ~/projects/dotfiles/nvim/compe-config.lua
+luafile ~/projects/dotfiles/nvim/python-lsp.lua
+luafile ~/projects/dotfiles/nvim/bash-lsp.lua
 
