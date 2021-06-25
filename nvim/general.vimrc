@@ -66,7 +66,7 @@ nnoremap <C-n> :nohlsearch<CR> " Clears search results by pressing CTRL+n
 vnoremap J :m '>+1<CR>gv=gv
 vnoremap K :m '<-2<CR>gv=gv
 
-vnoremap <leader> p "_dP
+vnoremap <leader>p "_dP
 
 set shortmess+=A " don't give annoying message about swap file found
 
