@@ -63,6 +63,11 @@ set signcolumn=yes
 nnoremap <A-g> :Gvdiffsplit!<CR>
 nnoremap <C-n> :nohlsearch<CR> " Clears search results by pressing CTRL+n
 
+vnoremap J :m '>+1<CR>gv=gv
+vnoremap H :m '<-2<CR>gv=gv
+
+vnoremap <leader> p "_dP
+
 set shortmess+=A " don't give annoying message about swap file found
 
 " Open new split panes to right and bottom, which feels more natural than Vim’s default:

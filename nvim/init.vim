@@ -27,8 +27,9 @@ Plug 'tpope/vim-fugitive'
 Plug 'vim-airline/vim-airline' " Display git branch on bottom
 Plug 'stsewd/fzf-checkout.vim' " Opens a window to checkout a branch
 
-" Kotlin syntax higlighting
+" Syntax higlighting
 Plug 'udalov/kotlin-vim'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 
 Plug 'gruvbox-community/gruvbox'
 
