@@ -2,20 +2,6 @@
 " LSP config (the mappings used in the default file don't quite work right)
 " default commands
 " https://www.chrisatmachine.com/Neovim/27-native-lsp/
-nnoremap <silent> gd <cmd>lua vim.lsp.buf.definition()<CR>
-nnoremap <silent> gD <cmd>lua vim.lsp.buf.declaration()<CR>
-nnoremap <silent> gr <cmd>lua vim.lsp.buf.references()<CR>
-nnoremap <silent> gi <cmd>lua vim.lsp.buf.implementation()<CR>
-nnoremap <silent> K <cmd>lua vim.lsp.buf.hover()<CR>
-nnoremap <silent> <C-k> <cmd>lua vim.lsp.buf.signature_help()<CR>
-nnoremap <silent> <C-n> <cmd>lua vim.lsp.diagnostic.goto_prev()<CR>
-nnoremap <silent> <C-p> <cmd>lua vim.lsp.diagnostic.goto_next()<CR>
-
-" auto-format
-autocmd BufWritePre *.js lua vim.lsp.buf.formatting_sync(nil, 100)
-autocmd BufWritePre *.jsx lua vim.lsp.buf.formatting_sync(nil, 100)
-autocmd BufWritePre *.py lua vim.lsp.buf.formatting_sync(nil, 100)
-
 
 "" ## COC ##
 	"set statusline^=%{coc#status()}
@@ -64,40 +50,7 @@ autocmd BufWritePre *.py lua vim.lsp.buf.formatting_sync(nil, 100)
 	  "endif
 	"endfunction
 
-" ## NERDTree ##
-	" If another buffer tries to replace NERDTree, put it in the other window, and bring back NERDTree.
-	autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
-	    \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
 
-	nnoremap <C-e> :NERDTreeToggle<CR>
-	let NERDTreeWinSize = 40
-
-" ## Git ##
-" 	fzf checkout
-	let g:fzf_layout = {'window': {'width': 0.8, 'height': 0.8}}
-	let $FZF_DEFAULT_OPTS='--reverse'
-	nnoremap <leader>gc : GCheckout<CR>
-
-"	fugitive
-	nmap <leader>gs : Git<CR> # Git status
-	nmap <leader>gp : Git push<CR> # Git push
-
-	nmap <leader>gf : diffget //2<CR> # use the left diff
-	nmap <leader>gj : diffget //3<CR> # use the right diff
-
-
-" ## FZF ##
-" https://www.youtube.com/watch?v=on1AzaZzQ7k
-" https://www.chrisatmachine.com/Neovim/08-fzf/
-	nnoremap <C-p> :FZF<CR>
-
-" ## Vim Rooter ###
-	" To specify how to identify a project's root directory:
-	let g:rooter_patterns = ['Rakefile', 'requirements.txt', 'Cargo.toml', '.git/', '.gitignore', 'README.md']
-	" resolve symbolic links. To resolve links
-	let g:rooter_resolve_links = 1
-
-" ## NERDComment ###
-	nnoremap <C-_> :call NERDComment(0,"toggle")<CR>
-	vnoremap <C-_> :call NERDComment(0,"toggle")<CR>
+inoremap <silent><expr> <TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
 

@@ -7,13 +7,13 @@ Plug 'hrsh7th/nvim-compe'
 
 "Plug 'neoclide/coc.nvim', {'branch': 'release'} 
 
-let g:fzf_install = 'yes | ./install'
-Plug 'junegunn/fzf', { 'do': g:fzf_install }
+"let g:fzf_install = 'yes | ./install'
+"Plug 'junegunn/fzf', { 'do': g:fzf_install }
 
 " Text editing
 Plug 'scrooloose/nerdcommenter' " Comment functions so powerful, no comment necessary.
 Plug 'tpope/vim-surround' " Provides mappings to change surroundings in pairs.
-Plug 'jiangmiao/auto-pairs' " Insert or delete brackets, parens, quotes in pair
+"Plug 'jiangmiao/auto-pairs' " Insert or delete brackets, parens, quotes in pair
 
 " Icons for Nerd Font
 Plug 'ryanoasis/vim-devicons'
