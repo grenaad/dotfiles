@@ -200,8 +200,10 @@ sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.
 
 # soft link settings files for nvim and coc
 mkdir ~/.config/nvim
+mkdir ~/.config/nvim/after
 ln -s ~/projects/dotfiles/nvim/init.vim ~/.config/nvim/init.vim
-ln -s ~/projects/dotfiles/nvim/coc-settings.json ~/.config/nvim/coc-settings.json
+ln -s ~/projects/dotfiles/nvim/plugin ~/.config/nvim/plugin 
+ln -s ~/projects/dotfiles/nvim/lua ~/.config/nvim/after/plugin 
 
 # Install all the plugins
 nvim --headless +PlugInstall +qall > /dev/null 2>&1
