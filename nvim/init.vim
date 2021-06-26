@@ -26,7 +26,6 @@ Plug 'vim-airline/vim-airline' " Display git branch on bottom
 "Plug 'stsewd/fzf-checkout.vim' " Opens a window to checkout a branch
 
 " Syntax higlighting
-"Plug 'udalov/kotlin-vim'
 " TSInstall python java kotlin 
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 
@@ -41,10 +40,4 @@ highlight Normal guibg=None
 " TSInstall python kotlin java bash 
 "lua require'nvim-treesitter.configs'.setup {highlight = {enable = true}}
 
-" source ~/projects/dotfiles/nvim/plugins.vimrc
-" source ~/projects/dotfiles/nvim/general.vimrc
-
-"luafile ~/projects/dotfiles/nvim/compe-config.lua
-"luafile ~/projects/dotfiles/nvim/python-lsp.lua
-"luafile ~/projects/dotfiles/nvim/bash-lsp.lua
 
