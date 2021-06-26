@@ -225,3 +225,4 @@ sudo smbios-thermal-ctl --set-thermal-mode quiet  # quiet # default is balanced
 # List all available thermal modes: smbios-thermal-ctl -i
 # "Quiet" and "Cool Bottom" profiles limit CPU power to 11W (18W boost) and thus reduces overall system performance.
 # "Balanced" and "Performance" profiles remove this limit.
+

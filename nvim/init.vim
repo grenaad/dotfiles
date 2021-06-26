@@ -36,8 +36,4 @@ call plug#end()
 colorscheme gruvbox
 highlight Normal guibg=None
 
-" Turn on tree sitter
-" TSInstall python kotlin java bash 
-"lua require'nvim-treesitter.configs'.setup {highlight = {enable = true}}
-
 
