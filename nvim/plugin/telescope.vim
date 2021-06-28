@@ -2,6 +2,7 @@ lua require("ice")
 
 nnoremap <leader>dot :lua require('ice.telescope').search_dotfiles()<CR>
 nnoremap <leader>gc :lua require('ice.telescope').git_branches()<CR>
+nnoremap <leader>b :lua require('telescope.builtin').buffers()<CR>
 
 nnoremap <C-p> :lua require('telescope.builtin').git_files()<CR>
 nnoremap <C-f> :lua require('telescope.builtin').find_files()<CR>
