@@ -2,8 +2,9 @@
 call plug#begin('~/.vim/plugged')
 
 " LSP
-Plug 'neovim/nvim-lspconfig'
-Plug 'hrsh7th/nvim-compe'
+Plug 'neovim/nvim-lspconfig' " impelments lsp servers
+Plug 'hrsh7th/nvim-compe' " auto completion
+"Plug 'glepnir/lspsaga.nvim' # pretty hovering windows
 
 " Text editing
 Plug 'scrooloose/nerdcommenter' " Comment functions so powerful, no comment necessary.
@@ -31,6 +32,7 @@ Plug 'vim-airline/vim-airline' " Display git branch on bottom
 " TSInstall python java kotlin 
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 
+" Styling theme
 Plug 'gruvbox-community/gruvbox'
 
 call plug#end()

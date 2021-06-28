@@ -1,5 +1,5 @@
 " ###### General Vim Settings ###### 
-" let mapleader="\<BS>"  
+let mapleader="\<Space>"
 
 nnoremap<leader>n :nohlsearch<CR>
 
