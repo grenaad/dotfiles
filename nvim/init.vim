@@ -19,11 +19,13 @@ Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-fzy-native.nvim'
+Plug 'kevinhwang91/rnvimr'
 
 " Git
 Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-rhubarb' " Allows for Gbrowse in fugitive to open github
+Plug 'shumphrey/fugitive-gitlab.vim' " Same as above but for gitlab
 Plug 'vim-airline/vim-airline' " Display git branch on bottom
-"Plug 'stsewd/fzf-checkout.vim' " Opens a window to checkout a branch
 
 " Syntax higlighting
 " TSInstall python java kotlin 
