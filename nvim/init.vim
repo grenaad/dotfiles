@@ -29,7 +29,7 @@ Plug 'shumphrey/fugitive-gitlab.vim' " Same as above but for gitlab
 Plug 'vim-airline/vim-airline' " Display git branch on bottom
 
 " Syntax higlighting
-" TSInstall python java kotlin 
+" TSInstall python java kotlin dockerfile bash json
 Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}  " We recommend updating the parsers on update
 
 " Styling theme
