@@ -21,7 +21,7 @@ Plug 'nvim-lua/popup.nvim'
 Plug 'nvim-lua/plenary.nvim'
 Plug 'nvim-telescope/telescope.nvim'
 Plug 'nvim-telescope/telescope-fzy-native.nvim'
-Plug 'kevinhwang91/rnvimr'
+Plug 'kevinhwang91/rnvimr' " use ranger in a floating window
 
 " Git
 Plug 'tpope/vim-fugitive'
