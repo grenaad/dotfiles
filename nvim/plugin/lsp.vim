@@ -30,3 +30,4 @@ nnoremap <silent> gv :Lspsaga preview_definition<CR>
 nnoremap <silent> <leader>cd :Lspsaga show_line_diagnostics<CR>
 nnoremap <silent> ]g :Lspsaga diagnostic_jump_prev<CR>
 nnoremap <silent> [g :Lspsaga diagnostic_jump_next<CR>
+
