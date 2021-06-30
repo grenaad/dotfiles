@@ -4,6 +4,7 @@ call plug#begin('~/.vim/plugged')
 " LSP
 Plug 'neovim/nvim-lspconfig' " impelments lsp servers
 Plug 'hrsh7th/nvim-compe' " auto completion
+Plug 'kabouzeid/nvim-lspinstall' " Language Server Install ' LspInstall kotlin java python dockerfile html json vim lua bash
 "Plug 'glepnir/lspsaga.nvim' # pretty hovering windows
 
 " Text editing
