@@ -24,7 +24,7 @@ guake \
 onedrive
 
 # Install neovim 0.5, used by telescope plugin
-wget -P ~ https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage
+wget -P ~ https://github.com/neovim/neovim/releases/download/v0.5.0/nvim.appimage
 chmod u+x ~/nvim.appimage
 echo 'alias nvim="nvim.appimage"' >> ~/.bashrc
 
