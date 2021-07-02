@@ -25,16 +25,15 @@ function! TermToggle(height)
 endfunction
 
 " Toggle terminal on/off (neovim)
-"nnoremap <C-t> :call TermToggle(12)<CR>
-"inoremap <C-t> <Esc>:call TermToggle(12)<CR>
-"tnoremap <C-t> <C-\><C-n>:call TermToggle(12)<CR>
+nnoremap <M-t> :call TermToggle(12)<CR>
+inoremap <M-t> <Esc>:call TermToggle(12)<CR>
+tnoremap <M-t> <C-\><C-n>:call TermToggle(12)<CR>
 
 
 "" When in the terminal window:  Terminal go back to normal mode
 "tnoremap <Esc> <C-\><C-n>
 "tnoremap :q! <C-\><C-n>:q!<CR>
 
-"
 nnoremap <C-\><C-n> :call TermToggle(12)<CR>
 inoremap <C-\><C-n> :call TermToggle(12)<CR>
 
