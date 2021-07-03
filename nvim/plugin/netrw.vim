@@ -17,5 +17,3 @@ let g:netrw_liststyle = 3 " tree view, toggle with i for different views
 
 nnoremap <silent> <C-e> :Lexplore %:p:h <bar> :vertical resize 40<CR>
 nnoremap <silent> <M-e> :Lexplore<CR>
-nnoremap <M-=> :vertical resize +5<CR>
-nnoremap <M--> :vertical resize -5<CR>

@@ -15,8 +15,10 @@ nnoremap <leader>y  "+y
 nnoremap <leader>yy  "+yy
 
 " Paste from clipboard
-" nnoremap <leader>p "+p
-" nnoremap <leader>P "+P
+nnoremap <leader>p "+p
+nnoremap <leader>P "+P
 " vnoremap <leader>p "+p
 " vnoremap <leader>P "+P
 
+nnoremap <M-[> :vertical resize +5<CR>
+nnoremap <M-]> :vertical resize -5<CR>
