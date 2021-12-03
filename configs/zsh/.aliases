@@ -1,0 +1,65 @@
+###### Aliases  ######
+
+alias r="ranger"
+alias vim="~/.local/bin/lvim"
+alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="
+alias d="cd ~/projects/dotfiles"
+alias ed="vim ~/projects/dotfiles/configs/zsh/.aliases"
+alias ev="vim ~/projects/dotfiles/configs/nvim/.config/nvim/init.vim"
+alias el="vim ~/projects/dotfiles/configs/lvim/.config/lvim/config.lua"
+alias ..="cd .."
+alias ....="cd ../../"
+alias mkdir="mkdir -pv"
+alias jupyterlab_docker='docker run -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -v $HOME:/home/jovyan/work jupyter/datascience-notebook start.sh jupyter lab --LabApp.token='
+alias jupyterlab='jupyter lab --LabApp.token='
+alias java_config='sudo update-alternatives --config java'
+alias portainer="docker run -d -p 9000:9000 --restart always -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer"
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    alias bat="batcat" # command is batcat if you are on Debian or Ubuntu
+fi
+
+# accces with http://localhost:9000 
+alias yabai_windows="yabai -m query --windows"
+alias yabai_start="yabai &; disown"
+
+alias obsvirt="sudo modprobe -r v4l2loopback;obs"
+
+# kubernetes
+alias kc="kubectx"
+alias kns="kubens"
+alias s="stern"
+
+###### Environment Variables ######
+
+# using 'bat' with color as a preview for 'fzf'
+export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
+# dotnet core, opt out of dotnet telemetry data
+export DOTNET_CLI_TELEMETRY_OPTOUT='true' 
+# History Size
+export HISTSIZE=10000
+
+# scripts or symlinked to this location and it is not in path in macos
+export PATH="$PATH:$HOME/.local/bin"
+
+# export DOTNET_HOST_PATH="$(which dotnet)"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export LC_ALL=en_US.UTF-8 # was required for macos
+fi
+
+export VISUAL=vim;
+export EDITOR=vim;
+
+###### General Settings ######
+
+# Activate vi mode with <Escape>
+set -o vi
+
+###### Work ######
+alias runstubs="cd ~/work/checkout-local/master; ./go run  --without checkout checkout-stubs"
+alias runiam="cd ~/work/checkout-local/master; ./go run --no-stubs  --without checkout checkout-stubs"
+alias runclean="cd ~/work/checkout-local/master; ./go clean"
+alias tmwprojects="create_tmux_window ~/projects"
+alias tmwwork="create_tmux_window ~/work"
+alias tmswork="create_tmux_session ~/work" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}

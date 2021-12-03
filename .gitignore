@@ -1,0 +1,7 @@
+tags
+*.netrwhist
+**/.ionide
+.zshrc.zwc
+*.swp
+
+configs/lvim/.config/lvim/plugin/packer_compiled.lua

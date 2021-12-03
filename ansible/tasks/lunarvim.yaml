@@ -1,0 +1,21 @@
+- name: Get Lunar vim repo
+  git:
+    repo: git@github.com:LunarVim/LunarVim.git
+    dest: "{{ lookup('env', 'HOME') }}/projects/LunarVim"
+  tags:
+    - install
+    - dotfiles
+    - lvim
+
+- name: Install Lunar vim
+  become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
+  shell: |
+        cd {{ lookup('env', 'HOME') }}/projects
+        ./LunarVim/utils/installer/install-neovim-from-release
+        ./LunarVim/utils/installer/install.sh --no-install-dependencies
+        rm -rf LunarVim
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - core

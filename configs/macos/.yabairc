@@ -1,0 +1,74 @@
+#!/usr/bin/env sh
+
+###### SIP ######
+
+# window_border must be turned off
+# It caused random window server crash and new windows of a application can become invisible
+yabai -m config window_border off
+yabai -m config window_shadow off
+yabai -m config window_opacity off
+yabai -m config window_opacity_duration 0.00
+yabai -m config active_window_opacity 1.0
+
+###### General ######
+# New window spawns to the right if vertical split, or bottom if horizontal split
+yabai -m config window_placement second_child
+
+# floating windows are always on top (default: off)
+yabai -m config window_topmost off
+
+###### Window Layout ######
+yabai -m config layout                       bsp
+yabai -m config top_padding                  10
+yabai -m config bottom_padding               10
+yabai -m config left_padding                 10
+yabai -m config right_padding                10
+yabai -m config window_gap                   10
+
+###### Debug ######
+# Debug info is turned on
+yabai -m config debug_output on
+# or launch with yabai with --verbose flag
+# View logs at:
+# tail -f $HOMEBREW_PREFIX/var/log/yabai/yabai.err.log
+# tail -f $HOMEBREW_PREFIX/var/log/yabai/yabai.out.log
+
+###### Window Ignore list ######
+# Do not tile list
+yabai -m rule --add app=Stickies manage=off
+yabai -m rule --add app="^System Preferences$" sticky=on layer=above manage=off
+yabai -m rule --add app="^Finder$" sticky=on layer=above manage=off
+yabai -m rule --add app="^Disk Utility$" sticky=on layer=above manage=off
+yabai -m rule --add app="^System Information$" sticky=on layer=above manage=off
+yabai -m rule --add app="^Activity Monitor$" sticky=on layer=above manage=off
+yabai -m rule --add app="^TeamViewer$" sticky=off layer=above manage=off
+yabai -m rule --add app="^Spotify$" manage=off
+yabai -m rule --add app="^mpv$" manage=off
+yabai -m rule --add app="^YouTube Music Desktop App$" manage=off
+yabai -m rule --add app="^Library$" manage=off
+yabai -m rule --add app="^OBS$" manage=off
+yabai -m rule --add app="System Information" label="About This Mac" title="About This Mac" manage=off
+yabai -m rule --add label="Software Update" title="Software Update" manage=off
+yabai -m rule --add app="^Calculater$" manage=off
+yabai -m rule --add app="^Calendar$" manage=off
+yabai -m rule --add app="^Calculator$" manage=off
+yabai -m rule --add app="^Docker Desktop$" manage=off
+
+# Go to IntelliJ IDEA > Preferences > Appearance & behavior > Appearance > UI Options > Always show full path in window header
+yabai -m rule --add app="^IntelliJ IDEA$" manage=off
+yabai -m rule --add app="^IntelliJ IDEA$" title=".*\[(.*)\].*" manage=on
+yabai -m rule --add title="^Slack call" manage=off
+
+
+###### Custom space names ######
+yabai -m space 1 --label one
+yabai -m space 2 --label two
+
+###### End ######
+echo "yabai configuration loaded.."
+
+# Mouse movements does not work when SIP is enabled
+# Does not work currently
+# yabai -m config mouse_modifier fn
+# yabai -m config mouse_action2 resize
+# yabai -m config mouse_action1 move

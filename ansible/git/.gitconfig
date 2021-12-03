@@ -1,0 +1,8 @@
+[includeIf "gitdir:~/Documents/"]
+  path = ~/.gitconfig-personal
+[includeIf "gitdir:~/projects/"]
+  path = ~/.gitconfig-personal
+[includeIf "gitdir:~/work/"]
+  path = ~/.gitconfig-work
+[push]
+	default = current

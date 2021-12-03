@@ -1,0 +1,42 @@
+- name: Install Ubuntu Packages
+  hosts: localhost
+
+  pre_tasks:
+  - name: Update Apt
+    apt:
+      force_apt_get: true
+      update_cache: true
+      state: present
+    become: true
+
+  tasks:
+    # this block of tasks will use sudo to install packages
+    - block:
+        - include: tasks/k8.yaml
+
+        - name: Install System Packages
+          apt:
+            name: ["zsh", "ffmpeg", "fzf", "bat", "ranger", "unzip", "zip", "tldr", "stow", "mpv", "tmux"]
+          tags:
+            - install
+            - core
+      become: true
+
+    - include: tasks/kubectx.yaml
+    - include: tasks/stern.yaml
+
+    # - name: Install nvim
+    #   shell: |
+    #         curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage --output "$HOME/.local/bin/nvim"
+    #         chmod +x "$HOME/.local/bin/nvim"
+    #   tags:
+    #     - install
+    #     - core
+    #     - nvim
+
+
+# docker example
+# https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/
+
+
+# become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)

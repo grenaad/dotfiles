@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# tmux-sessionizer path 
+#
+# Description
+# Giving a path, create a new tmux session with the
+# basename of the path as the session name
+# Example:
+# tmux-sessionizer /foo/bar
+
+path="$1"
+base_name=$(basename $path)
+session_name=$(echo $base_name | tr "./" "__")
+
+tmux has-session -t $session_name 2>/dev/null || tmux new-session -d -s $session_name
+
+tmux send-keys -t $session_name "cd $path" ENTER
+tmux send-keys -t $session_name "clear" ENTER
+
+echo "$session_name"
+

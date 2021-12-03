@@ -1,0 +1,19 @@
+- name: Get kubectx repo
+  git:
+    repo: 'https://github.com/ahmetb/kubectx'
+    dest: "{{ lookup('env', 'HOME') }}/.local/share/kubectx"
+  tags:
+    - install
+    - dotfiles
+
+- name: Setup kubectx
+  file:
+    src: "{{ lookup('env', 'HOME') }}/.local/share/kubectx/kubectx"
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/kubectx"
+    state: link
+
+- name: Setup kubens
+  file:
+    src: "{{ lookup('env', 'HOME') }}/.local/share/kubectx/kubens"
+    path: "{{ lookup('env', 'HOME') }}/.local/bin/kubens"
+    state: link

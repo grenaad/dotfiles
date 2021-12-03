@@ -1,0 +1,63 @@
+---
+- name: Install MacOS Packages
+  hosts: localhost
+
+  vars:
+    homebrew_installed_packages:
+      - docker
+      - docker-compose
+      - docker-machine
+      - jq
+      - tmux
+      - ffmpeg
+      - fzf
+      - kubectx
+      - nvm
+      - pyenv
+      - ranger
+      - rust
+      - stern
+      - tldr
+      - tmux
+      - glow
+      - gnu-sed
+      - bat
+      - rustup
+
+    homebrew_cask_apps:
+      - docker
+      - firefox
+      - google-chrome
+      - brave-browser
+      - slack
+      - chromedriver
+      - intellij-idea
+      - mpv
+      - onedrive
+      - slack
+      - zoom
+      - firefox
+      - google-cloud-sdk
+      - iterm2
+      - obs
+      - postman
+      - visual-studio-code
+
+  roles:
+    - geerlingguy.mac.homebrew
+
+  tasks:
+    - name: Setup yabai
+      file:
+        src: ~/projects/dotfiles/configs/macos/.yabairc
+        path: ~/
+        state: hard
+
+    - name: Install rust
+      shell: rustup-init
+      args:
+        executable: /bin/bash
+      tags:
+        - install
+        - core
+

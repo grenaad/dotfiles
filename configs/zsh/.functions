@@ -1,0 +1,87 @@
+
+function remove_carriage_returns {
+	sed -i 's/\r//g' $1
+}
+
+function remove_all_carriage_returns {
+    find . -name $1 | xargs sed -i 's/\r//g'
+}
+
+function f {
+	find $1 -name $2 2>/dev/null
+}
+
+# Kill any application that is using a giving port
+function kill_port {
+	kill -9 $(lsof -i TCP:$1 | grep LISTEN | awk '{print $2}')
+}
+
+function cd {
+    builtin cd "$@" && ls -F
+}
+
+# convert_vid inputfile outputfile
+function convert_vid () {
+	ffmpeg -i $1 -vcodec libx264 -acodec aac $2.mp4
+}
+
+function convert_scale_to_phone () {
+  ffmpeg -i $1 -vf scale=480:-1 $2
+}
+
+# convert_vid inputfile outputfile
+function convert_audio () {
+	ffmpeg -i $1 -acodec aac $2.aac
+}
+
+function vimz() {
+	vim "$(fzf)"
+}
+
+function list_dir_with_fzf (){
+  # giving a path, pipe all the directories in the path to fzf
+  find $1 -maxdepth 1 -type d -not -path '*/\.*' |
+  fzf
+}
+
+function create_tmux_window(){
+  # must run in tmux sessions
+  list_dir_with_fzf $1 |
+  xargs tmux-windowizer --printtarget | # script must be in path
+  xargs tmux switch -t
+}
+
+function create_tmux_session(){
+  list_dir_with_fzf $1 |
+  xargs -I{} tmux-sessionizer {}  # script must be in path
+}
+
+function reset_repo_remote {
+    # for some reason git fetch does not work without this when in bare repo
+    remote=$(git remote -v | sed -e 's/([^()]*)//g' | head -n 1)
+    git remote rm origin
+    bash -c "git remote add $remote"
+}
+
+function clone_worktree {
+# clone the git repo into a bare repo and setup the directory structure
+		REPO_NAME=$(echo "$1" | awk -F "[./]" '{print $(NF-1)}')
+		mkdir $REPO_NAME
+		git clone --bare $1 $REPO_NAME/.bare/
+		echo "gitdir: ./.bare" > $REPO_NAME/.git
+    cd $REPO_NAME
+}
+
+function thermal() {
+    sudo smbios-thermal-ctl -g  | grep -A1 "Current Thermal Modes:"
+    echo "\nSet Thermal Mode:"
+    select yn in "Balanced" "Cool_Bottom" "Quiet" "Performance"; do
+        case $yn in
+            Balanced ) sudo smbios-thermal-ctl --set-thermal-mode balanced; break;;
+            Cool_Bottom ) sudo smbios-thermal-ctl --set-thermal-mode cool-bottom; break;;
+            Quiet ) sudo smbios-thermal-ctl --set-thermal-mode quiet; break;; 
+            Performance ) sudo smbios-thermal-ctl --set-thermal-mode performance; break;;
+        esac
+    done
+}
+

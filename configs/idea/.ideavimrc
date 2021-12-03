@@ -1,0 +1,12 @@
+let mapleader="\<Space>"
+
+set clipboard+=unnamed
+set number relativenumber
+
+" NERDTree
+set NERDTree
+map <C-e> <Action>(NERDTreeFocus)
+map <leader>e <Action>(NERDTreeToggle)
+
+map [g :action GotoNextError<CR>
+map ]g :action GotoPreviousError<CR>

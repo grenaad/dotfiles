@@ -1,0 +1,49 @@
+- name: Add all configurations
+  hosts: localhost
+
+  tasks:
+
+    - stat:
+        path: "{{ lookup('env', 'HOME') }}/.config/lvim/config.lua"
+      register: link
+
+    # only delete lvim config if it is a file and not a symbolic link
+    - name: Remove LunarVim's config if it is not sym linked
+      file:
+        path: "{{ lookup('env', 'HOME') }}/.config/lvim/config.lua"
+        state: absent
+      when: link.stat.islnk is defined and link.stat.islnk is not defined
+
+    - name: Stow all config files
+      shell: | 
+          cd ../configs/
+          stow -t "{{ lookup('env', 'HOME') }}" */
+      args:
+        executable: /bin/bash
+      tags:
+        - install
+        - core
+
+    - name: Install Lunar Vim plugins
+      shell: lvim --headless -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
+      args:
+        executable: /bin/bash
+      tags:
+        - install
+        - core
+
+    - name: Launch zsh with bash
+      lineinfile:
+        path: "{{ lookup('env', 'HOME') }}/.bashrc"
+        regexp: 'zsh'
+        line: 'zsh'
+        state: present
+        create: yes
+
+    - name: Add zsh configs to main .zshrc
+      lineinfile:
+        path: "{{ lookup('env', 'HOME') }}/.zshrc"
+        regexp: '^source ~/.zshrc_'
+        line: 'source ~/.zshrc_'
+        state: present
+        create: yes
