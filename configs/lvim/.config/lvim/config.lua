@@ -73,10 +73,10 @@ lvim.plugins = {
       end,
       requires = "nvim-lua/plenary.nvim",
     },
-    -- {"ggandor/lightspeed.nvim",
-    --   event = "BufRead",
-    --   -- vim.cmd("unmap s | unmap S") -- or unmap f | unmap F | unmap t | unmap T
-    -- },
+    {"ggandor/lightspeed.nvim",
+      event = "BufRead",
+      -- vim.cmd("unmap s | unmap S") -- or unmap f | unmap F | unmap t | unmap T
+    },
     {"kevinhwang91/nvim-bqf",
       event = { "BufRead", "BufNew" },
       config = function()

@@ -48,8 +48,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     export LC_ALL=en_US.UTF-8 # was required for macos
 fi
 
-export VISUAL=vim;
-export EDITOR=vim;
+export VISUAL=lvim;
+export EDITOR=lvim;
 
 ###### General Settings ######
 

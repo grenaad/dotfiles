@@ -56,11 +56,12 @@ function create_tmux_session(){
   xargs -I{} tmux-sessionizer {}  # script must be in path
 }
 
-function reset_repo_remote {
-    # for some reason git fetch does not work without this when in bare repo
+function git_fetch {
+    # for some reason git fetch does not work without removing/adding remote repo
     remote=$(git remote -v | sed -e 's/([^()]*)//g' | head -n 1)
     git remote rm origin
     bash -c "git remote add $remote"
+    git fetch --prune --all
 }
 
 function clone_worktree {
