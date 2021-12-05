@@ -101,8 +101,12 @@ lvim.plugins = {
           },
          })
       end,
-},
+      },
+      {"ThePrimeagen/harpoon"},
 }
+-- Appending to pattern when looking searching root dir
+lvim.builtin.project.patterns[#lvim.builtin.project.patterns+1]="*.sln"
+
 -- TODO use Octo.nvim for Github integration
 -- https://github.com/pwntester/octo.nvim
 
@@ -120,23 +124,32 @@ require'lspconfig'.fsautocomplete.setup{
 
 -- ########### Configure plugins ###########
 
--- Whichkey
+-- ## Whichkey ##
+
+-- Git Linker
 lvim.builtin.which_key.mappings.g.y = { "<cmd>lua require('gitlinker').get_buf_range_url('n')<cr>", "Copy permalink to clipboard" }
+
+-- Neogit and Diffview
 lvim.builtin.which_key.mappings.g.w = { "<cmd>Neogit<cr>", "Status Window" }
 lvim.builtin.which_key.mappings.g.d = { "<cmd>DiffviewOpen<cr>", "Diff view" }
 lvim.builtin.which_key.mappings.g.D = { "<cmd>DiffviewOpen master<cr>", "Diff view against master" }
 lvim.builtin.which_key.mappings.g.t = { "<cmd>DiffviewClose<cr>", "Close Diff view" }
 lvim.builtin.which_key.mappings.g.P = lvim.builtin.which_key.mappings.g.p -- switch preview chunk with Git Push
 lvim.builtin.which_key.mappings.g.p = { "<cmd>Neogit push<cr>", "Push" }
+
+-- Telescope
 lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>", "Search dotfiles" }
 lvim.builtin.which_key.mappings["F"] = { "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>", "Find all files" }
-lvim.builtin.which_key.mappings["r"] = { -- Spectre, Search and replace
+
+-- Spectre, Search and replace
+lvim.builtin.which_key.mappings["r"] = {
     name = "Replace",
     r = { "<cmd>lua require('spectre').open()<cr>", "Replace" },
     w = { "<cmd>lua require('spectre').open_visual({select_word=true})<cr>", "Replace current word" },
     f = { "<cmd>lua require('spectre').open_file_search()<cr>", "Replace in current buffer only" },
 }
--- lvim.builtin.which_key.mappings["t"] = { "<cmd>tabclose<cr>", "Close tab" }
+
+-- Trouble
 lvim.builtin.which_key.mappings.t = { -- Trouble, jump to lsp error diagnostics
     name = "Diagnostics",
     t = { "<cmd>TroubleToggle<cr>", "Trouble" },
@@ -146,7 +159,18 @@ lvim.builtin.which_key.mappings.t = { -- Trouble, jump to lsp error diagnostics
     l = { "<cmd>TroubleToggle loclist<cr>", "Loclist" },
     r = { "<cmd>TroubleToggle lsp_references<cr>", "References" },
 }
+
+-- Markdown
 lvim.builtin.which_key.mappings.m = { "<cmd>Glow<cr>", "View Markdown files" }
+
+-- Harpoon
+lvim.builtin.which_key.mappings.n = {
+    name = "Harpoon",
+    m = { "<cmd>lua require('harpoon.ui').toggle_quick_menu()<cr>", "Quick Menu" },
+    a = { "<cmd>lua require('harpoon.mark').add_file()<cr>", "Add File" },
+}
+lvim.keys.normal_mode["<C-n>"] = ":lua require('harpoon.ui').nav_next()<cr>"
+lvim.keys.normal_mode["<C-p>"] = ":lua require('harpoon.ui').nav_prev()<cr>"
 
 -- Nvim-tree
 lvim.builtin.nvimtree.hide_dotfiles = false
