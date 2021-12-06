@@ -103,8 +103,11 @@ lvim.plugins = {
       end,
       },
       {"ThePrimeagen/harpoon"},
+      {"meain/vim-package-info",
+        run ="npm install"
+      }
 }
--- Appending to pattern when looking searching root dir
+-- Appending to root dir pattern
 lvim.builtin.project.patterns[#lvim.builtin.project.patterns+1]="*.sln"
 
 -- TODO use Octo.nvim for Github integration
@@ -171,6 +174,10 @@ lvim.builtin.which_key.mappings.n = {
 }
 lvim.keys.normal_mode["<C-n>"] = ":lua require('harpoon.ui').nav_next()<cr>"
 lvim.keys.normal_mode["<C-p>"] = ":lua require('harpoon.ui').nav_prev()<cr>"
+lvim.keys.normal_mode["<C-y>"] = ":lua require('harpoon.ui').nav_file(1)<cr>"
+lvim.keys.normal_mode["<C-n>"] = ":lua require('harpoon.ui').nav_file(2)<cr>"
+lvim.keys.normal_mode["<C-m>"] = ":lua require('harpoon.ui').nav_file(3)<cr>"
+
 
 -- Nvim-tree
 lvim.builtin.nvimtree.hide_dotfiles = false
