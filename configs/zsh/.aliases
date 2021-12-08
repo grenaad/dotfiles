@@ -15,6 +15,14 @@ alias jupyterlab='jupyter lab --LabApp.token='
 alias java_config='sudo update-alternatives --config java'
 alias portainer="docker run -d -p 9000:9000 --restart always -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer"
 
+# RibGrep and FZF
+# See refence: https://dev.to/matrixersp/how-to-use-fzf-with-ripgrep-to-selectively-ignore-vcs-files-4e27
+# using 'bat' with color as a preview for 'fzf'
+export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
+export FZF_DEFAULT_COMMAND='rg --files --hidden --follow'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+# alias fz="rg --files --hidden --follow -g '!{node_modules,.git}' | fzf"
+
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     alias bat="batcat" # command is batcat if you are on Debian or Ubuntu
 fi
@@ -31,9 +39,6 @@ alias kns="kubens"
 alias s="stern"
 
 ###### Environment Variables ######
-
-# using 'bat' with color as a preview for 'fzf'
-export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
 # dotnet core, opt out of dotnet telemetry data
 export DOTNET_CLI_TELEMETRY_OPTOUT='true' 
 # History Size
@@ -56,10 +61,13 @@ export EDITOR=lvim;
 # Activate vi mode with <Escape>
 set -o vi
 
+
 ###### Work ######
-alias runstubs="cd ~/work/checkout-local/master; ./go run  --without checkout checkout-stubs"
-alias runiam="cd ~/work/checkout-local/master; ./go run --no-stubs  --without checkout checkout-stubs"
-alias runclean="cd ~/work/checkout-local/master; ./go clean"
+alias runstubs="cd ~/work/checkout-local/master;git pull origin master;./go run  --without checkout checkout-stubs"
+alias runiam="cd ~/work/checkout-local/master;git pull origin master;./go run --no-stubs  --without checkout checkout-stubs"
+alias runclean="cd ~/work/checkout-local/master;git pull origin master;./go clean"
+alias runacceptance="cd ~/work/checkout-acceptance-tests/master;git pull origin master;npm run parallel-local -- 15"
 alias tmwprojects="create_tmux_window ~/projects"
 alias tmwwork="create_tmux_window ~/work"
 alias tmswork="create_tmux_session ~/work" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}
+

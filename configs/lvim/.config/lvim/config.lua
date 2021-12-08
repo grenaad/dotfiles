@@ -107,6 +107,8 @@ lvim.plugins = {
         run ="npm install"
       }
 }
+
+vim.cmd("set textwidth=100") 
 -- vim.cmd([[
 --     augroup FSharp_AutoRefreshCodeLens
 --         autocmd!
@@ -161,7 +163,8 @@ lvim.builtin.which_key.mappings.g.p = { "<cmd>Neogit push<cr>", "Push" }
 
 -- Telescope
 lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>", "Search dotfiles" }
-lvim.builtin.which_key.mappings["F"] = { "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>", "Find all files" }
+lvim.builtin.which_key.mappings["F"] = lvim.builtin.which_key.mappings["f"]
+lvim.builtin.which_key.mappings["f"] = { "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>", "Find all files" }
 
 -- Spectre, Search and replace
 lvim.builtin.which_key.mappings["r"] = {
@@ -172,6 +175,12 @@ lvim.builtin.which_key.mappings["r"] = {
 }
 
 -- Trouble
+
+-- jump to the previous item, skipping the groups
+lvim.keys.normal_mode["<C-]>"] = ":lua require('trouble').previous({skip_groups = true, jump = true})<cr>"
+-- jump to the next item, skipping the groups
+lvim.keys.normal_mode["<C-[>"] = ":lua require('trouble').next({skip_groups = true, jump = true})<cr>"
+
 lvim.builtin.which_key.mappings.t = { -- Trouble, jump to lsp error diagnostics
     name = "Diagnostics",
     t = { "<cmd>TroubleToggle<cr>", "Trouble" },

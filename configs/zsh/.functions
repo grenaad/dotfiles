@@ -34,12 +34,18 @@ function convert_audio () {
 	ffmpeg -i $1 -acodec aac $2.aac
 }
 
+function fz() {
+  rg --files --follow -g '!{node_modules,.git,.bare}' $1 | fzf
+ }
+
 function vimz() {
-	vim "$(fzf)"
-}
+  vim "$(fz $1)"
+ }
 
 function list_dir_with_fzf (){
   # giving a path, pipe all the directories in the path to fzf
+  # cd $(ls -d $1*/ | fzf)
+  # ls -d $1*/ | fzf
   find $1 -maxdepth 1 -type d -not -path '*/\.*' |
   fzf
 }
