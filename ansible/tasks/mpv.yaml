@@ -1,0 +1,10 @@
+- name: Set mpv as default player in MacOs
+  shell: |
+        duti -s io.mpv avi all
+        duti -s io.mpv mkv all
+        duti -s io.mpv mp4 all
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - core

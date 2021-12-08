@@ -21,4 +21,3 @@
 brew install rustup
 rustup-init # Next let's setup cargo and rustc,
 ```
-

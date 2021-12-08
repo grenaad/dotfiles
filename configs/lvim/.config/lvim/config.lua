@@ -107,8 +107,12 @@ lvim.plugins = {
         run ="npm install"
       }
 }
--- Appending to root dir pattern
-lvim.builtin.project.patterns[#lvim.builtin.project.patterns+1]="*.sln"
+-- vim.cmd([[
+--     augroup FSharp_AutoRefreshCodeLens
+--         autocmd!
+--         autocmd CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()
+--     augroup END
+-- ]])
 
 -- TODO use Octo.nvim for Github integration
 -- https://github.com/pwntester/octo.nvim
@@ -126,6 +130,21 @@ require'lspconfig'.fsautocomplete.setup{
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
 -- ########### Configure plugins ###########
+
+-- ## Builtin ##
+
+    -- Appending to root dir pattern
+lvim.builtin.project.patterns[#lvim.builtin.project.patterns+1]="*.sln"
+
+    -- LSP, was copied from lvim configs, these mappings are not loaded with lvim for some reason
+lvim.keys.normal_mode["K"]  = ":lua vim.lsp.buf.hover()<cr>"
+lvim.keys.normal_mode["gd"] = ":lua vim.lsp.buf.definition()<cr>"
+lvim.keys.normal_mode["gD"] = ":lua vim.lsp.buf.declaration()<cr>"
+lvim.keys.normal_mode["gr"] = ":lua vim.lsp.buf.references()<cr>"
+lvim.keys.normal_mode["gI"] = ":lua vim.lsp.buf.implementation()<cr>"
+lvim.keys.normal_mode["gs"] = ":lua vim.lsp.buf.signature_help()<cr>"
+lvim.keys.normal_mode["gp"] = ":lua require'lvim.lsp.peek'.Peek('definition')<cr>"
+lvim.keys.normal_mode["gl"] = ":lua require'lvim.lsp.handlers'.show_line_diagnostics()<cr>"
 
 -- ## Whichkey ##
 
@@ -178,6 +197,9 @@ lvim.keys.normal_mode["<C-y>"] = ":lua require('harpoon.ui').nav_file(1)<cr>"
 lvim.keys.normal_mode["<C-n>"] = ":lua require('harpoon.ui').nav_file(2)<cr>"
 lvim.keys.normal_mode["<C-m>"] = ":lua require('harpoon.ui').nav_file(3)<cr>"
 
+-- Lightspeed
+lvim.keys.normal_mode["<C-S>"] = ":<Plug>Lightspeed_S<enter>"
+lvim.keys.normal_mode["<C-s>"] = ":<Plug>Lightspeed_s<enter>"
 
 -- Nvim-tree
 lvim.builtin.nvimtree.hide_dotfiles = false
@@ -188,14 +210,4 @@ lvim.leader = "space"
 lvim.keys.normal_mode["<C-s>"] = ":w<cr>" -- save file
 lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather just quit
 vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
-
--- LSP, was copied from lvim configs, these mappings are not loaded with lvim for some reason
-lvim.keys.normal_mode["K"]  = ":lua vim.lsp.buf.hover()<cr>"
-lvim.keys.normal_mode["gd"] = ":lua vim.lsp.buf.definition()<cr>"
-lvim.keys.normal_mode["gD"] = ":lua vim.lsp.buf.declaration()<cr>"
-lvim.keys.normal_mode["gr"] = ":lua vim.lsp.buf.references()<cr>"
-lvim.keys.normal_mode["gI"] = ":lua vim.lsp.buf.implementation()<cr>"
-lvim.keys.normal_mode["gs"] = ":lua vim.lsp.buf.signature_help()<cr>"
-lvim.keys.normal_mode["gp"] = ":lua require'lvim.lsp.peek'.Peek('definition')<cr>"
-lvim.keys.normal_mode["gl"] = ":lua require'lvim.lsp.handlers'.show_line_diagnostics()<cr>"
 
