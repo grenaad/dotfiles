@@ -13,30 +13,25 @@ alias mkdir="mkdir -pv"
 alias jupyterlab_docker='docker run -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -v $HOME:/home/jovyan/work jupyter/datascience-notebook start.sh jupyter lab --LabApp.token='
 alias jupyterlab='jupyter lab --LabApp.token='
 alias java_config='sudo update-alternatives --config java'
+# accces with http://localhost:9000 
 alias portainer="docker run -d -p 9000:9000 --restart always -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer"
+# kubernetes
+alias kc="kubectx"
+alias kns="kubens"
+alias s="stern"
+alias obsvirt="sudo modprobe -r v4l2loopback;obs"
 
-# RibGrep and FZF
-# See refence: https://dev.to/matrixersp/how-to-use-fzf-with-ripgrep-to-selectively-ignore-vcs-files-4e27
-# using 'bat' with color as a preview for 'fzf'
-export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
-export FZF_DEFAULT_COMMAND='rg --files --hidden --follow'
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-# alias fz="rg --files --hidden --follow -g '!{node_modules,.git}' | fzf"
+###### OS Specific ######
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export LC_ALL=en_US.UTF-8 # was required for macos
+fi
 
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     alias bat="batcat" # command is batcat if you are on Debian or Ubuntu
 fi
 
-# accces with http://localhost:9000 
 alias yabai_windows="yabai -m query --windows"
 alias yabai_start="yabai &; disown"
-
-alias obsvirt="sudo modprobe -r v4l2loopback;obs"
-
-# kubernetes
-alias kc="kubectx"
-alias kns="kubens"
-alias s="stern"
 
 ###### Environment Variables ######
 # dotnet core, opt out of dotnet telemetry data
@@ -44,23 +39,23 @@ export DOTNET_CLI_TELEMETRY_OPTOUT='true'
 # History Size
 export HISTSIZE=10000
 
+     ### RibGrep and FZF ###
+# See refence: https://dev.to/matrixersp/how-to-use-fzf-with-ripgrep-to-selectively-ignore-vcs-files-4e27
+# using 'bat' with color as a preview for 'fzf'
+export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
+export FZF_DEFAULT_COMMAND='rg --files --hidden --follow'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+# alias fz="rg --files --hidden --follow -g '!{node_modules,.git}' | fzf"
 # scripts or symlinked to this location and it is not in path in macos
 export PATH="$PATH:$HOME/.local/bin"
 
-# export DOTNET_HOST_PATH="$(which dotnet)"
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    export LC_ALL=en_US.UTF-8 # was required for macos
-fi
+###### General Settings ######
 
 export VISUAL=lvim;
 export EDITOR=lvim;
 
-###### General Settings ######
-
 # Activate vi mode with <Escape>
 set -o vi
-
 
 ###### Work ######
 alias runstubs="cd ~/work/checkout-local/master;git pull origin master;./go run  --without checkout checkout-stubs"
