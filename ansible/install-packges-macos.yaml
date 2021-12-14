@@ -6,7 +6,6 @@
     homebrew_installed_packages:
       - docker
       - docker-compose
-      - docker-machine
       - jq
       - tmux
       - ffmpeg

@@ -108,7 +108,7 @@ lvim.plugins = {
       }
 }
 
-vim.cmd("set textwidth=100") 
+vim.cmd("set textwidth=150")
 -- vim.cmd([[
 --     augroup FSharp_AutoRefreshCodeLens
 --         autocmd!
@@ -175,7 +175,6 @@ lvim.builtin.which_key.mappings["r"] = {
 }
 
 -- Trouble
-
 -- jump to the previous item, skipping the groups
 lvim.keys.normal_mode["<C-]>"] = ":lua require('trouble').previous({skip_groups = true, jump = true})<cr>"
 -- jump to the next item, skipping the groups
@@ -184,11 +183,6 @@ lvim.keys.normal_mode["<C-[>"] = ":lua require('trouble').next({skip_groups = tr
 lvim.builtin.which_key.mappings.t = { -- Trouble, jump to lsp error diagnostics
     name = "Diagnostics",
     t = { "<cmd>TroubleToggle<cr>", "Trouble" },
-    w = { "<cmd>TroubleToggle lsp_workspace_diagnostics<cr>", "Workspace" },
-    d = { "<cmd>TroubleToggle lsp_document_diagnostics<cr>", "Document" },
-    q = { "<cmd>TroubleToggle quickfix<cr>", "Quickfix" },
-    l = { "<cmd>TroubleToggle loclist<cr>", "Loclist" },
-    r = { "<cmd>TroubleToggle lsp_references<cr>", "References" },
 }
 
 -- Markdown
@@ -206,10 +200,6 @@ lvim.keys.normal_mode["<C-y>"] = ":lua require('harpoon.ui').nav_file(1)<cr>"
 lvim.keys.normal_mode["<C-n>"] = ":lua require('harpoon.ui').nav_file(2)<cr>"
 lvim.keys.normal_mode["<C-m>"] = ":lua require('harpoon.ui').nav_file(3)<cr>"
 
--- Lightspeed
-lvim.keys.normal_mode["<C-S>"] = ":<Plug>Lightspeed_S<enter>"
-lvim.keys.normal_mode["<C-s>"] = ":<Plug>Lightspeed_s<enter>"
-
 -- Nvim-tree
 lvim.builtin.nvimtree.hide_dotfiles = false
 
@@ -218,5 +208,5 @@ lvim.builtin.nvimtree.hide_dotfiles = false
 lvim.leader = "space"
 lvim.keys.normal_mode["<C-s>"] = ":w<cr>" -- save file
 lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather just quit
-vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
+-- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
 
