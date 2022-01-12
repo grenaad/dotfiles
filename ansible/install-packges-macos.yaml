@@ -41,6 +41,7 @@
       - iterm2
       - obs
       - postman
+      - transmission
       - visual-studio-code
 
   roles:

@@ -61,8 +61,9 @@ set -o vi
 alias runstubs="cd ~/work/checkout-local/master;git pull origin master;./go run  --without checkout checkout-stubs"
 alias runiam="cd ~/work/checkout-local/master;git pull origin master;./go run --no-stubs  --without checkout checkout-stubs"
 alias runclean="cd ~/work/checkout-local/master;./go clean"
-alias runacceptance="cd ~/work/checkout-acceptance-tests/master;git pull origin master;npm run parallel-local -- 15"
+alias runacceptance="cd ~/work/checkout-acceptance-tests/master;git pull origin master;npm run parallel-local -- 10"
 alias tmwprojects="create_tmux_window ~/projects"
 alias tmwwork="create_tmux_window ~/work"
 alias tmswork="create_tmux_session ~/work" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}
+alias rmcontainers="docker rm $(docker container ls -aq)"
 
