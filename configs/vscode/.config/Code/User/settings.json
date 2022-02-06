@@ -93,11 +93,12 @@
 "editor.cursorStyle": "line",
     "editor.wordSeparators": "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-",
     "editor.wordWrap": "off",
+    "dart.lineLength": 150,
     "[dart]": {
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
         "editor.rulers": [
-            80
+            150
         ],
         "editor.selectionHighlight": false,
         "editor.suggest.snippetsPreventQuickSuggestions": false,
