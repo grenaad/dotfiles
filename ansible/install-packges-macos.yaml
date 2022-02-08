@@ -43,6 +43,7 @@
       - postman
       - transmission
       - visual-studio-code
+      - mailspring
 
   roles:
     - geerlingguy.mac.homebrew

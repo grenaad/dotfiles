@@ -113,5 +113,7 @@
     "liveshare.audio.startCallOnShare": true,
     "dart.openDevTools": "flutter",
     "liveshare.audio.joinCallBehavior": "accept",
-    "workbench.colorTheme": "Gruvbox Dark Hard"
+    "workbench.colorTheme": "Gruvbox Dark Hard",
+    "kite.showWelcomeNotificationOnStartup": false,
+    "cmake.configureOnOpen": false
 }
