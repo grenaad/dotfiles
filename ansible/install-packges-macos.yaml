@@ -23,6 +23,7 @@
       - bat
       - rustup
       - duti
+      - kustomize
 
     homebrew_cask_apps:
       - docker
@@ -44,6 +45,8 @@
       - transmission
       - visual-studio-code
       - mailspring
+      - onlyoffice
+      - zotero
 
   roles:
     - geerlingguy.mac.homebrew
