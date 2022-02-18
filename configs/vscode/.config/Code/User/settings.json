@@ -115,5 +115,7 @@
     "liveshare.audio.joinCallBehavior": "accept",
     "workbench.colorTheme": "Gruvbox Dark Hard",
     "kite.showWelcomeNotificationOnStartup": false,
-    "cmake.configureOnOpen": false
+    "cmake.configureOnOpen": false,
+    "kite.enableSnippets": false,
+    "kite.startKiteEngineOnStartup": false
 }

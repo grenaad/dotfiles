@@ -58,6 +58,7 @@ export EDITOR=lvim;
 set -o vi
 
 ###### Work ######
+alias runatg="cd ~/work/checkout-local/master;git pull origin master;./go run --atg-proxy-only"
 alias runstubs="cd ~/work/checkout-local/master;git pull origin master;./go run  --without checkout checkout-stubs"
 alias runiam="cd ~/work/checkout-local/master;git pull origin master;./go run --no-stubs  --without checkout checkout-stubs"
 alias runclean="cd ~/work/checkout-local/master;./go clean"
