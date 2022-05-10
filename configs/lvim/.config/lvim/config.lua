@@ -24,6 +24,7 @@ lvim.builtin.treesitter.ensure_installed = {
   "java",
   "kotlin",
   "yaml",
+  "dart",
 }
 lvim.builtin.treesitter.ignore_install = { "haskell" }
 lvim.builtin.treesitter.highlight.enabled = true
@@ -128,6 +129,7 @@ require'lspconfig'.fsautocomplete.setup{
     cmd = {'fsautocomplete', '--background-service-enabled' },
     root_dir = util.root_pattern('*.sln', '.git'),
 }
+require'lspconfig'.dartls.setup{}
 -- autocommand are done by plugin PhilT/vim-fsharp
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
