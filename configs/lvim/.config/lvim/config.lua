@@ -25,6 +25,7 @@ lvim.builtin.treesitter.ensure_installed = {
   "kotlin",
   "yaml",
   "dart",
+  "json"
 }
 lvim.builtin.treesitter.ignore_install = { "haskell" }
 lvim.builtin.treesitter.highlight.enabled = true
@@ -140,7 +141,7 @@ require'lspconfig'.dartls.setup{}
     -- Appending to root dir pattern
 lvim.builtin.project.patterns[#lvim.builtin.project.patterns+1]="*.sln"
 
-    -- LSP, was copied from lvim configs, these mappings are not loaded with lvim for some reason
+-- LSP, was copied from lvim configs, these mappings are not loaded with lvim for some reason
 lvim.keys.normal_mode["K"]  = ":lua vim.lsp.buf.hover()<cr>"
 lvim.keys.normal_mode["gd"] = ":lua vim.lsp.buf.definition()<cr>"
 lvim.keys.normal_mode["gD"] = ":lua vim.lsp.buf.declaration()<cr>"
