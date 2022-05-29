@@ -27,9 +27,6 @@
 
     "editor.fontFamily": "MesloLGS NF",
 
-    // Python
-    "python.languageServer": "Pylance",
-
     // General
     "editor.bracketPairColorization.enabled":true,
     "json.maxItemsComputed": 10000,
@@ -117,8 +114,5 @@
     "dart.openDevTools": "flutter",
     "liveshare.audio.joinCallBehavior": "accept",
     "workbench.colorTheme": "Gruvbox Dark Hard",
-    "kite.showWelcomeNotificationOnStartup": false,
     "cmake.configureOnOpen": false,
-    "kite.enableSnippets": false,
-    "kite.startKiteEngineOnStartup": false
 }
