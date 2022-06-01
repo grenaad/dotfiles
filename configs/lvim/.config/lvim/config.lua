@@ -52,13 +52,6 @@ lvim.plugins = {
         })
       end,
     },
-    { -- brew install gnu-sed
-    "windwp/nvim-spectre",
-      event = "BufRead",
-      config = function()
-        require("spectre").setup()
-      end,
-    },
     {"PhilT/vim-fsharp"}, -- Fsharp syntax and indenting
     {"ruifm/gitlinker.nvim",
       event = "BufRead",
@@ -74,10 +67,6 @@ lvim.plugins = {
           }
       end,
       requires = "nvim-lua/plenary.nvim",
-    },
-    {"ggandor/lightspeed.nvim",
-      event = "BufRead",
-      -- vim.cmd("unmap s | unmap S") -- or unmap f | unmap F | unmap t | unmap T
     },
     {"kevinhwang91/nvim-bqf",
       event = { "BufRead", "BufNew" },
@@ -110,6 +99,7 @@ lvim.plugins = {
       }
 }
 
+vim.opt.colorcolumn = "150"
 vim.cmd("set textwidth=150")
 -- vim.cmd([[
 --     augroup FSharp_AutoRefreshCodeLens
@@ -130,7 +120,16 @@ require'lspconfig'.fsautocomplete.setup{
     cmd = {'fsautocomplete', '--background-service-enabled' },
     root_dir = util.root_pattern('*.sln', '.git'),
 }
-require'lspconfig'.dartls.setup{}
+
+require'lspconfig'.dartls.setup{
+  settings ={
+  dart = {
+    lineLength = 150,
+    completeFunctionCalls = true,
+    showTodos = true
+    }
+  }
+}
 -- autocommand are done by plugin PhilT/vim-fsharp
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
@@ -168,14 +167,6 @@ lvim.builtin.which_key.mappings.g.p = { "<cmd>Neogit push<cr>", "Push" }
 lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>", "Search dotfiles" }
 lvim.builtin.which_key.mappings["F"] = lvim.builtin.which_key.mappings["f"]
 lvim.builtin.which_key.mappings["f"] = { "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>", "Find all files" }
-
--- Spectre, Search and replace
-lvim.builtin.which_key.mappings["r"] = {
-    name = "Replace",
-    r = { "<cmd>lua require('spectre').open()<cr>", "Replace" },
-    w = { "<cmd>lua require('spectre').open_visual({select_word=true})<cr>", "Replace current word" },
-    f = { "<cmd>lua require('spectre').open_file_search()<cr>", "Replace in current buffer only" },
-}
 
 -- Trouble
 -- jump to the previous item, skipping the groups
