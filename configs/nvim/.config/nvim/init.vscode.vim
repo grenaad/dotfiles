@@ -39,15 +39,14 @@ command! -complete=file -nargs=? New call <SID>split('h', '__vscode_new__')
 command! -complete=file -nargs=? Vnew call <SID>split('v', '__vscode_new__')
 command! -bang Only if <q-bang> == '!' | call <SID>closeOtherEditors() | else | call VSCodeNotify('workbench.action.joinAllGroups') | endif
 
-nnoremap <silent> <C-w>s :call <SID>split('h')<CR>
-xnoremap <silent> <C-w>s :call <SID>split('h')<CR>
+nnoremap <silent> <C-w>s :call VSCodeNotify('workbench.action.splitEditorRight')<CR>
+xnoremap <silent> <C-w>s :call VSCodeNotify('workbench.action.splitEditorRight')<CR>
 
-nnoremap <silent> <C-w>v :call <SID>split('v')<CR>
-xnoremap <silent> <C-w>v :call <SID>split('v')<CR>
+nnoremap <silent> <C-w>v :call VSCodeNotify('workbench.action.splitEditorDown')<CR>
+xnoremap <silent> <C-w>v :call VSCodeNotify('workbench.action.splitEditorDown')<CR>
 
 nnoremap <silent> <C-w>n :call <SID>splitNew('h', '__vscode_new__')<CR>
 xnoremap <silent> <C-w>n :call <SID>splitNew('h', '__vscode_new__')<CR>
-
 
 nnoremap <silent> <C-w>= :<C-u>call VSCodeNotify('workbench.action.evenEditorWidths')<CR>
 xnoremap <silent> <C-w>= :<C-u>call VSCodeNotify('workbench.action.evenEditorWidths')<CR>

@@ -132,6 +132,13 @@
       "args": "<C-/>"
     },
     {
+      "key": "h",
+      "name": "no highlight",
+      "type": "command",
+      "command": "vscode-neovim.send",
+      "args": ":noh<CR>"
+    },
+    {
       "key": "b",
       "name": "Buffers/Editors...",
       "type": "bindings",
@@ -385,12 +392,6 @@
       ]
     },
     {
-      "key": "h",
-      "name": "Split Horizontal",
-      "type": "command",
-      "command": "workbench.action.splitEditorDown"
-    },
-    {
       "key": "i",
       "name": "Insert...",
       "type": "bindings",
@@ -632,16 +633,22 @@
       ]
     },
     {
-      "key": "v",
-      "name": "Split Vertical",
-      "type": "command",
-      "command": "workbench.action.splitEditor"
-    },
-    {
       "key": "w",
       "name": "Window...",
       "type": "bindings",
       "bindings": [
+        {
+          "key": "h",
+          "name": "Split Horizontal",
+          "type": "command",
+          "command": "workbench.action.splitEditorDown"
+        },
+        {
+          "key": "v",
+          "name": "Split Vertical",
+          "type": "command",
+          "command": "workbench.action.splitEditor"
+        },
         {
           "key": "W",
           "name": "Focus previous editor group",
