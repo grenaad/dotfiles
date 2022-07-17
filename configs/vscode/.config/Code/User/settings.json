@@ -118,4 +118,5 @@
     "cmake.configureOnOpen": false,
     "git.mergeEditor": true,
     "terminal.integrated.shellIntegration.enabled": true,
+    "vscode-neovim.neovimExecutablePaths.darwin": "/opt/homebrew/bin/nvim",
 }
