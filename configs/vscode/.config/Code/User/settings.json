@@ -116,4 +116,6 @@
     "liveshare.audio.joinCallBehavior": "accept",
     "workbench.colorTheme": "Gruvbox Dark Hard",
     "cmake.configureOnOpen": false,
+    "git.mergeEditor": true,
+    "terminal.integrated.shellIntegration.enabled": true,
 }

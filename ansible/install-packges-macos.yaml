@@ -47,6 +47,7 @@
       - mailspring
       - onlyoffice
       - zotero
+      - authy
 
   roles:
     - geerlingguy.mac.homebrew
