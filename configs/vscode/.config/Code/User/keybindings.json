@@ -37,37 +37,21 @@
         "command": "git.openFile",
         "when": "isInDiffEditor && editorTextFocus"
     },
+    // When focus is in source control sidebar
     {
-        "key": "ctrl+alt+p",
-        "command": "git.push",
-    },
-    // open git source control side window
-    {
-        "key": "ctrl+shift+g",
-        "command": "workbench.view.scm",
-        "when": "!gitlens:disabled && config.gitlens.keymap == 'chorded'"
-    },
-    // when focus is in source control sidebar, allow to stage all
-    {
-        "key": "ctrl+a",
+        "key": "S",
         "command": "git.stageAll",
         "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
     },
-    // Stage selected file when Source Control is open
     {
-        "key": "ctrl+s",
+        "key": "s",
         "command": "git.stage",
-        "when": "sideBarFocus && activeViewlet == 'workbench.view.scm'"
+        "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
     },
     {
-        "key": "ctrl+shift+s",
+        "key": "x",
         "command": "git.unstage",
-        "when": "sideBarFocus && activeViewlet == 'workbench.view.scm'"
-    },
-    {
-        "key": "ctrl+r",
-        "command": "git.revertChange",
-        "when": "sideBarFocus && activeViewlet == 'workbench.view.scm'"
+        "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
     },
     // When in diff, allow for single line staging/unstaging and reverts
     {

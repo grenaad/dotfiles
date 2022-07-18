@@ -697,5 +697,6 @@
       "type": "command",
       "command": "workbench.action.toggleZenMode"
     }
-  ],
+],
+"workbench.activityBar.visible": false,
 }
