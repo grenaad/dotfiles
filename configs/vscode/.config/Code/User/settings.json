@@ -3,26 +3,19 @@
   "git.autofetch": true,
   "git.confirmSync": false,
   "git.enableSmartCommit": true,
+  "git.mergeEditor": true,
   "git.ignoredRepositories": [
     "/opt/homebrew/bin/flutter",
     "/opt/homebrew/Caskroom/flutter/2.8.1/flutter"
   ],
-  // Vscode specific
+
+  // Vscode 
   "telemetry.telemetryLevel": "off",
-  "vim.sneak": true,
   "settingsSync.keybindingsPerPlatform": false,
-  "git.mergeEditor": true,
-  "terminal.integrated.shellIntegration.enabled": true,
-  // Indentation
-  "editor.detectIndentation": false,
-  "editor.stickyTabStops": true,
-  "editor.tabSize": 4,
-  // Terminal
-  "workbench.list.automaticKeyboardNavigation": false,
-  "terminal.integrated.fontFamily": "MesloLGS NF",
-  "editor.fontFamily": "MesloLGS NF",
+
   // General
-  "editor.bracketPairColorization.enabled": true,
+    // set to false to allow keybindings in the navigator
+  "workbench.list.automaticKeyboardNavigation": false, 
   "json.maxItemsComputed": 10000,
   "workbench.editorAssociations": {
     "*.ipynb": "jupyter-notebook"
@@ -34,7 +27,6 @@
     "**/.settings": true,
     "**/obj": true
   },
-  // "terminal.integrated.inheritEnv": false,
   "files.associations": {
     "*.mqh": "cpp",
     "*.mq4": "cpp",
@@ -43,6 +35,8 @@
   "search.exclude": {
     "**/obj": true
   },
+  "terminal.integrated.shellIntegration.enabled": true,
+  "terminal.integrated.fontFamily": "MesloLGS NF",
   "terminal.integrated.defaultProfile.osx": "zsh",
   "terminal.integrated.defaultProfile.linux": "zsh",
   "terminal.integrated.defaultProfile.windows": "PowerShell",
@@ -81,10 +75,8 @@
     }
   },
   "security.workspace.trust.untrustedFiles": "open",
-  "editor.cursorStyle": "line",
-  "editor.wordSeparators": "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-",
-  "editor.wordWrap": "off",
-  "dart.lineLength": 150,
+
+  // Dart lang
   "[dart]": {
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
@@ -97,25 +89,29 @@
     "editor.tabCompletion": "onlySnippets",
     "editor.wordBasedSuggestions": false
   },
-  "notebook.cellToolbarLocation": {
-    "default": "right",
-    "jupyter-notebook": "left"
-  },
-  "liveshare.audio.startCallOnShare": true,
   "dart.openDevTools": "flutter",
+  "dart.lineLength": 150,
+
   "liveshare.audio.joinCallBehavior": "accept",
   "workbench.colorTheme": "Gruvbox Dark Hard",
-  "cmake.configureOnOpen": false,
 
   // Plugin vscode-neovim
   "vscode-neovim.neovimExecutablePaths.darwin": "/opt/homebrew/bin/nvim",
   "vscode-neovim.neovimInitVimPaths.darwin": "$HOME/.config/nvim/init.vim",
 
   // General editor
+  "editor.cursorStyle": "line",
+  "editor.wordSeparators": "/\\()\"':,.;<>~!@#$%^&*|+=[]{}`?-",
+  "editor.wordWrap": "off",
   "editor.lineNumbers": "relative",
   "editor.suggestSelection": "first",
   "editor.scrollbar.horizontal": "hidden",
   "editor.scrollbar.vertical": "hidden",
+  "editor.detectIndentation": false,
+  "editor.stickyTabStops": true,
+  "editor.tabSize": 4,
+  "editor.fontFamily": "MesloLGS NF",
+  "editor.bracketPairColorization.enabled": true,
 
   // Plugin WhichKey 
   "whichkey.sortOrder": "alphabetically",
@@ -696,6 +692,12 @@
       "name": "Toggle zen mode",
       "type": "command",
       "command": "workbench.action.toggleZenMode"
+    },
+    {
+      "key": "F",
+      "name": "Format Document",
+      "type": "command",
+      "command": "editor.action.formatDocument"
     }
 ],
 "workbench.activityBar.visible": false,

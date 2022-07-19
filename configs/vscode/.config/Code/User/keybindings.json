@@ -9,18 +9,18 @@
     },
     // cycle to next terminal session    
     {
-        "key": "ctrl+]",
+        "key": "ctrl+l",
         "command": "workbench.action.terminal.focusNext",
         "when": "terminalFocus"
     },
     // cycle to prev terminal session    
     {
-        "key": "ctrl+[",
+        "key": "ctrl+h",
         "command": "workbench.action.terminal.focusPrevious",
         "when": "terminalFocus"
     },
     {
-        "key": "alt+m",
+        "key": "ctrl+m",
         "command": "markdown.showPreviewToSide",
         "when": "!notebookEditorFocused && editorLangId == 'markdown'"
     },
@@ -37,9 +37,9 @@
         "command": "git.openFile",
         "when": "isInDiffEditor && editorTextFocus"
     },
-    // When focus is in source control sidebar
+    // Source control
     {
-        "key": "S",
+        "key": "shift+s",
         "command": "git.stageAll",
         "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
     },
@@ -53,21 +53,25 @@
         "command": "git.unstage",
         "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
     },
-    // When in diff, allow for single line staging/unstaging and reverts
+    {
+        "key": "ctrl+j",
+        "command": "workbench.action.compareEditor.nextChange",
+        "when": "isInDiffEditor && textCompareEditorVisible"
+    },
+    {
+        "key": "ctrl+k",
+        "command": "workbench.action.compareEditor.previousChange",
+        "when": "isInDiffEditor && textCompareEditorVisible"
+    },
     {
         "key": "ctrl+s",
         "command": "git.stageSelectedRanges",
-        "when": "isInDiffEditor && editorTextFocus"
+        "when": "isInDiffEditor && textCompareEditorVisible"
     },
     {
-        "key": "ctrl+shift+s",
-        "command": "git.unstageSelectedRanges",
-        "when": "isInDiffEditor && editorTextFocus"
-    },
-    {
-        "key": "ctrl+r",
+        "key": "ctrl+x",
         "command": "git.revertSelectedRanges",
-        "when": "isInDiffEditor && editorTextFocus"
+        "when": "isInDiffEditor && textCompareEditorVisible"
     },
     // **** Open Settings ****    
     {
