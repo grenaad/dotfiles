@@ -9,7 +9,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Installing brew ..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   else
-    echo "Brew already installed. SKipping"
+    echo "Brew already installed. Skipping"
   fi
 
   # Ensure Apple's command line tools are installed
