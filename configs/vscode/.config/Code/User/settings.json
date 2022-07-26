@@ -137,6 +137,12 @@
       "args": "<C-/>"
     },
     {
+      "key": "G",
+      "name": "Show source control",
+      "type": "command",
+      "command": "workbench.view.scm"
+    },
+    {
       "key": "b",
       "name": "Buffers/Editors...",
       "type": "bindings",
@@ -318,7 +324,7 @@
     },
     {
       "key": "e",
-      "name": "Toggle Explorer",
+      "name": "Toggle SideBar",
       "type": "command",
       "command": "workbench.action.toggleSidebarVisibility"
     },

@@ -37,16 +37,21 @@
         "command": "git.openFile",
         "when": "isInDiffEditor && editorTextFocus"
     },
+    {
+        "key": "ctrl+n",
+        "command": "editor.action.marker.next",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+p",
+        "command": "editor.action.marker.prev",
+        "when": "editorTextFocus"
+    },
     // Source control
     {
         "key": "ctrl+x",
         "command": "git.unstageSelectedRanges",
         "when": "isInDiffEditor"
-    },
-    {
-        "key": "x",
-        "command": "git.revertselectedranges",
-        "when": "isInDiffEditor && textCompareEditorActive"
     },
     {
         "key": "s",
@@ -69,7 +74,7 @@
         "when": "isInDiffEditor && textCompareEditorVisible"
     },
     {
-        "key": "alt+s",
+        "key": "ctrl+shift+s",
         "command": "git.stageSelectedRanges",
         "when": "isInDiffEditor && textCompareEditorVisible"
     },
@@ -111,8 +116,12 @@
         "command": "-actions.findWithSelection"
       },
       {
-        "key": "ctrl+e",
+        "key": "alt+e",
         "command": "workbench.view.explorer"
+      },
+      {
+        "key": "ctrl+e",
+        "command": "workbench.action.toggleSidebarVisibility"
       },
       {
         "key": "shift+ctrl+e",
@@ -162,11 +171,6 @@
         "key": "tab",
         "command": "workbench.action.quickOpenNavigateNext",
         "when": "inQuickOpen"
-      },
-      {
-        "key": "shit+tab",
-        "command": "selectPrevSuggestion",
-        "when": "editorTextFocus && suggestWidgetMultipleSuggestions && suggestWidgetVisible"
       },
       {
         "key": "shift+tab",
