@@ -89,10 +89,6 @@
         "command": "workbench.action.openSettingsJson"
     },
     {
-        "key": "ctrl+shift+z",
-        "command": "workbench.action.closeActiveEditor"
-    },
-    {
         "key": "ctrl+w",
         "command": "workbench.action.terminal.kill",
         "when": "terminalFocus"
@@ -108,24 +104,12 @@
         "when": "editorHasDocumentFormattingProvider && editorTextFocus && !editorReadonly && !inCompositeEditor"
     },
       {
-        "key": "shift+ctrl+e",
-        "command": "actions.findWithSelection"
-      },
-      {
         "key": "ctrl+e",
-        "command": "-actions.findWithSelection"
+          "command": "workbench.view.explorer"
       },
       {
         "key": "alt+e",
         "command": "workbench.view.explorer"
-      },
-      {
-        "key": "ctrl+e",
-        "command": "workbench.action.toggleSidebarVisibility"
-      },
-      {
-        "key": "shift+ctrl+e",
-        "command": "-workbench.view.explorer"
       },
       {
         "key": "r",
