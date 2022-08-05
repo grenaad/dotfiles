@@ -10,8 +10,8 @@ mklink /h "C:\Users\ice\.ideavimrc" "C:\Users\ice\projects\dotfiles\.ideavimrc"
 mkdir "C:\Users\ice\AppData\Roaming\Code\User"
 del "C:\Users\ice\AppData\Roaming\Code\User\settings.json"
 del "C:\Users\ice\AppData\Roaming\Code\User\keybindings.json"
-mklink /h "C:\Users\ice\AppData\Roaming\Code\User\keybindings.json" "C:\Users\ice\projects\dotfiles\vscode\keybindings.json" 
-mklink /h "C:\Users\ice\AppData\Roaming\Code\User\settings.json" "C:\Users\ice\projects\dotfiles\vscode\settings.json" 
+mklink /h "C:\Users\ice\AppData\Roaming\Code\User\keybindings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\keybindings.json" 
+mklink /h "C:\Users\ice\AppData\Roaming\Code\User\settings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\settings.json" 
 ```
 
 [Meslo Nerd fonts](https://github.com/romkatv/dotfiles-public/tree/master/.local/share/fonts/NerdFonts)
