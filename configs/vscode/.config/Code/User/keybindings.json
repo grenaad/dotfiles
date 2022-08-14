@@ -59,6 +59,11 @@
         "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
     },
     {
+        "key": "shift+s",
+        "command": "git.stageAll",
+        "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"
+    },
+    {
         "key": "x",
         "command": "git.unstage",
         "when": "listFocus && sideBarFocus && activeViewlet == 'workbench.view.scm'"

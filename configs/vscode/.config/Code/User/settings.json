@@ -706,5 +706,5 @@
       "command": "editor.action.formatDocument"
     }
 ],
-"workbench.activityBar.visible": false,
+"python.terminal.activateEnvInCurrentTerminal": true,
 }
