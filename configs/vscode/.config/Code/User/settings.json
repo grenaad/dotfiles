@@ -710,4 +710,5 @@
     }
 ],
 "python.terminal.activateEnvInCurrentTerminal": true,
+"editor.stickyScroll.enabled": true
 }
