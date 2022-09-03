@@ -7,11 +7,15 @@ mklink /h "C:\Users\ice\.ideavimrc" "C:\Users\ice\projects\dotfiles\.ideavimrc"
 ``` 
 
 ``` cmd
-mkdir "C:\Users\ice\AppData\Roaming\Code\User"
-del "C:\Users\ice\AppData\Roaming\Code\User\settings.json"
-del "C:\Users\ice\AppData\Roaming\Code\User\keybindings.json"
-mklink /h "C:\Users\ice\AppData\Roaming\Code\User\keybindings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\keybindings.json" 
-mklink /h "C:\Users\ice\AppData\Roaming\Code\User\settings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\settings.json" 
+mkdir "C:\Users\ice\AppData\Roaming\VSCodium\User"
+del "C:\Users\ice\AppData\Roaming\VSCodium\User\settings.json"
+del "C:\Users\ice\AppData\Roaming\VSCodium\User\keybindings.json"
+mklink /h "C:\Users\ice\AppData\Roaming\VSCodium\User\keybindings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\keybindings.json"
+mklink /h "C:\Users\ice\AppData\Roaming\VSCodium\User\settings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\settings.json"
+
+"C:\Program Files\VSCodium\VSCodium.exe" --install-extension asvetliakov.vscode-neovim
+"C:\Program Files\VSCodium\VSCodium.exe" --install-extension VSpaceCode.whichkey
+"C:\Program Files\VSCodium\VSCodium.exe" --install-extension jdinhlife.gruvbox
 ```
 
 [Meslo Nerd fonts](https://github.com/romkatv/dotfiles-public/tree/master/.local/share/fonts/NerdFonts)
@@ -23,7 +27,6 @@ cat ~/projects/dotfiles/vscode/extensions.txt | xargs -n 1 code-insiders --insta
 # Install packages using winget
 ``` powershell
 winget install -e Microsoft.WindowsTerminal
-winget install -e Microsoft.VisualStudioCode
 winget install -e Microsoft.AzureDataStudio
 winget install -e Mozilla.Firefox
 winget install -e Google.Chrome --force
@@ -46,6 +49,8 @@ winget install -e JetBrains.IntelliJIDEA.Ultimate
 winget install -e Google.AndroidStudio
 winget install -e 7zip.7zip
 winget install -e Ytmdesktop.Ytmdesktop
+winget install Neovim.Neovim
+winget install -e --id VSCodium.VSCodium
 ```
 
 # Install packages using choco
