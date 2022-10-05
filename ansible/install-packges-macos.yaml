@@ -48,6 +48,7 @@
       - onlyoffice
       - zotero
       - authy
+      - derailed/k9s/k9s
 
   roles:
     - geerlingguy.mac.homebrew
