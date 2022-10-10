@@ -710,5 +710,10 @@
     }
 ],
 "python.terminal.activateEnvInCurrentTerminal": true,
-"editor.stickyScroll.enabled": true
+// Format
+"editor.stickyScroll.enabled": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    }
 }

@@ -149,6 +149,10 @@ lvim.keys.normal_mode["gs"] = ":lua vim.lsp.buf.signature_help()<cr>"
 lvim.keys.normal_mode["gp"] = ":lua require'lvim.lsp.peek'.Peek('definition')<cr>"
 lvim.keys.normal_mode["gl"] = ":lua require'lvim.lsp.handlers'.show_line_diagnostics()<cr>"
 
+-- Move between buffers
+lvim.keys.normal_mode["<S-L>"] = ":bnext<CR>"
+lvim.keys.normal_mode["<S-H>"] = ":bprev<CR>"
+
 -- ## Whichkey ##
 
 -- Git Linker
