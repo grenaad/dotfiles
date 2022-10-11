@@ -20,6 +20,7 @@ alias kc="kubectx"
 alias kns="kubens"
 alias s="stern"
 alias obsvirt="sudo modprobe -r v4l2loopback;obs"
+alias python="python3"
 
 ###### OS Specific ######
 if [[ "$OSTYPE" == "darwin"* ]]; then

@@ -6,7 +6,7 @@ lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "left"
 -- lvim.builtin.nvimtree.show_icons.git = 0
 lvim.log.level = "warn"
-lvim.format_on_save = true
+lvim.format_on_save = false
 lvim.colorscheme = "onedarker"
 vim.opt.relativenumber = true
 -- if you don't want all the parsers change this to a table of the ones you want
@@ -152,6 +152,11 @@ lvim.keys.normal_mode["gl"] = ":lua require'lvim.lsp.handlers'.show_line_diagnos
 -- Move between buffers
 lvim.keys.normal_mode["<S-L>"] = ":bnext<CR>"
 lvim.keys.normal_mode["<S-H>"] = ":bprev<CR>"
+
+-- Move between quicklist items
+-- harpoon is bined to these maps
+-- lvim.keys.normal_mode["<C-n>"] = ":cnext<CR>"
+-- lvim.keys.normal_mode["<C-p>"] = ":cprev<CR>"
 
 -- ## Whichkey ##
 
