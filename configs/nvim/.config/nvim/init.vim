@@ -11,6 +11,8 @@ set clipboard=unnamedplus               " Copy paste between vim and everything 
 vnoremap < <gv
 vnoremap > >gv
 
+vnoremap <leader>P \"_dP
+
 " if global var 'vscode' exist, then nvim is been called from vscode
 if exists('g:vscode')
   source ~/.config/nvim/init.vscode.vim
