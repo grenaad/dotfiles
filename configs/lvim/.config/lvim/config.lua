@@ -7,7 +7,7 @@ lvim.builtin.nvimtree.setup.view.side = "left"
 -- lvim.builtin.nvimtree.show_icons.git = 0
 lvim.log.level = "warn"
 lvim.format_on_save = false
-lvim.colorscheme = "onedarker"
+-- lvim.colorscheme = "onedarker"
 vim.opt.relativenumber = true
 -- if you don't want all the parsers change this to a table of the ones you want
 lvim.builtin.treesitter.ensure_installed = {
@@ -139,24 +139,13 @@ require 'lspconfig'.dartls.setup {
 -- Appending to root dir pattern
 lvim.builtin.project.patterns[#lvim.builtin.project.patterns + 1] = "*.sln"
 
--- LSP, was copied from lvim configs, these mappings are not loaded with lvim for some reason
-lvim.keys.normal_mode["K"]  = ":lua vim.lsp.buf.hover()<cr>"
-lvim.keys.normal_mode["gd"] = ":lua vim.lsp.buf.definition()<cr>"
-lvim.keys.normal_mode["gD"] = ":lua vim.lsp.buf.declaration()<cr>"
-lvim.keys.normal_mode["gr"] = ":lua vim.lsp.buf.references()<cr>"
-lvim.keys.normal_mode["gI"] = ":lua vim.lsp.buf.implementation()<cr>"
-lvim.keys.normal_mode["gs"] = ":lua vim.lsp.buf.signature_help()<cr>"
-lvim.keys.normal_mode["gp"] = ":lua require'lvim.lsp.peek'.Peek('definition')<cr>"
-lvim.keys.normal_mode["gl"] = ":lua require'lvim.lsp.handlers'.show_line_diagnostics()<cr>"
-
 -- Move between buffers
 lvim.keys.normal_mode["<S-L>"] = ":bnext<CR>"
 lvim.keys.normal_mode["<S-H>"] = ":bprev<CR>"
 
 -- Move between quicklist items
--- harpoon is bined to these maps
--- lvim.keys.normal_mode["<C-n>"] = ":cnext<CR>"
--- lvim.keys.normal_mode["<C-p>"] = ":cprev<CR>"
+lvim.keys.normal_mode["<C-n>"] = ":cnext<CR>"
+lvim.keys.normal_mode["<C-p>"] = ":cprev<CR>"
 
 -- ## Whichkey ##
 
@@ -194,16 +183,17 @@ lvim.builtin.which_key.mappings.t = { -- Trouble, jump to lsp error diagnostics
 lvim.builtin.which_key.mappings.m = { "<cmd>Glow<cr>", "View Markdown files" }
 
 -- Harpoon
+
 lvim.builtin.which_key.mappings.n = {
   name = "Harpoon",
   m = { "<cmd>lua require('harpoon.ui').toggle_quick_menu()<cr>", "Quick Menu" },
   a = { "<cmd>lua require('harpoon.mark').add_file()<cr>", "Add File" },
+  n = { "<cmd>lua require('harpoon.ui').nav_next()<cr>", "Next"},
+  p = { "<cmd>lua require('harpoon.ui').nav_prev()<cr>", "Previous"},
+  j = { "<cmd>lua require('harpoon.ui').nav_file(1)<cr>", "File 1"},
+  k = { "<cmd>lua require('harpoon.ui').nav_file(2)<cr>", "File 2"},
+  l = { "<cmd>lua require('harpoon.ui').nav_file(3)<cr>", "File 3"},
 }
-lvim.keys.normal_mode["<C-n>"] = ":lua require('harpoon.ui').nav_next()<cr>"
-lvim.keys.normal_mode["<C-p>"] = ":lua require('harpoon.ui').nav_prev()<cr>"
-lvim.keys.normal_mode["<C-y>"] = ":lua require('harpoon.ui').nav_file(1)<cr>"
-lvim.keys.normal_mode["<C-n>"] = ":lua require('harpoon.ui').nav_file(2)<cr>"
-lvim.keys.normal_mode["<C-m>"] = ":lua require('harpoon.ui').nav_file(3)<cr>"
 
 -- Nvim-tree
 lvim.builtin.nvimtree.hide_dotfiles = false
@@ -213,7 +203,7 @@ lvim.builtin.nvimtree.hide_dotfiles = false
 lvim.leader = "space"
 lvim.keys.normal_mode["<C-s>"] = ":w<cr>" -- save file
 lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather just quit
--- vim.cmd("vnoremap <leader>p \"_dP") -- when pasting, move the word to the _ register (delete it), and paste
+vim.cmd("vnoremap <leader>P \"_dP") -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
 
 
