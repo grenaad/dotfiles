@@ -67,35 +67,16 @@ lvim.plugins = {
     end,
     requires = "nvim-lua/plenary.nvim",
   },
-  { "kevinhwang91/nvim-bqf",
-    event = { "BufRead", "BufNew" },
-    config = function()
-      require("bqf").setup({
-        auto_enable = true,
-        preview = {
-          win_height = 12,
-          win_vheight = 12,
-          delay_syntax = 80,
-          border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
-        },
-        func_map = {
-          vsplit = "",
-          ptogglemode = "z,",
-          stoggleup = "",
-        },
-        filter = {
-          fzf = {
-            action_for = { ["ctrl-s"] = "split" },
-            extra_opts = { "--bind", "ctrl-o:toggle-all", "--prompt", "> " },
-          },
-        },
-      })
-    end,
-  },
   { "ThePrimeagen/harpoon" },
   { "meain/vim-package-info",
     run = "npm install"
-  }
+  },
+  {
+  "windwp/nvim-ts-autotag",
+  config = function()
+    require("nvim-ts-autotag").setup()
+  end,
+},
 }
 
 vim.opt.colorcolumn = "150"
@@ -205,5 +186,4 @@ lvim.keys.normal_mode["<C-s>"] = ":w<cr>" -- save file
 lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather just quit
 vim.cmd("vnoremap <leader>P \"_dP") -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
-
 
