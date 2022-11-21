@@ -25,6 +25,8 @@
     - include: tasks/kubectx.yaml
     - include: tasks/stern.yaml
 
+    # need to install lazygit and lvm
+
     # - name: Install nvim
     #   shell: |
     #         curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage --output "$HOME/.local/bin/nvim"

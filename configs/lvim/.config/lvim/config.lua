@@ -43,14 +43,7 @@ lvim.plugins = {
   { "sindrets/diffview.nvim",
     event = "BufRead",
   },
-  { 'TimUntersberger/neogit',
-    config = function()
-      require("neogit").setup({
-        disable_commit_confirmation = true,
-        integrations = { diffview = true }
-      })
-    end,
-  },
+  { 'kdheepak/lazygit.nvim'},
   { "PhilT/vim-fsharp" }, -- Fsharp syntax and indenting
   { "ruifm/gitlinker.nvim",
     event = "BufRead",
@@ -155,17 +148,21 @@ lvim.keys.normal_mode["<C-]>"] = ":lua require('trouble').previous({skip_groups 
 -- jump to the next item, skipping the groups
 lvim.keys.normal_mode["<C-[>"] = ":lua require('trouble').next({skip_groups = true, jump = true})<cr>"
 
-lvim.builtin.which_key.mappings.t = { -- Trouble, jump to lsp error diagnostics
+lvim.builtin.which_key.mappings["t"] = {-- Trouble, jump to lsp error diagnostics
   name = "Diagnostics",
-  t = { "<cmd>TroubleToggle<cr>", "Trouble" },
+  t = { "<cmd>TroubleToggle<cr>", "trouble" },
+  w = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "workspace" },
+  d = { "<cmd>TroubleToggle document_diagnostics<cr>", "document" },
+  q = { "<cmd>TroubleToggle quickfix<cr>", "quickfix" },
+  l = { "<cmd>TroubleToggle loclist<cr>", "loclist" },
+  r = { "<cmd>TroubleToggle lsp_references<cr>", "references" },
 }
 
 -- Markdown
 lvim.builtin.which_key.mappings.m = { "<cmd>Glow<cr>", "View Markdown files" }
 
 -- Harpoon
-
-lvim.builtin.which_key.mappings.n = {
+lvim.builtin.which_key.mappings.n = { -- Navigation
   name = "Harpoon",
   m = { "<cmd>lua require('harpoon.ui').toggle_quick_menu()<cr>", "Quick Menu" },
   a = { "<cmd>lua require('harpoon.mark').add_file()<cr>", "Add File" },

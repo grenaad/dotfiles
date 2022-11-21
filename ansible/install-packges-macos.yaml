@@ -24,6 +24,7 @@
       - rustup
       - duti
       - kustomize
+      - lazygit
 
     homebrew_cask_apps:
       - docker
