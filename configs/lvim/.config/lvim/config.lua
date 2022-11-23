@@ -127,14 +127,6 @@ lvim.keys.normal_mode["<C-p>"] = ":cprev<CR>"
 lvim.builtin.which_key.mappings.g.y = { "<cmd>lua require('gitlinker').get_buf_range_url('n')<cr>",
   "Copy permalink to clipboard" }
 
--- Neogit and Diffview
-lvim.builtin.which_key.mappings.g.w = { "<cmd>Neogit<cr>", "Status Window" }
-lvim.builtin.which_key.mappings.g.d = { "<cmd>DiffviewOpen<cr>", "Diff view" }
-lvim.builtin.which_key.mappings.g.D = { "<cmd>DiffviewOpen master<cr>", "Diff view against master" }
-lvim.builtin.which_key.mappings.g.t = { "<cmd>DiffviewClose<cr>", "Close Diff view" }
-lvim.builtin.which_key.mappings.g.P = lvim.builtin.which_key.mappings.g.p -- switch preview chunk with Git Push
-lvim.builtin.which_key.mappings.g.p = { "<cmd>Neogit push<cr>", "Push" }
-
 -- Telescope
 lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>",
   "Search dotfiles" }
