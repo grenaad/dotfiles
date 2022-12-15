@@ -87,9 +87,11 @@ lvim.plugins = {
     requires = "nvim-lua/plenary.nvim",
   },
   { "ThePrimeagen/harpoon" },
+  { "ThePrimeagen/vim-be-good" },
   { "meain/vim-package-info",
     run = "npm install"
   },
+
   {
   "windwp/nvim-ts-autotag",
   config = function()
@@ -199,6 +201,6 @@ lvim.builtin.nvimtree.hide_dotfiles = false
 lvim.leader = "space"
 lvim.keys.normal_mode["<C-s>"] = ":w<cr>" -- save file
 lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather just quit
-vim.cmd("vnoremap <leader>P \"_dP") -- when pasting, move the word to the _ register (delete it), and paste
+-- vim.cmd('vnoremap <C-p> "_dP') -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
 
