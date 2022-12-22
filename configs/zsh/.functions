@@ -42,13 +42,6 @@ function vimz() {
   vim "$(fz $1)"
  }
 
-function cdf() {
-  path=$(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
-  if [ "$path" != "" ]; then
-    builtin cd $path
-  fi
-}
-
 function list_dir_with_fzf (){
   # giving a path, pipe all the directories in the path to fzf
   # cd $(ls -d $1*/ | fzf)
@@ -68,13 +61,18 @@ function git_fetch {
 function clone_worktree {
 # clone the git repo into a bare repo and setup the directory structure
 		REPO_NAME=$(echo "$1" | awk -F "[./]" '{print $(NF-1)}')
-		mkdir $REPO_NAME
+		mkdir $REP$pathO_NAME
 		git clone --bare $1 $REPO_NAME/.bare/
 		echo "gitdir: ./.bare" > $REPO_NAME/.git
     cd $REPO_NAME
 }
 
-function dkill {
+function dkill() {
   docker rm -vf $(docker ps -aq)
+}
+
+function cdf {
+  path=$(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+  builtin cd $path
 }
 
