@@ -1,21 +1,29 @@
 #!/usr/bin/env bash
 #
-# tmux-sessionizer path 
-#
-# Description
-# Giving a path, create a new tmux session with the
-# basename of the path as the session name
-# Example:
-# tmux-sessionizer /foo/bar
+# tmux-sessionizer [path] 
+# if no path is giving, using fzf, search in default locations
 
-path="$1"
-base_name=$(basename $path)
-session_name=$(echo $base_name | tr "./" "__")
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    selected=$(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+fi
 
-tmux has-session -t $session_name 2>/dev/null || tmux new-session -d -s $session_name
+if [[ -z $selected ]]; then
+    exit 0
+fi
 
-tmux send-keys -t $session_name "cd $path" ENTER
-tmux send-keys -t $session_name "clear" ENTER
+selected_name=$(basename "$selected" | tr . _)
+tmux_running=$(pgrep tmux)
 
-echo "$session_name"
+if [[ -z $TMUX ]] && [[ -z $tmux_running ]]; then
+    tmux new-session -s $selected_name -c $selected
+    exit 0
+fi
+
+if ! tmux has-session -t=$selected_name 2> /dev/null; then
+    tmux new-session -ds $selected_name -c $selected
+fi
+
+tmux switch-client -t $selected_name
 

@@ -28,6 +28,7 @@ lvim.builtin.treesitter.ensure_installed = {
 }
 lvim.builtin.treesitter.ignore_install = { "haskell" }
 lvim.builtin.treesitter.highlight.enabled = true
+lvim.builtin.nvimtree.setup.view.adaptive_size = true
 
 -- ########### Additional Plugins ###########
 

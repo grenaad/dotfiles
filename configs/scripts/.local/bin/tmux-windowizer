@@ -24,7 +24,15 @@ if [[ "$1" == "--printtarget" ]]; then
     PRINT_TARGET=true
 fi
 
-path="$1"
+if [[ $# -eq 1 ]]; then
+    path=$1
+else
+    path=$(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+fi
+
+echo "$path"
+
+path="$path"
 base_name=$(basename $path)
 session_name=$(tmux display-message -p "#S")
 clean_name=$(echo $base_name | tr "./" "__")
@@ -43,6 +51,8 @@ if [ "$1" != "" ]; then
   tmux send-keys -t $target "$*"
 fi
 
+# for debugging
 if [ "$PRINT_TARGET" = true ]; then
   echo "$target"
 fi
+

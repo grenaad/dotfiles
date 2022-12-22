@@ -79,16 +79,7 @@ function clone_worktree {
     cd $REPO_NAME
 }
 
-function thermal() {
-    sudo smbios-thermal-ctl -g  | grep -A1 "Current Thermal Modes:"
-    echo "\nSet Thermal Mode:"
-    select yn in "Balanced" "Cool_Bottom" "Quiet" "Performance"; do
-        case $yn in
-            Balanced ) sudo smbios-thermal-ctl --set-thermal-mode balanced; break;;
-            Cool_Bottom ) sudo smbios-thermal-ctl --set-thermal-mode cool-bottom; break;;
-            Quiet ) sudo smbios-thermal-ctl --set-thermal-mode quiet; break;; 
-            Performance ) sudo smbios-thermal-ctl --set-thermal-mode performance; break;;
-        esac
-    done
+function dkill {
+  docker rm -vf $(docker ps -aq)
 }
 
