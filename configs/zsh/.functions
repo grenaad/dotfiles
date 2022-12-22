@@ -1,13 +1,13 @@
 
-function remove_carriage_returns {
+function remove_carriage_returns (){
 	sed -i 's/\r//g' $1
 }
 
-function remove_all_carriage_returns {
+function remove_all_carriage_returns (){
     find . -name $1 | xargs sed -i 's/\r//g'
 }
 
-function f {
+function f () {
 	find $1 -name $2 2>/dev/null
 }
 
@@ -16,21 +16,21 @@ function kill_port {
 	kill -9 $(lsof -i TCP:$1 | grep LISTEN | awk '{print $2}')
 }
 
-function cd {
+function cd() {
     builtin cd "$@" && ls -F
 }
 
 # convert_vid inputfile outputfile
-function convert_vid () {
+function convert_vid() {
 	ffmpeg -i $1 -vcodec libx264 -acodec aac $2.mp4
 }
 
-function convert_scale_to_phone () {
+function convert_scale_to_phone() {
   ffmpeg -i $1 -vf scale=480:-1 $2
 }
 
 # convert_vid inputfile outputfile
-function convert_audio () {
+function convert_audio() {
 	ffmpeg -i $1 -acodec aac $2.aac
 }
 
@@ -42,7 +42,7 @@ function vimz() {
   vim "$(fz $1)"
  }
 
-function list_dir_with_fzf (){
+function list_dir_with_fzf() {
   # giving a path, pipe all the directories in the path to fzf
   # cd $(ls -d $1*/ | fzf)
   # ls -d $1*/ | fzf
@@ -50,7 +50,7 @@ function list_dir_with_fzf (){
   fzf
 }
 
-function git_fetch {
+function git_fetch()  {
     # for some reason git fetch does not work without removing/adding remote repo
     remote=$(git remote -v | sed -e 's/([^()]*)//g' | head -n 1)
     git remote rm origin
@@ -58,10 +58,10 @@ function git_fetch {
     git fetch --prune --all
 }
 
-function clone_worktree {
+function clone_worktree()  {
 # clone the git repo into a bare repo and setup the directory structure
 		REPO_NAME=$(echo "$1" | awk -F "[./]" '{print $(NF-1)}')
-		mkdir $REP$pathO_NAME
+		mkdir $REPO_NAME
 		git clone --bare $1 $REPO_NAME/.bare/
 		echo "gitdir: ./.bare" > $REPO_NAME/.git
     cd $REPO_NAME
@@ -71,8 +71,7 @@ function dkill() {
   docker rm -vf $(docker ps -aq)
 }
 
-function cdf {
-  path=$(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
-  builtin cd $path
+function cdf() {
+  builtin cd $(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
 }
 
