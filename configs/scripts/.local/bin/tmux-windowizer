@@ -1,45 +1,35 @@
 #!/usr/bin/env bash
 
-# tmux-windowizer [--printtarget] path [command]
+# tmux-windowizer [path] [command]
 #
 # Description
 # This must be executed in a tmux session
 # This will create a new window in the current tmux session.
 # The new window's name will be the basename of the path eg. bar if path=/foo/bar.
-# The new window's working directory will set to the giving path.
+# If no path is giving, use fzf to search for folder
 # The giving command argument are executed in the new window.
 #
 # options:
-# --printtarget if flag exist, print the target, <sessionId>:<windowId>, to the 
-#               current terminal window when the script ends.
 # command       execute this command in the new window.
 #
 # example:
-# tmux-windowizer --printtarget /foo/bar echo "Hello"
+# tmux-windowizer /foo/bar echo "Hello"
 
 # Debugging
-PRINT_TARGET=false
-if [[ "$1" == "--printtarget" ]]; then
-    shift
-    PRINT_TARGET=true
-fi
-
 if [[ $# -eq 1 ]]; then
     path=$1
 else
     path=$(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
-echo "$path"
-
 path="$path"
 base_name=$(basename $path)
 session_name=$(tmux display-message -p "#S")
-clean_name=$(echo $base_name | tr "./" "__")
-target="$session_name:$clean_name"
+window_name=$(echo $base_name | tr "./" "__")
+target="$session_name:$window_name"
 
 if ! tmux has-session -t $target 2> /dev/null; then
-  tmux neww -dn $clean_name
+  tmux neww -dn $window_name
 fi
 
 tmux send-keys -t $target "cd $path" ENTER
@@ -51,9 +41,5 @@ if [ "$1" != "" ]; then
   tmux send-keys -t $target "$*"
 fi
 
-tmux select-window -t $target
-
-if [ "$PRINT_TARGET" = true ]; then
-  echo "$target"
-fi
+tmux select-window -t $window_name
 
