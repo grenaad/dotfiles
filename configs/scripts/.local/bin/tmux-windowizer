@@ -17,8 +17,8 @@
 # example:
 # tmux-windowizer --printtarget /foo/bar echo "Hello"
 
+# Debugging
 PRINT_TARGET=false
-
 if [[ "$1" == "--printtarget" ]]; then
     shift
     PRINT_TARGET=true
@@ -51,7 +51,8 @@ if [ "$1" != "" ]; then
   tmux send-keys -t $target "$*"
 fi
 
-# for debugging
+tmux select-window -t $target
+
 if [ "$PRINT_TARGET" = true ]; then
   echo "$target"
 fi
