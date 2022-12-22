@@ -42,24 +42,19 @@ function vimz() {
   vim "$(fz $1)"
  }
 
+function cdf() {
+  path=$(find ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+  if [ "$path" != "" ]; then
+    builtin cd $path
+  fi
+}
+
 function list_dir_with_fzf (){
   # giving a path, pipe all the directories in the path to fzf
   # cd $(ls -d $1*/ | fzf)
   # ls -d $1*/ | fzf
   find $1 -maxdepth 1 -type d -not -path '*/\.*' |
   fzf
-}
-
-function create_tmux_window(){
-  # must run in tmux sessions
-  list_dir_with_fzf $1 |
-  xargs tmux-windowizer --printtarget | # script must be in path
-  xargs tmux switch -t
-}
-
-function create_tmux_session(){
-  list_dir_with_fzf $1 |
-  xargs -I{} tmux-sessionizer {}  # script must be in path
 }
 
 function git_fetch {
