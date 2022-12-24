@@ -11,9 +11,9 @@
     - nvim
 
 - name: Get Lunar vim repo
-  git:
-    repo: git@github.com:LunarVim/LunarVim.git
-    dest: "{{ lookup('env', 'HOME') }}/LunarVim"
+  shell: |
+        cd  "{{ lookup('env', 'HOME') }}/"
+        git clone git@github.com:LunarVim/LunarVim.git
   tags:
     - install
     - dotfiles
