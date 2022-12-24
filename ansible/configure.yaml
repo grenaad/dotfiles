@@ -47,3 +47,4 @@
         line: 'source ~/.zshrc_'
         state: present
         create: yes
+

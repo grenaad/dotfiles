@@ -1,7 +1,7 @@
 - name: Get Lunar vim repo
   git:
     repo: git@github.com:LunarVim/LunarVim.git
-    dest: "{{ lookup('env', 'HOME') }}/projects/LunarVim"
+    dest: "{{ lookup('env', 'HOME') }}/LunarVim"
   tags:
     - install
     - dotfiles
@@ -20,3 +20,4 @@
   tags:
     - install
     - core
+

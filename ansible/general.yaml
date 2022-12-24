@@ -37,7 +37,6 @@
       pip:
         name: youtube-dl
 
-
   vars:
     rustup_cargo_crates:
       - ripgrep

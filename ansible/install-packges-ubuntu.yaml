@@ -12,11 +12,11 @@
   tasks:
     # this block of tasks will use sudo to install packages
     - block:
-        - include: tasks/k8.yaml
+        # - include: tasks/k8.yaml
 
         - name: Install System Packages
           apt:
-            name: ["zsh", "ffmpeg", "fzf", "bat", "ranger", "unzip", "zip", "tldr", "stow", "mpv", "tmux", "make"]
+            name: ["zsh", "ffmpeg", "fzf", "bat", "ranger", "unzip", "zip", "tldr", "stow", "mpv", "tmux", "make", "python3-pip"]
           tags:
             - install
             - core
@@ -27,8 +27,8 @@
     - include: tasks/neovim.yaml
     - include: tasks/lazygit.yaml
 
-
 # docker example
 # https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/
 
 # become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
+#
