@@ -22,10 +22,10 @@
             - core
       become: true
 
-    - include: tasks/kubectx.yaml
-    - include: tasks/stern.yaml
     - include: tasks/neovim.yaml
     - include: tasks/lazygit.yaml
+    # - include: tasks/kubectx.yaml
+    # - include: tasks/stern.yaml
 
 # docker example
 # https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/
