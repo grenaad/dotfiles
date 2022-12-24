@@ -3,7 +3,6 @@
 
 # setup ssh and git
   tasks:
-    - include: tasks/lunarvim.yaml
     - include: tasks/ssh.yaml
     - include: tasks/git.yaml
 
