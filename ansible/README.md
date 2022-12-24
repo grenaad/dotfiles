@@ -2,10 +2,10 @@
 
 - `installl_ansible.sh`
     - To install `ansible` and the roles that it will use.
-- `ansible-playbook general.yaml --ask-become-pass --ask-vault-pass`
-    - Setup ssh, git, rustup, python, nvim, lunar vim
 - `ansible-playbook install-packges-ubuntu.yaml --ask-become-pass`
     - Install packages per OS `ubuntu` or `macos`
+- `ansible-playbook general.yaml --ask-become-pass --ask-vault-pass`
+    - Setup ssh, git, rustup, python, nvim, lunar vim
 - `ansible-playbook configure.yaml`
     - Add configs for all the applications
 

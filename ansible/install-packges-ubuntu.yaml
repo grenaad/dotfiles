@@ -24,21 +24,11 @@
 
     - include: tasks/kubectx.yaml
     - include: tasks/stern.yaml
-
-    # need to install lazygit and lvm
-
-    # - name: Install nvim
-    #   shell: |
-    #         curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage --output "$HOME/.local/bin/nvim"
-    #         chmod +x "$HOME/.local/bin/nvim"
-    #   tags:
-    #     - install
-    #     - core
-    #     - nvim
+    - include: tasks/neovim.yaml
+    - include: tasks/lazygit.yaml
 
 
 # docker example
 # https://www.rechberger.io/tutorial-install-docker-using-ansible-on-a-remote-server/
-
 
 # become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
