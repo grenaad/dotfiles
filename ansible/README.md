@@ -1,4 +1,5 @@
 # Ansible installation and setup
+When running as root, execute script first:`root_user.sh` and restart bash
 
 - `installl_ansible.sh`
     - To install `ansible` and the roles that it will use.

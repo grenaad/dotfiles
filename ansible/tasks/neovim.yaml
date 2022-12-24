@@ -1,9 +1,9 @@
 
 - name: Install nvim
   shell: |
-        mkdir $HOME/.local/bin/
-        curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage --output "$HOME/.local/bin/nvim"
-        chmod u+x "$HOME/.local/bin/nvim"
+        mkdir -p {{ lookup('env', 'HOME') }}/.local/bin/
+        curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage --output "{{ lookup('env', 'HOME') }}/.local/bin/nvim"
+        chmod u+x "{{ lookup('env', 'HOME') }}/.local/bin/nvim"
   tags:
     - install
     - dotfiles
