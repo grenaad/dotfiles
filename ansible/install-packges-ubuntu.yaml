@@ -16,7 +16,7 @@
 
         - name: Install System Packages
           apt:
-            name: ["zsh", "ffmpeg", "fzf", "bat", "ranger", "unzip", "zip", "tldr", "stow", "mpv", "tmux"]
+            name: ["zsh", "ffmpeg", "fzf", "bat", "ranger", "unzip", "zip", "tldr", "stow", "mpv", "tmux", "make"]
           tags:
             - install
             - core
