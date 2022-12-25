@@ -121,3 +121,10 @@ enter           copy it and leave copy mode
 PATH=$PATH:~/.dotnet/tools/
 dotnet tool install --global fsautocomplete
 ```
+
+### Windows 
+For nerdfont installation
+```
+curl.exe https://webi.ms/nerdfont | powershell
+```
+

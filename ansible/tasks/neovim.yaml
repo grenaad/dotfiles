@@ -4,6 +4,8 @@
         mkdir -p {{ lookup('env', 'HOME') }}/.local/bin/
         curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage --output "{{ lookup('env', 'HOME') }}/.local/bin/nvim"
         chmod u+x "{{ lookup('env', 'HOME') }}/.local/bin/nvim"
+  args:
+    executable: /bin/bash
   tags:
     - install
     - dotfiles
