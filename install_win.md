@@ -13,9 +13,12 @@ del "C:\Users\ice\AppData\Roaming\VSCodium\User\keybindings.json"
 mklink /h "C:\Users\ice\AppData\Roaming\VSCodium\User\keybindings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\keybindings.json"
 mklink /h "C:\Users\ice\AppData\Roaming\VSCodium\User\settings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\settings.json"
 
-"C:\Program Files\VSCodium\VSCodium.exe" --install-extension asvetliakov.vscode-neovim
-"C:\Program Files\VSCodium\VSCodium.exe" --install-extension VSpaceCode.whichkey
-"C:\Program Files\VSCodium\VSCodium.exe" --install-extension jdinhlife.gruvbox
+codium  --list-extensions --show-versions 
+
+codium --install-extension asvetliakov.vscode-neovim
+codium --install-extension VSpaceCode.whichkey
+codium --install-extension jdinhlife.gruvbox
+codium  --install-extension eamodio.gitlens
 ```
 
 [Meslo Nerd fonts](https://github.com/romkatv/dotfiles-public/tree/master/.local/share/fonts/NerdFonts)
