@@ -25,6 +25,7 @@
       - duti
       - kustomize
       - lazygit
+      - k9s
 
     homebrew_cask_apps:
       - docker
