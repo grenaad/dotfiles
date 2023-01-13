@@ -34,6 +34,15 @@ lvim.builtin.nvimtree.setup.view.adaptive_size = true
 
 lvim.plugins = {
   {
+    "kevinhwang91/rnvimr",
+      cmd = "RnvimrToggle",
+      config = function()
+        vim.g.rnvimr_draw_border = 1
+        vim.g.rnvimr_pick_enable = 1
+        vim.g.rnvimr_bw_enable = 1
+        end,
+  },
+  {
     "kevinhwang91/nvim-bqf",
     event = { "BufRead", "BufNew" },
     config = function()
@@ -138,6 +147,8 @@ require 'lspconfig'.dartls.setup {
 -- autocommand are done by plugin PhilT/vim-fsharp
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
+vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
+
 -- ########### Configure plugins ###########
 
 -- ## Builtin ##
@@ -172,7 +183,8 @@ lvim.keys.normal_mode["<C-]>"] = ":lua require('trouble').previous({skip_groups 
 -- jump to the next item, skipping the groups
 lvim.keys.normal_mode["<C-[>"] = ":lua require('trouble').next({skip_groups = true, jump = true})<cr>"
 
-lvim.builtin.which_key.mappings["t"] = {-- Trouble, jump to lsp error diagnostics
+-- Trouble, jump to lsp error diagnostics
+lvim.builtin.which_key.mappings["t"] = {
   name = "Diagnostics",
   t = { "<cmd>TroubleToggle<cr>", "trouble" },
   w = { "<cmd>TroubleToggle workspace_diagnostics<cr>", "workspace" },
@@ -180,6 +192,12 @@ lvim.builtin.which_key.mappings["t"] = {-- Trouble, jump to lsp error diagnostic
   q = { "<cmd>TroubleToggle quickfix<cr>", "quickfix" },
   l = { "<cmd>TroubleToggle loclist<cr>", "loclist" },
   r = { "<cmd>TroubleToggle lsp_references<cr>", "references" },
+}
+
+-- Ranger
+lvim.builtin.which_key.mappings.r = {
+  name = "Ranger",
+  r = {"<cmd>RnvimrToggle<cr>", "Show Ranger in floating window"},
 }
 
 -- Markdown
