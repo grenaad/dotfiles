@@ -22,7 +22,6 @@ brew leaves | xargs -n1 brew desc
 - stern: Tail multiple Kubernetes pods & their containers
 - tldr
 - tmux
-- glow
 
 
 ### Cask

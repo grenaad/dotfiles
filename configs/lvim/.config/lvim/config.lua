@@ -62,10 +62,13 @@ lvim.plugins = {
   { "folke/trouble.nvim",
     cmd = "TroubleToggle",
   },
-  { "udalov/kotlin-vim" }, -- Syntax for kotlin
-  { -- brew install glow
-    "npxbr/glow.nvim",
-    ft = { "markdown" } -- markdown previewer
+  { "udalov/kotlin-vim" }, -- Syntax for kotlin 
+  { "iamcco/markdown-preview.nvim", -- markdown previewer
+    run = "cd app && npm install",
+    ft = "markdown",
+    config = function()
+      vim.g.mkdp_auto_start = 1
+    end,
   },
   { "sindrets/diffview.nvim",
     event = "BufRead",
@@ -180,7 +183,12 @@ lvim.builtin.which_key.mappings["t"] = {-- Trouble, jump to lsp error diagnostic
 }
 
 -- Markdown
-lvim.builtin.which_key.mappings.m = { "<cmd>Glow<cr>", "View Markdown files" }
+lvim.builtin.which_key.mappings.m = {
+  name = "Markdown",
+  m = {"<cmd>MarkdownPreview<cr>", "Preview Markdown file"},
+  s = {"<cmd>MarkdownPreviewStop<cr>", "Stop Preview"},
+  t = {"<cmd>MarkdownPreviewToggle<cr>", "Toggle Preview"},
+}
 
 -- Harpoon
 lvim.builtin.which_key.mappings.n = { -- Navigation

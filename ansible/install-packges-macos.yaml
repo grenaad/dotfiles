@@ -18,7 +18,6 @@
       - stern
       - tldr
       - tmux
-      - glow
       - gnu-sed
       - bat
       - rustup
