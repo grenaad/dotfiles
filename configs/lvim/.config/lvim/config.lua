@@ -147,6 +147,7 @@ require 'lspconfig'.dartls.setup {
 -- autocommand are done by plugin PhilT/vim-fsharp
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
+-- set Metatrader file types
 vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 -- ########### Configure plugins ###########
