@@ -6,3 +6,7 @@
   path = ~/.gitconfig-work
 [push]
 	default = current
+[pull]
+	rebase = false
+[fetch]
+	prune = true
