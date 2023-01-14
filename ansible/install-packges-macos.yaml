@@ -18,13 +18,13 @@
       - stern
       - tldr
       - tmux
-      - glow
       - gnu-sed
       - bat
       - rustup
       - duti
       - kustomize
       - lazygit
+      - k9s
 
     homebrew_cask_apps:
       - docker
