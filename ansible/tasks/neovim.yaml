@@ -1,17 +1,3 @@
-
-- name: Install nvim
-  shell: |
-        mkdir -p {{ lookup('env', 'HOME') }}/.local/bin/
-        curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage --output "{{ lookup('env', 'HOME') }}/.local/bin/nvim"
-        chmod u+x "{{ lookup('env', 'HOME') }}/.local/bin/nvim"
-  args:
-    executable: /bin/bash
-  tags:
-    - install
-    - dotfiles
-    - lvim
-    - nvim
-
 - name: Get Lunar vim repo
   git:
     repo: https://github.com/LunarVim/LunarVim.git
@@ -23,16 +9,17 @@
     - dotfiles
     - lvim
 
-- name: Install Lunar vim
+- name: Install Neovim and Lunar vim
   become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
   shell: |
         cd {{ lookup('env', 'HOME') }}/
         ./LunarVim/utils/installer/install-neovim-from-release
-        ./LunarVim/utils/installer/install.sh --no-install-dependencies
+        ./LunarVim/utils/installer/install.sh --no-install-dependencies -y
         rm -rf LunarVim
   args:
     executable: /bin/bash
   tags:
     - install
     - core
-
+    - lvim
+    - nvim

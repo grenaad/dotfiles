@@ -14,7 +14,6 @@
       - nvm
       - pyenv
       - ranger
-      - rust
       - stern
       - tldr
       - tmux
@@ -61,6 +60,10 @@
         src: ~/projects/dotfiles/configs/macos/.yabairc
         path: ~/
         state: hard
+      tags:
+        - install
+        - core
+        - yabai
 
     - name: Install rust
       shell: rustup-init
@@ -69,5 +72,6 @@
       tags:
         - install
         - core
+        - rust
 
     - include: tasks/mpv.yaml
