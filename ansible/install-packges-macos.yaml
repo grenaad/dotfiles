@@ -25,6 +25,7 @@
       - kustomize
       - lazygit
       - k9s
+      - shc
 
     homebrew_cask_apps:
       - docker

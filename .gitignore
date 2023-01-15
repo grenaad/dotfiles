@@ -5,3 +5,4 @@ tags
 *.swp
 
 configs/lvim/.config/lvim/plugin/packer_compiled.lua
+*wget-log*
