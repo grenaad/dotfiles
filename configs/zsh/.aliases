@@ -1,6 +1,6 @@
 ###### Aliases  ######
 
-alias l="lazygit"
+alias lg="lazygit"
 alias r="ranger"
 alias vim="~/.local/bin/lvim"
 alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="
