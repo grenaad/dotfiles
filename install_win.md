@@ -42,8 +42,8 @@ winget install -e SumatraPDF.SumatraPDF
 winget install -e Python.Python
 winget install -e Microsoft.dotnet
 winget install -e TeamViewer.TeamViewer --force
-winget install -e Zotero.Zotero
-winget install -e LibreOffice.LibreOffice
+winget install -e DigitalScholar.Zotero
+winget install -e TheDocumentFoundation.LibreOffice
 winget install -e Valve.Steam
 winget install -e Oracle.VirtualBox
 winget install -e VMware.WorkstationPlayer
