@@ -52,8 +52,9 @@ winget install -e JetBrains.IntelliJIDEA.Ultimate
 winget install -e Google.AndroidStudio
 winget install -e 7zip.7zip
 winget install -e Ytmdesktop.Ytmdesktop
-winget install Neovim.Neovim
 winget install -e --id VSCodium.VSCodium
+winget install -e Chocolatey.ChocolateyGUI
+winget install Neovim.Neovim
 ```
 
 # Install packages using choco
