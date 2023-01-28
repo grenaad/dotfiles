@@ -34,6 +34,19 @@ lvim.builtin.nvimtree.setup.view.adaptive_size = true
 
 lvim.plugins = {
   {
+    "tjdevries/sg.nvim",
+    run = "cargo build --workspace",
+    config = function()
+      require("sg").setup({
+        -- Pass your own custom attach function
+        --    If you do not pass your own attach function, then the following maps are provide:
+        --        - gd -> goto definition
+        --        - gr -> goto references
+        -- on_attach = your_custom_lsp_attach_function
+      })
+    end,
+  },
+  {
     "kevinhwang91/rnvimr",
     cmd = "RnvimrToggle",
     config = function()
