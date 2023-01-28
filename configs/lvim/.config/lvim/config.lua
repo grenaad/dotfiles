@@ -35,43 +35,43 @@ lvim.builtin.nvimtree.setup.view.adaptive_size = true
 lvim.plugins = {
   {
     "kevinhwang91/rnvimr",
-      cmd = "RnvimrToggle",
-      config = function()
-        vim.g.rnvimr_draw_border = 1
-        vim.g.rnvimr_pick_enable = 1
-        vim.g.rnvimr_bw_enable = 1
-        end,
+    cmd = "RnvimrToggle",
+    config = function()
+      vim.g.rnvimr_draw_border = 1
+      vim.g.rnvimr_pick_enable = 1
+      vim.g.rnvimr_bw_enable = 1
+    end,
   },
   {
     "kevinhwang91/nvim-bqf",
     event = { "BufRead", "BufNew" },
     config = function()
-        require("bqf").setup({
-                auto_enable = true,
-                preview = {
-                win_height = 12,
-                win_vheight = 12,
-                delay_syntax = 80,
-                border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
-                },
-                func_map = {
-                vsplit = "",
-                ptogglemode = "z,",
-                stoggleup = "",
-                },
-                filter = {
-                fzf = {
-                action_for = { ["ctrl-s"] = "split" },
-                extra_opts = { "--bind", "ctrl-o:toggle-all", "--prompt", "> " },
-                },
-                },
-                })
+      require("bqf").setup({
+        auto_enable = true,
+        preview = {
+          win_height = 12,
+          win_vheight = 12,
+          delay_syntax = 80,
+          border_chars = { "┃", "┃", "━", "━", "┏", "┓", "┗", "┛", "█" },
+        },
+        func_map = {
+          vsplit = "",
+          ptogglemode = "z,",
+          stoggleup = "",
+        },
+        filter = {
+          fzf = {
+            action_for = { ["ctrl-s"] = "split" },
+            extra_opts = { "--bind", "ctrl-o:toggle-all", "--prompt", "> " },
+          },
+        },
+      })
     end,
   },
   { "folke/trouble.nvim",
     cmd = "TroubleToggle",
   },
-  { "udalov/kotlin-vim" }, -- Syntax for kotlin 
+  { "udalov/kotlin-vim" }, -- Syntax for kotlin
   { "iamcco/markdown-preview.nvim", -- markdown previewer
     run = "cd app && npm install",
     ft = "markdown",
@@ -82,7 +82,7 @@ lvim.plugins = {
   { "sindrets/diffview.nvim",
     event = "BufRead",
   },
-  { 'kdheepak/lazygit.nvim'},
+  { 'kdheepak/lazygit.nvim' },
   { "PhilT/vim-fsharp" }, -- Fsharp syntax and indenting
   { "ruifm/gitlinker.nvim",
     event = "BufRead",
@@ -106,11 +106,11 @@ lvim.plugins = {
   },
 
   {
-  "windwp/nvim-ts-autotag",
-  config = function()
-    require("nvim-ts-autotag").setup()
-  end,
-},
+    "windwp/nvim-ts-autotag",
+    config = function()
+      require("nvim-ts-autotag").setup()
+    end,
+  },
 }
 
 vim.opt.colorcolumn = "150"
@@ -198,15 +198,15 @@ lvim.builtin.which_key.mappings["t"] = {
 -- Ranger
 lvim.builtin.which_key.mappings.r = {
   name = "Ranger",
-  r = {"<cmd>RnvimrToggle<cr>", "Show Ranger in floating window"},
+  r = { "<cmd>RnvimrToggle<cr>", "Show Ranger in floating window" },
 }
 
 -- Markdown
 lvim.builtin.which_key.mappings.m = {
   name = "Markdown",
-  m = {"<cmd>MarkdownPreview<cr>", "Preview Markdown file"},
-  s = {"<cmd>MarkdownPreviewStop<cr>", "Stop Preview"},
-  t = {"<cmd>MarkdownPreviewToggle<cr>", "Toggle Preview"},
+  m = { "<cmd>MarkdownPreview<cr>", "Preview Markdown file" },
+  s = { "<cmd>MarkdownPreviewStop<cr>", "Stop Preview" },
+  t = { "<cmd>MarkdownPreviewToggle<cr>", "Toggle Preview" },
 }
 
 -- Harpoon
@@ -214,11 +214,11 @@ lvim.builtin.which_key.mappings.n = { -- Navigation
   name = "Harpoon",
   m = { "<cmd>lua require('harpoon.ui').toggle_quick_menu()<cr>", "Quick Menu" },
   a = { "<cmd>lua require('harpoon.mark').add_file()<cr>", "Add File" },
-  n = { "<cmd>lua require('harpoon.ui').nav_next()<cr>", "Next"},
-  p = { "<cmd>lua require('harpoon.ui').nav_prev()<cr>", "Previous"},
-  j = { "<cmd>lua require('harpoon.ui').nav_file(1)<cr>", "File 1"},
-  k = { "<cmd>lua require('harpoon.ui').nav_file(2)<cr>", "File 2"},
-  l = { "<cmd>lua require('harpoon.ui').nav_file(3)<cr>", "File 3"},
+  n = { "<cmd>lua require('harpoon.ui').nav_next()<cr>", "Next" },
+  p = { "<cmd>lua require('harpoon.ui').nav_prev()<cr>", "Previous" },
+  j = { "<cmd>lua require('harpoon.ui').nav_file(1)<cr>", "File 1" },
+  k = { "<cmd>lua require('harpoon.ui').nav_file(2)<cr>", "File 2" },
+  l = { "<cmd>lua require('harpoon.ui').nav_file(3)<cr>", "File 3" },
 }
 
 -- Nvim-tree
@@ -232,3 +232,4 @@ lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather jus
 -- vim.cmd('vnoremap <C-p> "_dP') -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
 
+lvim.keys.normal_mode["gd"] = "<cmd>Telescope lsp_definitions<cr>"
