@@ -34,19 +34,6 @@ lvim.builtin.nvimtree.setup.view.adaptive_size = true
 
 lvim.plugins = {
   {
-    "tjdevries/sg.nvim",
-    run = "cargo build --workspace",
-    config = function()
-      require("sg").setup({
-        -- Pass your own custom attach function
-        --    If you do not pass your own attach function, then the following maps are provide:
-        --        - gd -> goto definition
-        --        - gr -> goto references
-        -- on_attach = your_custom_lsp_attach_function
-      })
-    end,
-  },
-  {
     "kevinhwang91/rnvimr",
     cmd = "RnvimrToggle",
     config = function()
@@ -87,7 +74,7 @@ lvim.plugins = {
   },
   { "udalov/kotlin-vim" }, -- Syntax for kotlin
   { "iamcco/markdown-preview.nvim", -- markdown previewer
-    run = "cd app && npm install",
+    build = "cd app && npm install",
     ft = "markdown",
     config = function()
       vim.g.mkdp_auto_start = 1
@@ -111,12 +98,12 @@ lvim.plugins = {
         },
       }
     end,
-    requires = "nvim-lua/plenary.nvim",
+    dependencies = "nvim-lua/plenary.nvim",
   },
   { "ThePrimeagen/harpoon" },
   { "ThePrimeagen/vim-be-good" },
   { "meain/vim-package-info",
-    run = "npm install"
+    build = "npm install"
   },
 
   {
@@ -128,7 +115,7 @@ lvim.plugins = {
 }
 
 vim.opt.colorcolumn = "150"
-vim.cmd("set textwidth=150")
+-- vim.cmd("set textwidth=150")
 -- vim.cmd([[
 --     augroup FSharp_AutoRefreshCodeLens
 --         autocmd!
@@ -162,7 +149,7 @@ require 'lspconfig'.dartls.setup {
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
 -- set Metatrader file types
-vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
+-- vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 -- ########### Configure plugins ###########
 
