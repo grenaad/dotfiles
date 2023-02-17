@@ -56,6 +56,7 @@ lvim.plugins = {
     end,
   },
   {
+    -- Pretty Quick fix window with preview
     "kevinhwang91/nvim-bqf",
     event = { "BufRead", "BufNew" },
     config = function()
@@ -245,4 +246,7 @@ lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather jus
 -- vim.cmd('vnoremap <C-p> "_dP') -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
 
-lvim.keys.normal_mode["gd"] = "<cmd>Telescope lsp_definitions<cr>"
+-- lvim.keys.normal_mode["gd"] = "<cmd>Telescope lsp_definitions<CR>"
+lvim.keys.normal_mode["gr"] = "<cmd>Telescope lsp_references<CR>"
+
+vim.cmd("nnoremap gr :Telescope lsp_references<cr>") -- Allows gf to open non existing files

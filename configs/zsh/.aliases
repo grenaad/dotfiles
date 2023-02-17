@@ -21,6 +21,8 @@ alias kc="kubectx"
 alias kns="kubens"
 alias s="stern"
 alias obsvirt="sudo modprobe -r v4l2loopback;obs"
+alias dev="ssh root@142.93.226.100"
+alias prod="ssh root@178.128.255.129"
 
 ###### OS Specific ######
 if [[ "$OSTYPE" == "darwin"* ]]; then
