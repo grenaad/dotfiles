@@ -22,10 +22,9 @@
             - core
       become: true
 
-    - import_tasks: tasks/neovim.yaml
-    - import_tasks: tasks/neovim.yaml
-    - import_tasks: tasks/sch.yaml
+    - import_tasks: tasks/lazygit.yaml
     - import_tasks: tasks/rust.yaml
+    - import_tasks: tasks/neovim.yaml
     # - include: tasks/kubectx.yaml
     # - include: tasks/stern.yaml
 
