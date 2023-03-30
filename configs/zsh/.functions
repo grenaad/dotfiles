@@ -3,6 +3,10 @@ function remove_carriage_returns (){
 	sed -i 's/\r//g' $1
 }
 
+function myip() {
+  ifconfig | awk '/inet /&&!/127.0.0.1/{print $2;exit}'
+}
+
 function remove_all_carriage_returns (){
     find . -name $1 | xargs sed -i 's/\r//g'
 }
