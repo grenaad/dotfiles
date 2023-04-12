@@ -71,6 +71,11 @@ lvim.plugins = {
   },
   { "folke/trouble.nvim",
     cmd = "TroubleToggle",
+    config = function()
+      require("trouble").setup({
+        auto_preview = false
+      })
+    end
   },
   { "udalov/kotlin-vim" }, -- Syntax for kotlin
   { "iamcco/markdown-preview.nvim", -- markdown previewer
@@ -114,7 +119,7 @@ lvim.plugins = {
   },
 }
 
-vim.opt.colorcolumn = "150"
+vim.opt.colorcolumn = "120"
 -- vim.cmd("set textwidth=150")
 -- vim.cmd([[
 --     augroup FSharp_AutoRefreshCodeLens
@@ -149,7 +154,7 @@ require 'lspconfig'.dartls.setup {
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
 -- set Metatrader file types
--- vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
+vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 -- ########### Configure plugins ###########
 
@@ -172,6 +177,10 @@ lvim.keys.normal_mode["<C-p>"] = ":cprev<CR>"
 lvim.builtin.which_key.mappings.g.y = { "<cmd>lua require('gitlinker').get_buf_range_url('n')<cr>",
   "Copy permalink to clipboard" }
 
+lvim.builtin.which_key.mappings["s"]["w"] = {
+  "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<cr>",
+  "Search Word Under Cursor"
+}
 -- Telescope
 lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>",
   "Search dotfiles" }
@@ -181,9 +190,9 @@ lvim.builtin.which_key.mappings["f"] = { "<cmd>lua require('telescope.builtin').
 
 -- Trouble
 -- jump to the previous item, skipping the groups
-lvim.keys.normal_mode["<C-]>"] = ":lua require('trouble').previous({skip_groups = true, jump = true})<cr>"
+lvim.keys.normal_mode["<C-[>"] = ":lua require('trouble').previous({skip_groups = true, jump = true})<cr>"
 -- jump to the next item, skipping the groups
-lvim.keys.normal_mode["<C-[>"] = ":lua require('trouble').next({skip_groups = true, jump = true})<cr>"
+lvim.keys.normal_mode["<C-]>"] = ":lua require('trouble').next({skip_groups = true, jump = true})<cr>"
 
 -- Trouble, jump to lsp error diagnostics
 lvim.builtin.which_key.mappings["t"] = {
