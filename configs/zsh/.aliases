@@ -3,6 +3,7 @@
 alias lg="lazygit"
 alias r="ranger"
 alias vim="~/.local/bin/lvim"
+alias youtube-dl="yt-dlp"
 alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="
 alias d="cd ~/projects/dotfiles"
 alias ed="vim ~/projects/dotfiles/configs/zsh/.aliases"

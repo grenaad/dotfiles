@@ -32,9 +32,9 @@
         - install
         - core
 
-    - name: Install youtube-dl
+    - name: Install yt-dlp (youtube-dl)
       pip:
-        name: youtube-dl
+        name: yt-dlp
 
   vars:
     rustup_cargo_crates:
