@@ -177,11 +177,10 @@ lvim.keys.normal_mode["<C-p>"] = ":cprev<CR>"
 lvim.builtin.which_key.mappings.g.y = { "<cmd>lua require('gitlinker').get_buf_range_url('n')<cr>",
   "Copy permalink to clipboard" }
 
-lvim.builtin.which_key.mappings["s"]["w"] = {
-  "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<cr>",
-  "Search Word Under Cursor"
-}
 -- Telescope
+lvim.builtin.which_key.mappings.s.w = {
+  "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<cr>",
+  "Search Word Under Cursor" }
 lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>",
   "Search dotfiles" }
 lvim.builtin.which_key.mappings["F"] = lvim.builtin.which_key.mappings["f"]
@@ -242,7 +241,7 @@ lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather jus
 -- vim.cmd('vnoremap <C-p> "_dP') -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
 
--- lvim.keys.normal_mode["gd"] = "<cmd>Telescope lsp_definitions<CR>"
 lvim.keys.normal_mode["gr"] = "<cmd>Telescope lsp_references<CR>"
+lvim.keys.normal_mode["ge"] =   function() vim.diagnostic.open_float() end
 
 vim.cmd("nnoremap gr :Telescope lsp_references<cr>") -- Allows gf to open non existing files
