@@ -716,5 +716,8 @@
     "[javascript]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    "debug.javascript.autoAttachFilter": "always"
+    "debug.javascript.autoAttachFilter": "always",
+    "[fsharp]": {
+        "editor.defaultFormatter": "Ionide.Ionide-fsharp"
+    }
 }

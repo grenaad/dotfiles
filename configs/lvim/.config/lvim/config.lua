@@ -89,7 +89,6 @@ lvim.plugins = {
     event = "BufRead",
   },
   { 'kdheepak/lazygit.nvim' },
-  { "PhilT/vim-fsharp" }, -- Fsharp syntax and indenting
   { "ruifm/gitlinker.nvim",
     event = "BufRead",
     config = function()
@@ -117,29 +116,24 @@ lvim.plugins = {
       require("nvim-ts-autotag").setup()
     end,
   },
+  { "ionide/Ionide-vim",
+    -- config = function()
+    --   require("ionide").setup {
+    --     on_attach = function(client, bufnr)
+    --       on_attach(client, bufnr)
+    --       vim.lsp.codelens.refresh()
+    --     end,
+    --     capabilities = capabilities,
+    --   }
+    -- end
+  },
 }
 
 vim.opt.colorcolumn = "120"
 -- vim.cmd("set textwidth=150")
--- vim.cmd([[
---     augroup FSharp_AutoRefreshCodeLens
---         autocmd!
---         autocmd CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()
---     augroup END
--- ]])
 
 -- TODO use Octo.nvim for Github integration
 -- https://github.com/pwntester/octo.nvim
-
--- TODO Dependency management use vim package for javascript package.json updates
--- https://github.com/meain/vim-package-info
-
--- Fsharp LSP
-local util = require('lspconfig/util')
-require 'lspconfig'.fsautocomplete.setup {
-  cmd = { 'fsautocomplete', '--background-service-enabled' },
-  root_dir = util.root_pattern('*.sln', '.git'),
-}
 
 require 'lspconfig'.dartls.setup {
   settings = {
@@ -150,7 +144,7 @@ require 'lspconfig'.dartls.setup {
     }
   }
 }
--- autocommand are done by plugin PhilT/vim-fsharp
+-- autocommand for fsharp
 -- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
 -- set Metatrader file types
