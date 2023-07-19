@@ -25,6 +25,7 @@
       - lazygit
       - k9s
       - shc
+      - btop
 
     homebrew_cask_apps:
       - docker
