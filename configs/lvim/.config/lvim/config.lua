@@ -144,10 +144,8 @@ require 'lspconfig'.dartls.setup {
     }
   }
 }
--- autocommand for fsharp
--- vim.cmd("au BufNewFile,BufRead *.fs,*.fsx,*.fsi set filetype=fsharp")
 
--- set Metatrader file types
+-- autocommand set Metatrader file types
 vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 -- ########### Configure plugins ###########
@@ -176,7 +174,10 @@ lvim.builtin.which_key.mappings.s.w = {
   "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<cr>",
   "Search Word Under Cursor" }
 lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>",
-  "Search dotfiles" }
+  "Search Dotfiles" }
+lvim.builtin.which_key.mappings.s.P = lvim.builtin.which_key.mappings.s.p
+lvim.builtin.which_key.mappings.s.p = { "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.input('Grep > ') })<cr>",
+  "Search Project" }
 lvim.builtin.which_key.mappings["F"] = lvim.builtin.which_key.mappings["f"]
 lvim.builtin.which_key.mappings["f"] = { "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>",
   "Find all files" }
