@@ -5,13 +5,9 @@ lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "left"
 
--- TODO: change telescopes width, not working
--- Default settings
--- lvim.builtin.telescope.defaults.layout_config.horizontal.mirror = false
--- lvim.builtin.telescope.defaults.layout_config.preview_cutoff = 120
--- lvim.builtin.telescope.defaults.layout_config.vertical.mirror = false
--- lvim.builtin.telescope.defaults.layout_config.width = 0.75
-
+-- Telescope Settings, override defaults
+lvim.builtin.telescope.defaults.layout_strategy = "flex" -- change layout_strategy giving size
+lvim.builtin.telescope.defaults.prompt_prefix = "  "
 lvim.builtin.telescope.defaults.layout_config = {
   -- prompt_position = "top",
   height = 0.9,
