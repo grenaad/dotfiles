@@ -236,7 +236,7 @@ lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather jus
 -- vim.cmd('vnoremap <C-p> "_dP') -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
 
-lvim.keys.normal_mode["gr"] = "<cmd>Telescope lsp_references<CR>"
-lvim.keys.normal_mode["ge"] =   function() vim.diagnostic.open_float() end
+lvim.keys.normal_mode["gR"] = "<cmd>Telescope lsp_references<CR>"
+lvim.keys.normal_mode["ge"] = function() vim.diagnostic.open_float() end
 
-vim.cmd("nnoremap gr :Telescope lsp_references<cr>") -- Allows gf to open non existing files
+-- vim.cmd("nnoremap gr :Telescope lsp_references<cr>")
