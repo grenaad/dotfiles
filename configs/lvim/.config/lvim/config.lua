@@ -37,9 +37,6 @@ lvim.builtin.telescope.defaults.layout_config = {
 }
 
 lvim.builtin.telescope.pickers = {
-  defaults = {
-    layout_strategy = "horizontal"
-  },
   find_files = {
     layout_config = {
       width = 0.95,
