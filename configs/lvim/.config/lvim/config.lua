@@ -1,5 +1,6 @@
 -- ########### General ###########
 lvim.colorscheme = "desert"
+-- lvim.colorscheme = "onedarker"
 -- After changing plugin config exit and reopen LunarVim, Run :PackerInstall :PackerCompile
 lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
@@ -53,7 +54,6 @@ lvim.builtin.telescope.pickers = {
   --
 lvim.log.level = "warn"
 lvim.format_on_save = false
--- lvim.colorscheme = "onedarker"
 vim.opt.relativenumber = true
 -- if you don't want all the parsers change this to a table of the ones you want
 lvim.builtin.treesitter.ensure_installed = {
@@ -267,3 +267,9 @@ lvim.keys.normal_mode["gR"] = "<cmd>Telescope lsp_references<CR>"
 lvim.keys.normal_mode["ge"] = function() vim.diagnostic.open_float() end
 
 -- vim.cmd("nnoremap gr :Telescope lsp_references<cr>")
+
+-- Ionide-vim / fsautocomplete
+-- sending the signature after every cursor move, restarts codelens, causing codelens to flicker
+vim.g["fsharp#show_signature_on_cursor_move"] = 0
+vim.g["fsharp#lsp_codelens"]  = 1
+
