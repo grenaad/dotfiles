@@ -1,5 +1,5 @@
 -- ########### General ###########
-
+lvim.colorscheme = "desert"
 -- After changing plugin config exit and reopen LunarVim, Run :PackerInstall :PackerCompile
 lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
@@ -107,12 +107,6 @@ lvim.plugins = {
   { "ThePrimeagen/harpoon" },
   { "ThePrimeagen/vim-be-good" },
   { "vuki656/package-info.nvim"}, -- check package.json for latest versions of packges
-  {
-    "windwp/nvim-ts-autotag",
-    config = function()
-      require("nvim-ts-autotag").setup()
-    end,
-  },
   { "ionide/Ionide-vim",
     -- config = function()
     --   require("ionide").setup {
