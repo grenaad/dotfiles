@@ -255,6 +255,20 @@ lvim.builtin.which_key.mappings.n = { -- Navigation
 -- Nvim-tree
 lvim.builtin.nvimtree.hide_dotfiles = false
 
+-- Ionide-vim / fsautocomplete
+-- sending the signature after every cursor move, restarts codelens, causing codelens to flicker
+-- only refresh when text has changed
+vim.g["fsharp#show_signature_on_cursor_move"] = 0
+vim.g["fsharp#lsp_codelens"] = 0
+lvim.autocommands = {
+    {
+      { 'TextChanged' }, {
+      pattern = { "*.fs", "*.fsx", "*.fsi" },
+      callback = vim.lsp.codelens.refresh,
+    },
+  }
+}
+
 -- ########### Keymappings  ###########
 
 lvim.leader = "space"
@@ -267,9 +281,4 @@ lvim.keys.normal_mode["gR"] = "<cmd>Telescope lsp_references<CR>"
 lvim.keys.normal_mode["ge"] = function() vim.diagnostic.open_float() end
 
 -- vim.cmd("nnoremap gr :Telescope lsp_references<cr>")
-
--- Ionide-vim / fsautocomplete
--- sending the signature after every cursor move, restarts codelens, causing codelens to flicker
-vim.g["fsharp#show_signature_on_cursor_move"] = 0
-vim.g["fsharp#lsp_codelens"]  = 1
 
