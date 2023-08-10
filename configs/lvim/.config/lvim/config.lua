@@ -106,10 +106,7 @@ lvim.plugins = {
   },
   { "ThePrimeagen/harpoon" },
   { "ThePrimeagen/vim-be-good" },
-  { "meain/vim-package-info",
-    build = "npm install"
-  },
-
+  { "vuki656/package-info.nvim"}, -- check package.json for latest versions of packges
   {
     "windwp/nvim-ts-autotag",
     config = function()
