@@ -1,6 +1,6 @@
 -- ########### General ###########
-lvim.colorscheme = "desert"
--- lvim.colorscheme = "onedarker"
+-- lvim.colorscheme = "desert"
+lvim.colorscheme = "tokyonight-night"
 -- After changing plugin config exit and reopen LunarVim, Run :PackerInstall :PackerCompile
 lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
