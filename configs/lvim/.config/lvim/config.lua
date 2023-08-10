@@ -262,13 +262,24 @@ vim.g["fsharp#show_signature_on_cursor_move"] = 0
 vim.g["fsharp#lsp_codelens"] = 0
 lvim.autocommands = {
     {
+      { 'WinEnter' }, {
+      pattern = { "*.fs", "*.fsx", "*.fsi" },
+      callback = vim.lsp.codelens.refresh,
+      group = "fhsarp_codelens"
+    },
+  },
+}
+
+
+lvim.autocommands = {
+    {
       { 'TextChanged' }, {
       pattern = { "*.fs", "*.fsx", "*.fsi" },
       callback = vim.lsp.codelens.refresh,
+      group = "fhsarp_codelens"
     },
-  }
+  },
 }
-
 -- ########### Keymappings  ###########
 
 lvim.leader = "space"
