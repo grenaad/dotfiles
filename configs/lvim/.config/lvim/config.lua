@@ -4,7 +4,60 @@ lvim.colorscheme = "desert"
 lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "left"
+
+-- TODO: change telescopes width, not working
+-- Default settings
+-- lvim.builtin.telescope.defaults.layout_config.horizontal.mirror = false
+-- lvim.builtin.telescope.defaults.layout_config.preview_cutoff = 120
+-- lvim.builtin.telescope.defaults.layout_config.vertical.mirror = false
+-- lvim.builtin.telescope.defaults.layout_config.width = 0.75
+
+lvim.builtin.telescope.defaults.layout_config = {
+  -- prompt_position = "top",
+  height = 0.9,
+  width = 0.9,
+  bottom_pane = {
+    height = 25,
+    preview_cutoff = 120,
+  },
+  center = {
+    height = 0.4,
+    preview_cutoff = 40,
+    width = 0.5,
+  },
+  cursor = {
+    preview_cutoff = 40,
+  },
+  horizontal = {
+    preview_cutoff = 120,
+    preview_width = 0.6,
+  },
+  vertical = {
+    preview_cutoff = 40,
+  },
+  flex = {
+    flip_columns = 150,
+  },
+}
+
+lvim.builtin.telescope.pickers = {
+  defaults = {
+    layout_strategy = "horizontal"
+  },
+  find_files = {
+    layout_config = {
+      width = 0.95,
+    },
+  },
+  live_grep = {
+    layout_config = {
+      width = 0.95,
+    },
+  },
+}
+
 -- lvim.builtin.nvimtree.show_icons.git = 0
+  --
 lvim.log.level = "warn"
 lvim.format_on_save = false
 -- lvim.colorscheme = "onedarker"
@@ -107,17 +160,7 @@ lvim.plugins = {
   { "ThePrimeagen/harpoon" },
   { "ThePrimeagen/vim-be-good" },
   { "vuki656/package-info.nvim"}, -- check package.json for latest versions of packges
-  { "ionide/Ionide-vim",
-    -- config = function()
-    --   require("ionide").setup {
-    --     on_attach = function(client, bufnr)
-    --       on_attach(client, bufnr)
-    --       vim.lsp.codelens.refresh()
-    --     end,
-    --     capabilities = capabilities,
-    --   }
-    -- end
-  },
+  { "ionide/Ionide-vim"},
 }
 
 vim.opt.colorcolumn = "120"
