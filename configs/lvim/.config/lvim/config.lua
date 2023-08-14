@@ -1,54 +1,12 @@
 -- ########### General ###########
+
+-- vim.cmd("set textwidth=150")
 -- lvim.colorscheme = "desert"
 lvim.colorscheme = "tokyonight-night"
--- After changing plugin config exit and reopen LunarVim, Run :PackerInstall :PackerCompile
+vim.opt.colorcolumn = "120"
 lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "left"
-
--- Telescope Settings, override defaults
-lvim.builtin.telescope.defaults.layout_strategy = "flex" -- change layout_strategy giving size
-lvim.builtin.telescope.defaults.prompt_prefix = "  "
-lvim.builtin.telescope.defaults.layout_config = {
-  -- prompt_position = "top",
-  height = 0.9,
-  width = 0.9,
-  bottom_pane = {
-    height = 25,
-    preview_cutoff = 120,
-  },
-  center = {
-    height = 0.4,
-    preview_cutoff = 40,
-    width = 0.5,
-  },
-  cursor = {
-    preview_cutoff = 40,
-  },
-  horizontal = {
-    preview_cutoff = 120,
-    preview_width = 0.6,
-  },
-  vertical = {
-    preview_cutoff = 40,
-  },
-  flex = {
-    flip_columns = 150,
-  },
-}
-
-lvim.builtin.telescope.pickers = {
-  find_files = {
-    layout_config = {
-      width = 0.95,
-    },
-  },
-  live_grep = {
-    layout_config = {
-      width = 0.95,
-    },
-  },
-}
 
 -- lvim.builtin.nvimtree.show_icons.git = 0
   --
@@ -156,9 +114,6 @@ lvim.plugins = {
   { "ionide/Ionide-vim"},
 }
 
-vim.opt.colorcolumn = "120"
--- vim.cmd("set textwidth=150")
-
 -- TODO use Octo.nvim for Github integration
 -- https://github.com/pwntester/octo.nvim
 
@@ -187,9 +142,12 @@ lvim.keys.normal_mode["<S-L>"] = ":bnext<CR>"
 lvim.keys.normal_mode["<S-H>"] = ":bprev<CR>"
 
 -- Move between quicklist items
-lvim.keys.normal_mode["<C-n>"] = ":cnext<CR>"
-lvim.keys.normal_mode["<C-p>"] = ":cprev<CR>"
+vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz")
+vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz")
 
+-- Move visualy selected line up or down 
+vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
+vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 -- ## Whichkey ##
 
 -- Git Linker
@@ -255,6 +213,50 @@ lvim.builtin.which_key.mappings.n = { -- Navigation
 -- Nvim-tree
 lvim.builtin.nvimtree.hide_dotfiles = false
 
+-- Telescope
+lvim.builtin.telescope.defaults.layout_strategy = "flex" -- change layout_strategy giving size
+lvim.builtin.telescope.defaults.prompt_prefix = "  "
+lvim.builtin.telescope.defaults.layout_config = {
+  -- prompt_position = "top",
+  height = 0.9,
+  width = 0.9,
+  bottom_pane = {
+    height = 25,
+    preview_cutoff = 120,
+  },
+  center = {
+    height = 0.4,
+    preview_cutoff = 40,
+    width = 0.5,
+  },
+  cursor = {
+    preview_cutoff = 40,
+  },
+  horizontal = {
+    preview_cutoff = 120,
+    preview_width = 0.6,
+  },
+  vertical = {
+    preview_cutoff = 40,
+  },
+  flex = {
+    flip_columns = 150,
+  },
+}
+
+lvim.builtin.telescope.pickers = {
+  find_files = {
+    layout_config = {
+      width = 0.95,
+    },
+  },
+  live_grep = {
+    layout_config = {
+      width = 0.95,
+    },
+  },
+}
+
 -- Ionide-vim / fsautocomplete
 -- sending the signature after every cursor move, restarts codelens, causing codelens to flicker
 -- only refresh when text has changed
@@ -269,7 +271,6 @@ lvim.autocommands = {
     },
   },
 }
-
 
 lvim.autocommands = {
     {
