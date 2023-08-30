@@ -1,12 +1,9 @@
 
-function vimz () {
-
-  selected=$(fd --max-depth 6 --type file  | fzf)
-
+function v () {
+  selected=$(fd --max-depth 6 --type file | fzf)
   if [[ -z $selected ]]; then
-   exit 0
+    exit 0
   fi
-
   vim $path
 }
 
