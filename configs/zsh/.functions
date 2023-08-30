@@ -1,6 +1,6 @@
 
 function v () {
-  selected=$(fd --max-depth 6 --type file | fzf)
+  selected=$(fd --max-depth 6 --type file --hidden | fzf)
   if [[ -z $selected ]]; then
     exit 0
   fi
