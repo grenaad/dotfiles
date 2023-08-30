@@ -4,10 +4,10 @@ function v () {
   if [[ -z $selected ]]; then
     exit 0
   fi
-  vim $path
+  vim $selected
 }
 
-function remove_carriage_returns (){
+function remove_carriage_returns () {
 	sed -i 's/\r//g' $1
 }
 
