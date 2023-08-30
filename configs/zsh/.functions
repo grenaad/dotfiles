@@ -1,4 +1,15 @@
 
+function vimz () {
+
+  selected=$(fd --max-depth 6 --type file  | fzf)
+
+  if [[ -z $selected ]]; then
+   exit 0
+  fi
+
+  vim $path
+}
+
 function remove_carriage_returns (){
 	sed -i 's/\r//g' $1
 }
