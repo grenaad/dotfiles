@@ -1,4 +1,4 @@
-
+# List hidden files as well
 function v () {
   selected=$(fd --max-depth 6 --type file --hidden | fzf)
   if [[ -z $selected ]]; then
@@ -6,6 +6,10 @@ function v () {
   fi
   vim $selected
 }
+
+function vimz() {
+  vim "$(fz $1)"
+ }
 
 function remove_carriage_returns () {
 	sed -i 's/\r//g' $1
@@ -48,10 +52,6 @@ function convert_audio() {
 
 function fz() {
   rg --files --follow -g '!{node_modules,.git,.bare}' $1 | fzf
- }
-
-function vimz() {
-  vim "$(fz $1)"
  }
 
 function list_dir_with_fzf() {
