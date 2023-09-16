@@ -138,6 +138,7 @@ vim.cmd("au BufNewFile,BufRead *.functions,*.aliases set filetype=bash")
 
 -- Appending to root dir pattern
 lvim.builtin.project.patterns[#lvim.builtin.project.patterns + 1] = "*.sln"
+lvim.builtin.project.patterns[#lvim.builtin.project.patterns + 1] = "go.mod"
 
 -- Move between buffers
 lvim.keys.normal_mode["<S-L>"] = ":bnext<CR>"
