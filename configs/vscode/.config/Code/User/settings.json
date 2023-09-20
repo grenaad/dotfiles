@@ -719,5 +719,8 @@
     "debug.javascript.autoAttachFilter": "always",
     "[fsharp]": {
         "editor.defaultFormatter": "Ionide.Ionide-fsharp"
-    }
+   },
+"cSpell.userWords": [
+    "backpropagation"
+]
 }
