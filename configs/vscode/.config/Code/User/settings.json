@@ -99,8 +99,8 @@
   // Plugin vscode-neovim
   "vscode-neovim.neovimExecutablePaths.darwin": "/opt/homebrew/bin/nvim",
   "vscode-neovim.neovimInitVimPaths.darwin": "$HOME/.config/nvim/init.vim",
-  "vscode-neovim.neovimExecutablePaths.win32": "C:/Program Files/Neovim/bin/nvim.exe",
-  "vscode-neovim.neovimInitVimPaths.win32": "C:/Users/ice/projects/dotfiles/configs/nvim/.config/nvim/init.vim",
+  "vscode-neovim.useWSL": true,
+  "vscode-neovim.neovimExecutablePaths.linux": "/home/ice/.local/bin/nvim",
 
   // General editor
   "editor.cursorStyle": "line",
