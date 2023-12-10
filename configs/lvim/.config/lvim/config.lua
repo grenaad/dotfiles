@@ -8,6 +8,7 @@ lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "left"
 
+
 -- lvim.builtin.nvimtree.show_icons.git = 0
   --
 lvim.log.level = "warn"
@@ -36,7 +37,15 @@ lvim.builtin.nvimtree.setup.view.adaptive_size = true
 
 -- ########### Additional Plugins ###########
 
+-- java: https://medium.com/@chrisatmachine/lunarvim-as-a-java-ide-da65c4a77fb4
+-- disable the builtin jdtls support, nvim-jdtls will be used
+vim.list_extend(lvim.lsp.automatic_configuration.skipped_servers, { "jdtls" })
+
 lvim.plugins = {
+  {
+    -- TODO: settings are in ftplugin/java.lua, need to setup first
+    "mfussenegger/nvim-jdtls",
+  },
   {
     "kevinhwang91/rnvimr",
     cmd = "RnvimrToggle",
