@@ -706,7 +706,6 @@
       "command": "editor.action.formatDocument"
     }
   ],
-  "python.terminal.activateEnvInCurrentTerminal": true,
   // Format
   "editor.stickyScroll.enabled": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -722,10 +721,9 @@
     "asvetliakov.vscode-neovim": 1
   },
   "editor.minimap.enabled": false,
-  "templ.goplsLog": "~/projects/nurture/logs.txt",
 
   "tailwindCSS.includeLanguages": {
     "javascript": "javascript",
-    "templ": "html",
+    "templ": "html"
   }
 }
