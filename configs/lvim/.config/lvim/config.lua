@@ -141,6 +141,8 @@ vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 vim.cmd("au BufNewFile,BufRead *.js set filetype=typescript")
 
+vim.cmd("au BufNewFile,BufRead *.templ set filetype=html")
+
 -- dotfiles file types
 vim.cmd("au BufNewFile,BufRead *.functions,*.aliases set filetype=bash")
 -- ########### Configure plugins ###########

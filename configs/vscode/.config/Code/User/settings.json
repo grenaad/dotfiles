@@ -9,13 +9,13 @@
     "/opt/homebrew/Caskroom/flutter/2.8.1/flutter"
   ],
 
-  // Vscode 
+  // Vscode
   "telemetry.telemetryLevel": "off",
   "settingsSync.keybindingsPerPlatform": false,
 
   // General
-    // set to false to allow keybindings in the navigator
-  "workbench.list.automaticKeyboardNavigation": false, 
+  // set to false to allow keybindings in the navigator
+  "workbench.list.automaticKeyboardNavigation": false,
   "json.maxItemsComputed": 10000,
   "workbench.editorAssociations": {
     "*.ipynb": "jupyter-notebook"
@@ -27,7 +27,7 @@
     "**/.settings": true,
     "**/obj": true,
     "env/": true
-},
+  },
   "files.associations": {
     "*.mqh": "cpp",
     "*.mq4": "cpp",
@@ -47,7 +47,7 @@
     },
     "bash": {
       "path": "bash"
-    },
+    }
   },
   "terminal.integrated.profiles.osx": {
     "zsh": {
@@ -56,7 +56,7 @@
     "bash": {
       "path": "bash",
       "icon": "terminal-bash"
-    },
+    }
   },
   "terminal.integrated.profiles.windows": {
     "PowerShell": {
@@ -81,14 +81,12 @@
   "[dart]": {
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
-    "editor.rulers": [
-      150
-    ],
+    "editor.rulers": [150],
     "editor.selectionHighlight": false,
     "editor.suggest.snippetsPreventQuickSuggestions": false,
     "editor.suggestSelection": "first",
     "editor.tabCompletion": "onlySnippets",
-    "editor.wordBasedSuggestions": false
+    "editor.wordBasedSuggestions": "off"
   },
   "dart.openDevTools": "flutter",
   "dart.lineLength": 150,
@@ -116,17 +114,16 @@
   "editor.fontFamily": "MesloLGS NF",
   "editor.bracketPairColorization.enabled": true,
 
-  // Plugin WhichKey 
+  // Plugin WhichKey
   "whichkey.sortOrder": "alphabetically",
   "whichkey.bindings": [
-
     {
       "key": "c",
       "name": "Close active editor",
       "type": "command",
       "command": "workbench.action.closeActiveEditor"
     },
-     {
+    {
       "key": ";",
       "name": "commands",
       "type": "command",
@@ -708,19 +705,27 @@
       "type": "command",
       "command": "editor.action.formatDocument"
     }
-],
-"python.terminal.activateEnvInCurrentTerminal": true,
-// Format
-"editor.stickyScroll.enabled": true,
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "[javascript]": {
-      "editor.defaultFormatter": "esbenp.prettier-vscode"
-    },
-    "debug.javascript.autoAttachFilter": "always",
-    "[fsharp]": {
-        "editor.defaultFormatter": "Ionide.Ionide-fsharp"
-   },
-"cSpell.userWords": [
-    "backpropagation"
-]
+  ],
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  // Format
+  "editor.stickyScroll.enabled": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "debug.javascript.autoAttachFilter": "always",
+  "[fsharp]": {
+    "editor.defaultFormatter": "Ionide.Ionide-fsharp"
+  },
+  "cSpell.userWords": ["backpropagation"],
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  },
+  "editor.minimap.enabled": false,
+  "templ.goplsLog": "~/projects/nurture/logs.txt",
+
+  "tailwindCSS.includeLanguages": {
+    "javascript": "javascript",
+    "templ": "html",
+  }
 }

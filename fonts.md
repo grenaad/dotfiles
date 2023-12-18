@@ -5,3 +5,6 @@ Fonts downloaded from:
 
 Another repo with fonts to look into for future:
 [Meslo Nerd fonts](https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Meslo/L)
+
+Brew install fonts
+brew tap homebrew/cask-fonts && brew install --cask font-meslo-lg-nerd-font
