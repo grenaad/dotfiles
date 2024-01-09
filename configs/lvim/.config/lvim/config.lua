@@ -146,41 +146,15 @@ vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 vim.cmd("au BufNewFile,BufRead *.js set filetype=typescript")
 
--- vim.filetype.add({ extension = { templ = "templ" } })
+-- To have html and tailwind lsp, change the file type for temple files to html
 vim.filetype.add({ extension = { templ = "html" } })
-
--- require 'lspconfig'.html.setup {
---   filetypes = {
---     "templ",
---     "html",
---   },
--- }
-
--- require 'lspconfig'.tailwindcss.setup {
---   -- settings = {
---   --   tailwindCSS = {
---   --     classAttributes = { "class", "className", "class:list", "classList", "ngClass" },
---   --   },
---   --   includeLanguages = {
---   --     typescript = "javascript",
---   --     typescriptreact = "javascript",
---   --     templ = "html",
---   --   },
---   -- },
---   filetypes = {
---     "gohtml",
---     "gohtmltmpl",
---     "templ",
---     "css",
---     "scss",
---     "sass",
---     "html",
---     "javascript",
---     "javascriptreact",
---     "typescript",
---     "typescriptreact",
---   },
--- }
+-- Then add html to templ as filetype to use.
+require 'lspconfig'.templ.setup {
+  filetypes = {
+    "templ",
+    "html",
+  },
+}
 
 -- dotfiles file types
 vim.cmd("au BufNewFile,BufRead *.functions,*.aliases set filetype=bash")
