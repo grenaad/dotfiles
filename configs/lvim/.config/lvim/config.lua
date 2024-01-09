@@ -8,6 +8,7 @@ lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "left"
 
+vim.cmd [[autocmd FileType markdown set tw=80 wrap]]
 
 -- lvim.builtin.nvimtree.show_icons.git = 0
   --
@@ -141,7 +142,7 @@ vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 vim.cmd("au BufNewFile,BufRead *.js set filetype=typescript")
 
-vim.cmd("au BufNewFile,BufRead *.templ set filetype=html")
+vim.filetype.add({ extension = { templ = "templ" } })
 
 -- dotfiles file types
 vim.cmd("au BufNewFile,BufRead *.functions,*.aliases set filetype=bash")
