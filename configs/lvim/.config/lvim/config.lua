@@ -11,7 +11,7 @@ lvim.builtin.nvimtree.setup.view.side = "left"
 vim.cmd [[autocmd FileType markdown set tw=80 wrap]]
 
 -- lvim.builtin.nvimtree.show_icons.git = 0
-  --
+--
 lvim.log.level = "warn"
 lvim.format_on_save = false
 vim.opt.relativenumber = true
@@ -83,7 +83,8 @@ lvim.plugins = {
       })
     end,
   },
-  { "folke/trouble.nvim",
+  {
+    "folke/trouble.nvim",
     cmd = "TroubleToggle",
     config = function()
       require("trouble").setup({
@@ -91,28 +92,31 @@ lvim.plugins = {
       })
     end
   },
-  { "udalov/kotlin-vim" }, -- Syntax for kotlin
-  { "iamcco/markdown-preview.nvim", -- markdown previewer
+  { "udalov/kotlin-vim" },          -- Syntax for kotlin
+  {
+    "iamcco/markdown-preview.nvim", -- markdown previewer
     build = "cd app && npm install",
     ft = "markdown",
     config = function()
       vim.g.mkdp_auto_start = 1
     end,
   },
-  { "sindrets/diffview.nvim",
+  {
+    "sindrets/diffview.nvim",
     event = "BufRead",
   },
   { 'kdheepak/lazygit.nvim' },
-  { "ruifm/gitlinker.nvim",
+  {
+    "ruifm/gitlinker.nvim",
     event = "BufRead",
     config = function()
       require("gitlinker").setup {
         opts = {
           -- remote = 'github', -- force the use of a specific remote
-          add_current_line_on_normal_mode = true, -- adds current line nr in the url for normal mode
+          add_current_line_on_normal_mode = true,                           -- adds current line nr in the url for normal mode
           action_callback = require("gitlinker.actions").copy_to_clipboard, -- callback for what to do with the url
-          print_url = true, -- print the url after performing the action
-          mappings = "<leader>gy", -- mapping to call url generation
+          print_url = true,                                                 -- print the url after performing the action
+          mappings = "<leader>gy",                                          -- mapping to call url generation
         },
       }
     end,
@@ -120,8 +124,8 @@ lvim.plugins = {
   },
   { "ThePrimeagen/harpoon" },
   { "ThePrimeagen/vim-be-good" },
-  { "vuki656/package-info.nvim"}, -- check package.json for latest versions of packges
-  { "ionide/Ionide-vim"},
+  { "vuki656/package-info.nvim" }, -- check package.json for latest versions of packges
+  { "ionide/Ionide-vim" },
 }
 
 -- TODO use Octo.nvim for Github integration
@@ -142,7 +146,41 @@ vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
 
 vim.cmd("au BufNewFile,BufRead *.js set filetype=typescript")
 
-vim.filetype.add({ extension = { templ = "templ" } })
+-- vim.filetype.add({ extension = { templ = "templ" } })
+vim.filetype.add({ extension = { templ = "html" } })
+
+-- require 'lspconfig'.html.setup {
+--   filetypes = {
+--     "templ",
+--     "html",
+--   },
+-- }
+
+-- require 'lspconfig'.tailwindcss.setup {
+--   -- settings = {
+--   --   tailwindCSS = {
+--   --     classAttributes = { "class", "className", "class:list", "classList", "ngClass" },
+--   --   },
+--   --   includeLanguages = {
+--   --     typescript = "javascript",
+--   --     typescriptreact = "javascript",
+--   --     templ = "html",
+--   --   },
+--   -- },
+--   filetypes = {
+--     "gohtml",
+--     "gohtmltmpl",
+--     "templ",
+--     "css",
+--     "scss",
+--     "sass",
+--     "html",
+--     "javascript",
+--     "javascriptreact",
+--     "typescript",
+--     "typescriptreact",
+--   },
+-- }
 
 -- dotfiles file types
 vim.cmd("au BufNewFile,BufRead *.functions,*.aliases set filetype=bash")
@@ -162,7 +200,7 @@ lvim.keys.normal_mode["<S-H>"] = ":bprev<CR>"
 vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz")
 vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz")
 
--- Move visualy selected line up or down 
+-- Move visualy selected line up or down
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 -- ## Whichkey ##
@@ -175,10 +213,12 @@ lvim.builtin.which_key.mappings.g.y = { "<cmd>lua require('gitlinker').get_buf_r
 lvim.builtin.which_key.mappings.s.w = {
   "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<cr>",
   "Search Word Under Cursor" }
-lvim.builtin.which_key.mappings.s.d = { "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>",
+lvim.builtin.which_key.mappings.s.d = {
+  "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>",
   "Search Dotfiles" }
 lvim.builtin.which_key.mappings.s.P = lvim.builtin.which_key.mappings.s.p
-lvim.builtin.which_key.mappings.s.p = { "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.input('Grep > ') })<cr>",
+lvim.builtin.which_key.mappings.s.p = {
+  "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.input('Grep > ') })<cr>",
   "Search Project" }
 lvim.builtin.which_key.mappings["F"] = lvim.builtin.which_key.mappings["f"]
 lvim.builtin.which_key.mappings["f"] = { "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>",
@@ -280,22 +320,22 @@ lvim.builtin.telescope.pickers = {
 vim.g["fsharp#show_signature_on_cursor_move"] = 0
 vim.g["fsharp#lsp_codelens"] = 0
 lvim.autocommands = {
-    {
-      { 'WinEnter' }, {
-      pattern = { "*.fs", "*.fsx", "*.fsi" },
-      callback = vim.lsp.codelens.refresh,
-      group = "fhsarp_codelens"
-    },
+  {
+    { 'WinEnter' }, {
+    pattern = { "*.fs", "*.fsx", "*.fsi" },
+    callback = vim.lsp.codelens.refresh,
+    group = "fhsarp_codelens"
+  },
   },
 }
 
 lvim.autocommands = {
-    {
-      { 'TextChanged' }, {
-      pattern = { "*.fs", "*.fsx", "*.fsi" },
-      callback = vim.lsp.codelens.refresh,
-      group = "fhsarp_codelens"
-    },
+  {
+    { 'TextChanged' }, {
+    pattern = { "*.fs", "*.fsx", "*.fsi" },
+    callback = vim.lsp.codelens.refresh,
+    group = "fhsarp_codelens"
+  },
   },
 }
 -- ########### Keymappings  ###########
@@ -310,4 +350,3 @@ lvim.keys.normal_mode["gR"] = "<cmd>Telescope lsp_references<CR>"
 lvim.keys.normal_mode["ge"] = function() vim.diagnostic.open_float() end
 
 -- vim.cmd("nnoremap gr :Telescope lsp_references<cr>")
-
