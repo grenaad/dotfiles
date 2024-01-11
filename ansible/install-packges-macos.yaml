@@ -51,7 +51,7 @@
       - zotero
       - authy
       - derailed/k9s/k9s
-      - foxit-pdf-editor
+      - foxitreader
 
   roles:
     - geerlingguy.mac.homebrew
