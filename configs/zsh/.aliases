@@ -22,6 +22,7 @@ alias kc="kubectx"
 alias kns="kubens"
 alias s="stern"
 alias obsvirt="sudo modprobe -r v4l2loopback;obs"
+alias update_go="go install golang.org/x/tools/gopls@latest"
 
 ###### OS Specific ######
 if [[ "$OSTYPE" == "darwin"* ]]; then
