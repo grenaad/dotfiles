@@ -5,7 +5,8 @@ if [ ! -f ~/antigen.zsh ]; then
 fi
 
 ############# Load Aliases ############### 
-
+# For kubectl plugin, reference to shortcuts
+# https://gist.github.com/doevelopper/ff4a9a211e74f8a2d44eb4afb21f0a38
 if command -v kubectl  &> /dev/null; then
    source <(kubectl completion zsh)
 fi
@@ -36,6 +37,9 @@ antigen bundle fzf
 antigen bundle tmux
 
 antigen theme romkatv/powerlevel10k
+
+# kubectl plugin reference to shortcuts
+# https://gist.github.com/doevelopper/ff4a9a211e74f8a2d44eb4afb21f0a38
 
 # 3. Commit Antigen Configuration
 antigen apply

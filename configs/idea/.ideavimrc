@@ -1,4 +1,6 @@
-let mapleader="\<Space>"
+let mapleader="d"
+" let mapleader="\<Space>"
+" let mapleader=' '
 
 set clipboard+=unnamed
 set number relativenumber
@@ -10,3 +12,10 @@ map <leader>e <Action>(NERDTreeToggle)
 
 map [g :action GotoNextError<CR>
 map ]g :action GotoPreviousError<CR>
+
+nnoremap <Leader>f :action ShowNavBar<CR>
+nnoremap <Leader>s :action FileStructurePopup<CR>
+nnoremap <Leader>v :action Vcs.QuickListPopupAction<CR>
+nnoremap <Leader>b :action Vcs.ShowBranches<CR>
+nnoremap <Leader>z :action ToggleZenMode<CR>
+nnoremap <Leader>p :action TogglePresentationMode<CR>

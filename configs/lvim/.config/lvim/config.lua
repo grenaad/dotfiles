@@ -92,7 +92,7 @@ lvim.plugins = {
       })
     end
   },
-  { "udalov/kotlin-vim" },          -- Syntax for kotlin
+  -- { "udalov/kotlin-vim" },          -- Syntax for kotlin
   {
     "iamcco/markdown-preview.nvim", -- markdown previewer
     build = "cd app && npm install",
@@ -140,6 +140,38 @@ require 'lspconfig'.dartls.setup {
     }
   }
 }
+
+-- Hooks into LSP to extend it with external apps
+local null_ls = require("null-ls")
+null_ls.setup({
+  sources = {
+    -- Lua
+    null_ls.builtins.formatting.stylua,
+
+    -- Python
+    null_ls.builtins.formatting.black,
+    null_ls.builtins.formatting.isort.with({ extra_args = { "--profile", "black" } }),
+    null_ls.builtins.diagnostics.pylint.with({
+      extra_args = {
+        "--disable=R0801,W1508,C0114,C0115,C0116,C0301,W0611,W1309,C0103,W0201,E0401",
+      },
+      diagnostics_postprocess = function(diagnostic)
+        diagnostic.code = diagnostic.message_id
+      end,
+    }),
+    null_ls.builtins.diagnostics.flake8.with({
+      extra_args = {
+        "--extend-ignore=E302,E501,D107,D105,W503,E203,D100,D103,F401",
+      },
+    }),
+  }
+}
+)
+-- require 'lspconfig'.pyright.setup({
+--   settings={
+--
+--   }
+-- })
 
 -- autocommand set Metatrader file types
 vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
