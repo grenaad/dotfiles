@@ -27,11 +27,11 @@ set idearefactormode=normal
 set ideastatusicon=gray
 
 " location
-nmap <C-i> <Action>(Back)
-nmap <C-o> <Action>(Forward)
+nmap <C-i> <Action>(Forward)
+nmap <C-o> <Action>(Back)
 
 " buffer (buffer < window < tab)
-nmap <leader>xx <Action>(CloseContent)
+nmap <leader>c <Action>(CloseContent)
 nmap <leader>xa <Action>(CloseAllEditors)
 nmap <leader>xo <Action>(CloseAllEditorsButActive)
 nmap <leader>xp <Action>(CloseAllUnpinnedEditors)
@@ -103,7 +103,7 @@ nmap <leader>sw <Action>($SearchWeb)
 nmap <leader>fu <Action>(FindUsages)
 nmap <leader>fs <Action>(FileStructurePopup)
 nmap <leader>su <Action>(ShowUsages)
-nmap <leader>hl <Action>(HighlightUsagesInFile)
+" nmap <leader>hl <Action>(HighlightUsagesInFile)
 nmap <leader>qp <Action>(QuickPreview)
 nmap <leader>qd <Action>(QuickDefinition)
 nmap <leader>qD <Action>(QuickTypeDefinition)
@@ -113,7 +113,7 @@ set commentary
 " code
 nmap <leader>/ <Action>(CommentByLineComment)
 vmap <leader>/ <Action>(CommentByLineComment)
-nmap <leader>C <Action>(CommentByBlockComment)
+nmap <leader>B <Action>(CommentByBlockComment)
 nmap <leader>qf <Action>(ShowIntentionActions)
 nmap <leader>se <Action>(ShowErrorDescription)
 nmap <leader>om <Action>(OverrideMethods)
@@ -154,9 +154,9 @@ nmap <leader>sd <Action>(SafeDelete)
 nmap <leader>oi <Action>(OptimizeImports)
 
 " hierarchy
-nmap <leader>hc <Action>(CallHierarchy)
-nmap <leader>hm <Action>(MethodHierarchy)
-nmap <leader>ht <Action>(TypeHierarchy)
+" nmap <leader>hc <Action>(CallHierarchy)
+"nmap <leader>hm <Action>(MethodHierarchy)
+"nmap <leader>ht <Action>(TypeHierarchy)
 
 " collapse
 nmap zz <Action>(ExpandCollapseToggleAction)
@@ -201,8 +201,6 @@ nnoremap <leader>Lr :action IdeaVim.ReloadVimRc.reload<CR>
 
 " terminal
 nmap <C-\> <Action>(ActivateTerminalToolWindow)
-remap \r :action IdeaVim.ReloadVimRc.reload
-
 nmap <leader>tc <Action>(Terminal.OpenInTerminal)
 
 " bookmark
@@ -251,7 +249,7 @@ nmap \\te <Action>($ExclusiveTranslateAction)
 nmap <leader>ss <Action>(osmedile.intellij.stringmanip.PopupChoiceAction)
 
 " code screenshot (required idea plugin: Code Screenshots)
-nmap <leader>cs <Action>(one.util.ideaplugin.screenshoter.CopyImageAction)
+nmap <leader>sh <Action>(one.util.ideaplugin.screenshoter.CopyImageAction)
 
 " surround (bundle plugin)
 " usage: https://github.com/tpope/vim-surround
@@ -263,6 +261,9 @@ set exchange
 
 " nerdtree (bundle plugin)
 set NERDTree
+" map <C-e> <Action>(NERDTreeFocus)
+" map <C-e> :NERDTreeFocus<CR>
+map <leader>e :NERDTreeToggle<CR>
 
 " replace with register (bundle plugin)
 " usage: https://github.com/vim-scripts/ReplaceWithRegister
