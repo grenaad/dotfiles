@@ -95,13 +95,15 @@ nmap <leader>rp <Action>(ManageRecentProjects)
 nmap <leader>sh <Action>(LocalHistory.ShowHistory)
 nmap <leader>sf <Action>(ShowFilePath)
 nmap <leader>si <Action>(SelectIn)
-nmap <leader>fp <Action>(FindInPath)
-nmap <leader>rp <Action>(ReplaceInPath)
+" nmap <leader>fp <Action>(FindInPath)
+" nmap <leader>rp <Action>(ReplaceInPath)
 nmap <leader>sw <Action>($SearchWeb)
+" map <leader>f <Action>(ActivateFindToolWindow)
+map <leader>f <Action>(GotoFile)
 
 " tag
-nmap <leader>fu <Action>(FindUsages)
-nmap <leader>fs <Action>(FileStructurePopup)
+" nmap <leader>fu <Action>(FindUsages)
+" nmap <leader>fs <Action>(FileStructurePopup)
 nmap <leader>su <Action>(ShowUsages)
 " nmap <leader>hl <Action>(HighlightUsagesInFile)
 nmap <leader>qp <Action>(QuickPreview)
@@ -118,7 +120,7 @@ nmap <leader>qf <Action>(ShowIntentionActions)
 nmap <leader>se <Action>(ShowErrorDescription)
 nmap <leader>om <Action>(OverrideMethods)
 nmap <leader>im <Action>(ImplementMethods)
-nmap <leader>fc <Action>(ReformatCode)
+" nmap <leader>fc <Action>(ReformatCode)
 nmap <leader>ic <Action>(InspectCode)
 nmap <leader>so <Action>(SelectAllOccurrences)
 nmap <leader>gc <Action>(Generate)
@@ -146,7 +148,7 @@ vmap J :m '>+1<CR>gv=gv
 vmap K :m '<-2<CR>gv=gv
 
 " refactor
-nmap <leader>rn <Action>(RenameElement)
+nmap <leader>lr <Action>(RenameElement)
 nmap <leader>re <Action>(Refactorings.QuickListPopupAction)
 nmap <leader>uw <Action>(Unwrap)
 nmap <leader>sw <Action>(SurroundWith)
@@ -181,13 +183,12 @@ nmap [c <Action>(JumpToLastChange)
 nmap ]c <Action>(JumpToNextChange)
 
 " goto
-nmap <leader>a <Action>(GotoAction)
-nmap ga <Action>(GotoAction)
-nmap gc <Action>(GotoClass)
-nmap gf <Action>(GotoFile)
-nmap gs <Action>(GotoSymbol)
-nmap gt <Action>(GoToTest)
-nmap gT <Action>(TextSearchAction)
+nmap <leader>sa <Action>(GotoAction)
+nmap <leader>sc <Action>(GotoClass)
+nmap <leader>sf <Action>(GotoFile)
+nmap leader>ss <Action>(GotoSymbol)
+nmap <leader>sT <Action>(GoToTest)
+nmap <leader>st <Action>(TextSearchAction)
 nmap go <Action>(GotoSuperMethod)
 nmap gd <Action>(GotoDeclaration)
 nmap gD <Action>(GotoTypeDeclaration)
@@ -261,8 +262,6 @@ set exchange
 
 " nerdtree (bundle plugin)
 set NERDTree
-" map <C-e> <Action>(NERDTreeFocus)
-" map <C-e> :NERDTreeFocus<CR>
 map <leader>e :NERDTreeToggle<CR>
 
 " replace with register (bundle plugin)
