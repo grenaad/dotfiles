@@ -115,16 +115,18 @@ set commentary
 " code
 nmap <leader>/ <Action>(CommentByLineComment)
 vmap <leader>/ <Action>(CommentByLineComment)
-nmap <leader>B <Action>(CommentByBlockComment)
+nmap <leader>b <Action>(CommentByBlockComment)
+vmap <leader>b <Action>(CommentByBlockComment)
 nmap <leader>qf <Action>(ShowIntentionActions)
-nmap <leader>se <Action>(ShowErrorDescription)
 nmap <leader>om <Action>(OverrideMethods)
 nmap <leader>im <Action>(ImplementMethods)
-" nmap <leader>fc <Action>(ReformatCode)
 nmap <leader>ic <Action>(InspectCode)
 nmap <leader>so <Action>(SelectAllOccurrences)
 nmap <leader>gc <Action>(Generate)
 nmap <leader>gt <Action>(GoToTest)
+
+nmap ge <Action>(ShowErrorDescription)
+nmap <leader>lf <Action>(ReformatCode)
 
 " run
 nmap <leader>rc <Action>(ContextRun)
@@ -263,6 +265,7 @@ set exchange
 " nerdtree (bundle plugin)
 set NERDTree
 map <leader>e :NERDTreeToggle<CR>
+map <C-h> :NERDTreeFocus<CR>
 
 " replace with register (bundle plugin)
 " usage: https://github.com/vim-scripts/ReplaceWithRegister
@@ -274,3 +277,7 @@ xnoremap > >gv
 
 " alias
 nmap <C-a> ggVG"+y
+
+" Save
+nnoremap <A-s> :action SaveAll<CR>
+nnoremap <C-s> :action SaveDocument<CR>

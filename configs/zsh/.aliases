@@ -61,9 +61,10 @@ export EDITOR=lvim;
 set -o vi
 
 ###### Work ######
-alias tmwprojects="create_tmux_window ~/projects"
-alias tmwwork="create_tmux_window ~/work"
-alias tmswork="create_tmux_session ~/work" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}
+alias goprojects="create_tmux_window ~/projects"
+alias gowork="create_tmux_window ~/work"
+alias gowork="create_tmux_session ~/work" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}
+alias goshoprite="create_tmux_session ~/work/shoprite" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}
 
 # Go binaries install with 'go install'
 export PATH="$PATH:$HOME/go/bin"
