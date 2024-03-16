@@ -26,6 +26,7 @@
       - k9s
       - shc
       - btop
+      - ata
 
     homebrew_cask_apps:
       - docker
