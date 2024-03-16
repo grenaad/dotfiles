@@ -97,8 +97,8 @@ nmap <leader>sf <Action>(ShowFilePath)
 nmap <leader>si <Action>(SelectIn)
 " nmap <leader>fp <Action>(FindInPath)
 " nmap <leader>rp <Action>(ReplaceInPath)
-nmap <leader>sw <Action>($SearchWeb)
-" map <leader>f <Action>(ActivateFindToolWindow)
+" nmap <leader>sw <Action>($SearchWeb)
+map <leader>sw <Action>(ActivateFindToolWindow)
 map <leader>f <Action>(GotoFile)
 
 " tag
@@ -155,12 +155,12 @@ nmap <leader>re <Action>(Refactorings.QuickListPopupAction)
 nmap <leader>uw <Action>(Unwrap)
 nmap <leader>sw <Action>(SurroundWith)
 nmap <leader>sd <Action>(SafeDelete)
-nmap <leader>oi <Action>(OptimizeImports)
+nmap <leader>la <Action>(OptimizeImports)
 
 " hierarchy
 " nmap <leader>hc <Action>(CallHierarchy)
-"nmap <leader>hm <Action>(MethodHierarchy)
-"nmap <leader>ht <Action>(TypeHierarchy)
+" nmap <leader>hm <Action>(MethodHierarchy)
+" nmap <leader>ht <Action>(TypeHierarchy)
 
 " collapse
 nmap zz <Action>(ExpandCollapseToggleAction)
@@ -188,7 +188,7 @@ nmap ]c <Action>(JumpToNextChange)
 nmap <leader>sa <Action>(GotoAction)
 nmap <leader>sc <Action>(GotoClass)
 nmap <leader>sf <Action>(GotoFile)
-nmap leader>ss <Action>(GotoSymbol)
+nmap <leader>ss <Action>(GotoSymbol)
 nmap <leader>sT <Action>(GoToTest)
 nmap <leader>st <Action>(TextSearchAction)
 nmap go <Action>(GotoSuperMethod)
@@ -226,7 +226,7 @@ nmap \\cg <Action>(Github.Create.Gist)
 nmap <leader>v <Action>(VcsGroups)
 
 " open IdeaVim settings
-nmap \\v <Action>(VimActions)
+nmap <leader>Ls <Action>(VimActions)
 
 " text-object (bundle plugin)
 set vim-paragraph-motion
