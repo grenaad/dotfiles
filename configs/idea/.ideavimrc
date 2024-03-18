@@ -104,7 +104,6 @@ map <leader>f <Action>(GotoFile)
 " tag
 " nmap <leader>fu <Action>(FindUsages)
 " nmap <leader>fs <Action>(FileStructurePopup)
-nmap <leader>su <Action>(ShowUsages)
 " nmap <leader>hl <Action>(HighlightUsagesInFile)
 nmap <leader>qp <Action>(QuickPreview)
 nmap <leader>qd <Action>(QuickDefinition)
@@ -196,7 +195,8 @@ nmap gd <Action>(GotoDeclaration)
 nmap gD <Action>(GotoTypeDeclaration)
 nmap gi <Action>(GotoImplementation)
 nmap gI <Action>(QuickImplementations)
-nmap gn <Action>(ShowNavBar)
+" nmap gn <Action>(ShowNavBar)
+nmap gr <Action>(ShowUsages)
 
 " vimrc loading
 nnoremap <leader>Lc :e ~\.ideavimrc<CR>
