@@ -33,8 +33,8 @@ nmap <C-o> <Action>(Back)
 " buffer (buffer < window < tab)
 nmap <leader>c <Action>(CloseContent)
 nmap <leader>xa <Action>(CloseAllEditors)
-nmap <leader>xo <Action>(CloseAllEditorsButActive)
 nmap <leader>xp <Action>(CloseAllUnpinnedEditors)
+nmap <C-wo> <Action>(CloseAllEditorsButActive)
 
 " window
 nmap <C-Tab> <Action>(PreviousTab)
@@ -102,7 +102,7 @@ map <leader>sw <Action>(ActivateFindToolWindow)
 map <leader>f <Action>(GotoFile)
 
 " tag
-" nmap <leader>fu <Action>(FindUsages)
+" nmap grr <Action>(FindUsages)
 " nmap <leader>fs <Action>(FileStructurePopup)
 " nmap <leader>hl <Action>(HighlightUsagesInFile)
 nmap <leader>qp <Action>(QuickPreview)
@@ -129,7 +129,7 @@ nmap <leader>lf <Action>(ReformatCode)
 
 " run
 nmap <leader>rc <Action>(ContextRun)
-nmap <leader>rx<Action>(chooseRunConfiguration)
+nmap <leader>rx <Action>(chooseRunConfiguration)
 nmap <leader>rr <Action>(Rerun)
 nmap <leader>rt <Action>(RunTests)
 nmap <leader>rs <Action>(Stop)
@@ -196,7 +196,7 @@ nmap gD <Action>(GotoTypeDeclaration)
 nmap gi <Action>(GotoImplementation)
 nmap gI <Action>(QuickImplementations)
 " nmap gn <Action>(ShowNavBar)
-nmap gr <Action>(ShowUsages)
+nmap grr <Action>(ShowUsages)
 
 " vimrc loading
 nnoremap <leader>Lc :e ~\.ideavimrc<CR>

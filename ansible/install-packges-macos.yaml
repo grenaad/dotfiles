@@ -27,6 +27,7 @@
       - shc
       - btop
       - ata
+      - httpie
 
     homebrew_cask_apps:
       - docker
