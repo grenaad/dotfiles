@@ -54,20 +54,22 @@
       - authy
       - derailed/k9s/k9s
       - foxitreader
+      - yabai
+      - skhd
 
   roles:
     - geerlingguy.mac.homebrew
 
-  tasks:
-    - name: Setup yabai
-      file:
-        src: ~/projects/dotfiles/configs/macos/.yabairc
-        path: ~/
-        state: hard
-      tags:
-        - install
-        - core
-        - yabai
+  # tasks:
+  #   - name: Setup yabai
+  #     file:
+  #       src: ~/projects/dotfiles/configs/macos/.yabairc
+  #       path: ~/
+  #       state: hard
+  #     tags:
+  #       - install
+  #       - core
+  #       - yabai
 
     - name: Install rust
       shell: rustup-init

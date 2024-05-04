@@ -1,3 +1,4 @@
+" IdeaVim actionlist: https://gist.github.com/zchee/9c78f91cc5ad771c1f5d
 " vim settings
 set scrolloff=5
 set history=1000
@@ -196,7 +197,7 @@ nmap gD <Action>(GotoTypeDeclaration)
 nmap gi <Action>(GotoImplementation)
 nmap gI <Action>(QuickImplementations)
 " nmap gn <Action>(ShowNavBar)
-nmap grr <Action>(ShowUsages)
+nmap gR <Action>(ShowUsages)
 
 " vimrc loading
 nnoremap <leader>Lc :e ~\.ideavimrc<CR>

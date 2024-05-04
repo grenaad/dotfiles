@@ -19,7 +19,7 @@
 if [[ $# -eq 1 ]]; then
     path=$1
 else
-    path=$(find ~/work/shoprite ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+    path=$(find ~/work/shoprite ~/work/old/checkout ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
 fi
 
 path="$path"
