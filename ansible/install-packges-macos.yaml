@@ -28,6 +28,9 @@
       - btop
       - ata
       - httpie
+      - yabai
+      - skhd
+      - jira-cli
 
     homebrew_cask_apps:
       - docker
@@ -54,8 +57,12 @@
       - authy
       - derailed/k9s/k9s
       - foxitreader
-      - yabai
-      - skhd
+
+    homebrew_taps:
+      - ankitpokhrel/jira-cli
+
+# brew tap ankitpokhrel/jira-cli
+# brew install jira-cli
 
   roles:
     - geerlingguy.mac.homebrew
