@@ -11,7 +11,8 @@ cmd + alt - s : launchctl stop "gui/${UID}/homebrew.mxcl.yabai"
 alt - q : $(yabai -m window $(yabai -m query --windows --window | jq -re ".id") --close)
 
 # opens iTerm2
-alt - return : ~/projects/dotfiles/macos/open_iterm2.sh
+# alt - return : ~/projects/dotfiles/macos/open_iterm2.sh
+alt  - return : open -na iTerm
 
 # Window Navigation
 alt - h : yabai -m window --focus west
