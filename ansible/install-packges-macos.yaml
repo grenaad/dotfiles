@@ -28,7 +28,7 @@
       - btop
       - ata
       - httpie
-      - yabai
+      - koekeishiya/formulae/yabai
       - skhd
       - jira-cli
 

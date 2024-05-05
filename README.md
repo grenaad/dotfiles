@@ -128,3 +128,8 @@ For nerdfont installation
 curl.exe https://webi.ms/nerdfont | powershell
 ```
 
+```
+yabai --start-service
+shkd --start-service
+```
+
