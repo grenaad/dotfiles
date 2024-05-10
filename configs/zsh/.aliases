@@ -36,6 +36,9 @@ fi
 alias yabai_windows="yabai -m query --windows"
 alias yabai_start="yabai &; disown"
 
+alias tiling="yabai --start-service;skhd --start-service"
+alias tiling_stop="yabai --stop-service;skhd  --stop-service"
+
 ###### Environment Variables ######
 # dotnet core, opt out of dotnet telemetry data
 export DOTNET_CLI_TELEMETRY_OPTOUT='true' 

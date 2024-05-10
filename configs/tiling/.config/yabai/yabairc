@@ -2,11 +2,12 @@
 
 # window_border must be turned off
 # It caused random window server crash and new windows of a application can become invisible
-yabai -m config window_border off
-yabai -m config window_shadow off
-yabai -m config window_opacity off
-yabai -m config window_opacity_duration 0.00
-yabai -m config active_window_opacity 1.0
+yabai -m config                 \
+   window_border off            \
+   window_shadow off            \
+   window_opacity off           \
+   window_opacity_duration 0.00 \
+   active_window_opacity 1.0    \
 
 ###### General ######
 # New window spawns to the right if vertical split, or bottom if horizontal split
@@ -20,11 +21,12 @@ yabai -m config window_topmost off
 yabai -m config layout                       bsp
 
 ###### Padding ######
-yabai -m config top_padding                  10
-yabai -m config bottom_padding               10
-yabai -m config left_padding                 10
-yabai -m config right_padding                10
-yabai -m config window_gap                   10
+yabai -m config \
+   top_padding                  10 \ 
+   bottom_padding               10 \ 
+   left_padding                 10 \ 
+   right_padding                10 \ 
+   window_gap                   10
 
 ###### Custom space names ######
 yabai -m space 1 --label browser
@@ -58,8 +60,9 @@ yabai -m rule --add app="System Information" label="About This Mac" title="About
 yabai -m rule --add label="Software Update" title="Software Update" manage=off
 yabai -m rule --add app="^Calculater$" manage=off
 yabai -m rule --add app="^Calendar$" manage=off
-yabai -m rule --add app="^Calculator$" manage=off
+yabai -m rule --add title="^Calculator$" manage=off
 yabai -m rule --add app="^Docker Desktop$" manage=off
+yabai -m rule --add app="^System Settings$" manage=off
 
 # Go to IntelliJ IDEA > Preferences > Appearance & behavior > Appearance > UI Options > Always show full path in window header
 yabai -m rule --add app="^IntelliJ IDEA$" manage=off
