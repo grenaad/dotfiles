@@ -725,5 +725,6 @@
   "tailwindCSS.includeLanguages": {
     "javascript": "javascript",
     "templ": "html"
-  }
+},
+"git.ignoreRebaseWarning": true
 }

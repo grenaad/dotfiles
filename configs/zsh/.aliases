@@ -71,4 +71,5 @@ alias goshoprite="create_tmux_session ~/work/shoprite" # ; if [[ -z "$TMUX" ]]; 
 
 # Go binaries install with 'go install'
 export PATH="$PATH:$HOME/go/bin"
-
+# Open IntelliJ with command: idea
+export PATH="/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
