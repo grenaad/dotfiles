@@ -726,5 +726,6 @@
     "javascript": "javascript",
     "templ": "html"
 },
-"git.ignoreRebaseWarning": true
+"git.ignoreRebaseWarning": true,
+"git.replaceTagsWhenPull": true
 }
