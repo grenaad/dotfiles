@@ -727,5 +727,8 @@
     "templ": "html"
 },
 "git.ignoreRebaseWarning": true,
-"git.replaceTagsWhenPull": true
+"git.replaceTagsWhenPull": true,
+"[gleam]": {
+    "editor.defaultFormatter": "gleam.gleam"
+}
 }

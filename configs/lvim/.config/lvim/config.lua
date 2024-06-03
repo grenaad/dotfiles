@@ -112,7 +112,6 @@ lvim.plugins = {
     config = function()
       require("gitlinker").setup {
         opts = {
-          -- remote = 'github', -- force the use of a specific remote
           add_current_line_on_normal_mode = true,                           -- adds current line nr in the url for normal mode
           action_callback = require("gitlinker.actions").copy_to_clipboard, -- callback for what to do with the url
           print_url = true,                                                 -- print the url after performing the action
@@ -131,7 +130,18 @@ lvim.plugins = {
 -- TODO use Octo.nvim for Github integration
 -- https://github.com/pwntester/octo.nvim
 
-require 'lspconfig'.dartls.setup {
+local lspconfig = require("lspconfig")
+
+lspconfig.gleam.setup{}
+
+-- require("mason-lspconfig").setup_handlers {
+--   ["gleam"] = function()
+--     local lspconfig = require("lspconfig")
+--     lspconfig.gleam.setup({})
+--   end
+-- }
+
+lspconfig.dartls.setup {
   settings = {
     dart = {
       lineLength = 150,
@@ -141,37 +151,32 @@ require 'lspconfig'.dartls.setup {
   }
 }
 
--- Hooks into LSP to extend it with external apps
-local null_ls = require("null-ls")
-null_ls.setup({
-  sources = {
-    -- Lua
-    null_ls.builtins.formatting.stylua,
+-- Hoos into LSP to extend it with external apps
+-- local null_ls = require("null-ls")
+-- used to be  null_ls .setup()
+-- sources = {
+--   -- Lua
+--   null_ls.builtins.formatting.stylua,
 
-    -- Python
-    null_ls.builtins.formatting.black,
-    null_ls.builtins.formatting.isort.with({ extra_args = { "--profile", "black" } }),
-    null_ls.builtins.diagnostics.pylint.with({
-      extra_args = {
-        "--disable=R0801,W1508,C0114,C0115,C0116,C0301,W0611,W1309,C0103,W0201,E0401",
-      },
-      diagnostics_postprocess = function(diagnostic)
-        diagnostic.code = diagnostic.message_id
-      end,
-    }),
-    null_ls.builtins.diagnostics.flake8.with({
-      extra_args = {
-        "--extend-ignore=E302,E501,D107,D105,W503,E203,D100,D103,F401",
-      },
-    }),
-  }
-}
-)
--- require 'lspconfig'.pyright.setup({
---   settings={
---
---   }
--- })
+--   -- Python
+--   null_ls.builtins.formatting.black,
+--   null_ls.builtins.formatting.isort.with({ extra_args = { "--profile", "black" } }),
+--   null_ls.builtins.diagnostics.pylint.with({
+--     extra_args = {
+--       "--disable=R0801,W1508,C0114,C0115,C0116,C0301,W0611,W1309,C0103,W0201,E0401",
+--     },
+--     diagnostics_postprocess = function(diagnostic)
+--       diagnostic.code = diagnostic.message_id
+--     end,
+--   }),
+--   null_ls.builtins.diagnostics.flake8.with({
+--     extra_args = {
+--       "--extend-ignore=E302,E501,D107,D105,W503,E203,D100,D103,F401",
+--     },
+--   }),
+-- }
+
+-- table.insert(lvim.lsp.null_ls.config.sources, sources)
 
 -- autocommand set Metatrader file types
 vim.cmd("au BufNewFile,BufRead *.mqh,*.mq4,*.mq5 set filetype=cpp")
@@ -181,7 +186,7 @@ vim.cmd("au BufNewFile,BufRead *.js set filetype=typescript")
 -- To have html and tailwind lsp, change the file type for temple files to html
 vim.filetype.add({ extension = { templ = "html" } })
 -- Then add html to templ as filetype to use.
-require 'lspconfig'.templ.setup {
+lspconfig.templ.setup {
   filetypes = {
     "templ",
     "html",
@@ -351,8 +356,8 @@ lvim.keys.normal_mode["<C-s>"] = ":w<cr>" -- save file
 lvim.keys.normal_mode["<C-z>"] = ":q<cr>" -- override suspend of vim, rather just quit
 -- vim.cmd('vnoremap <C-p> "_dP') -- when pasting, move the word to the _ register (delete it), and paste
 -- vim.cmd("nnoremap gf :edit <cfile><cr>") -- Allows gf to open non existing files
+-- lvim.lsp.buffer_mappings.normal_mode.gD["2"] = "Goto Declaration"
 
 lvim.keys.normal_mode["gR"] = "<cmd>Telescope lsp_references<CR>"
-lvim.keys.normal_mode["ge"] = function() vim.diagnostic.open_float() end
 
 -- vim.cmd("nnoremap gr :Telescope lsp_references<cr>")
