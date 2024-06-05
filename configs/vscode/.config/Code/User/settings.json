@@ -96,7 +96,7 @@
 
   // Plugin vscode-neovim
   "vscode-neovim.neovimExecutablePaths.darwin": "/opt/homebrew/bin/nvim",
-  "vscode-neovim.neovimInitVimPaths.darwin": "$HOME/.config/nvim/init.vim",
+  "vscode-neovim.neovimInitVimPaths.darwin": "$HOME/.config/nvim/init.lua",
   "vscode-neovim.useWSL": true,
   "vscode-neovim.neovimExecutablePaths.linux": "/home/ice/.local/bin/nvim",
 
