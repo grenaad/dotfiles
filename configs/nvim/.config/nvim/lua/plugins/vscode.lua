@@ -26,16 +26,13 @@ Config.options.defaults.cond = function(plugin)
   return vim.tbl_contains(plugins, plugin.name)
 end
 
-print(":fdfdfd  runniung vscode pluing")
+print("running vscode plugin")
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
--- unmap space
+-- unmap space to prevent it from moving forward in normal mode
 vim.keymap.set('', '<Space>', '<Nop>', { noremap = true, silent = true })
 
--- vim.cmd("set clipboard+=unnamedplus")
--- vim.opt.clipboard:append { 'unnamed', 'unnamedplus' }
--- vim.cmd("set clipboard+=unnamedplus")
 vim.opt.clipboard="unnamed,unnamedplus"
 
 ---@type LazySpec
@@ -48,58 +45,59 @@ return {
       mappings = {
 
         x = {
-          -- vscode commentary
+          -- commentLine
           ["<Leader-/>"] = "<CMD>call VSCodeNotify('editor.action.addCommentLine')<CR>",
+
+          ["<Space>"] = "<CMD>call VSCodeNotify('whichkey.show')<CR>",
+
+          -- " Format
+          ["<Leader>lf"] = "<CMD>call VSCodeNotify('editor.action.formatSelection')<CR>",
+
+          -- " Better Navigation
+          ["<C-j>"] = "<CMD>call VSCodeNotify('workbench.action.navigateDown')<CR>",
+          ["<C-k>"] = "<CMD>call VSCodeNotify('workbench.action.navigateUp')<CR>",
+          ["<C-h>"] = "<CMD>call VSCodeNotify('workbench.action.navigateLeft')<CR>",
+          ["<C-l>"] = "<CMD>call VSCodeNotify('workbench.action.navigateRight')<CR>",
         },
+
+        v = {
+          -- " Format
+          ["<Leader>lf"] = "<CMD>call VSCodeNotify('editor.action.formatSelection')<CR>",
+        },
+
         n = {
-          -- vscode commentary
+          -- Find in files for word under cursor
+          ["<Leader>fc"] = "<Cmd>lua require('vscode').action('workbench.action.findInFiles', { args = { query = vim.fn.expand('<cword>') } })<CR>",
+
+          -- Find Files in project
+          ["<Leader>fW"] = "<CMD>call VSCodeNotify('workbench.action.findInFiles')<CR>",
+
+          -- CommentLine
           ["<Leader-/>"] = "<CMD>call VSCodeNotify('editor.action.commentLine')<CR>",
 
+          -- Find files
           ["<Leader>ff"] = "<CMD>Find<CR>",
-          ["<Leader>fw"] = "<CMD>call VSCodeNotify('workbench.action.findInFiles')<CR>",
-          ["<Leader>ls"] = "<CMD>call VSCodeNotify('workbench.action.gotoSymbol')<CR>",
 
-          ["<Tab>"]  = "<CMD>Tabnext<CR>",
-          ["<S-Tab>"] = "<CMD>Tabprev<CR>",
+          ["<Leader>c"] = "<CMD>call VSCodeNotify('workbench.action.closeActiveEditor')<CR>",
 
-          ["<S-L>"] = "<CMD>Tabnext<CR>",
-          ["<S-H>"] = "<CMD>Tabprev<CR>",
+           -- " Whichkey
+          ["<Space>"] = "<CMD>call VSCodeNotify('whichkey.show')<CR>",
 
--- xnoremap = <Cmd>lua require('vscode').call('editor.action.formatSelection')<CR>
--- nnoremap = <Cmd>lua require('vscode').call('editor.action.formatSelection')<CR><Esc>
--- nnoremap == <Cmd>lua require('vscode').call('editor.action.formatSelection')<CR>
-          --
--- " Better Navigation
--- nnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.navigateDown')<CR>
--- xnoremap <silent> <C-j> :call VSCodeNotify('workbench.action.navigateDown')<CR>
--- nnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.navigateUp')<CR>
--- xnoremap <silent> <C-k> :call VSCodeNotify('workbench.action.navigateUp')<CR>
--- nnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.navigateLeft')<CR>
--- xnoremap <silent> <C-h> :call VSCodeNotify('workbench.action.navigateLeft')<CR>
--- nnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.navigateRight')<CR>
--- xnoremap <silent> <C-l> :call VSCodeNotify('workbench.action.navigateRight')<CR>
---
---
--- nnoremap <silent> <C-w>_ :<C-u>call VSCodeNotify('workbench.action.toggleEditorWidths')<CR>
---
--- nnoremap <silent> <Space> :call VSCodeNotify('whichkey.show')<CR>
--- xnoremap <silent> <Space> :call VSCodeNotify('whichkey.show')<CR>
---
--- " Tabs
--- nnoremap <leader>1  :call VSCodeNotify('workbench.action.openEditorAtIndex1')<CR>
--- nnoremap <leader>2  :call VSCodeNotify('workbench.action.openEditorAtIndex2')<CR>
--- nnoremap <leader>3  :call VSCodeNotify('workbench.action.openEditorAtIndex3')<CR>
--- nnoremap <leader>4  :call VSCodeNotify('workbench.action.openEditorAtIndex4')<CR>
--- nnoremap <leader>5  :call VSCodeNotify('workbench.action.openEditorAtIndex5')<CR>
--- nnoremap <leader>6  :call VSCodeNotify('workbench.action.openEditorAtIndex6')<CR>
--- nnoremap <leader>7  :call VSCodeNotify('workbench.action.openEditorAtIndex7')<CR>
--- nnoremap <leader>8  :call VSCodeNotify('workbench.action.openEditorAtIndex8')<CR>
--- nnoremap <leader>9  :call VSCodeNotify('workbench.action.openEditorAtIndex9')<CR>
---
--- " Terminal
--- nnoremap <leader>tt  :call VSCodeNotify('workbench.action.togglePanel')<CR>
--- nnoremap <leader>tf  :call VSCodeNotify('terminal.focus')<CR>
--- nnoremap <leader>tn  :call VSCodeNotify('workbench.action.terminal.new')<CR>
+          -- " Terminal
+          ["<Leader>tt"] = "<CMD>call VSCodeNotify('workbench.action.togglePanel')<CR>",
+          ["<Leader>tf"] = "<CMD>call VSCodeNotify('terminal.focus')<CR>",
+          ["<Leader>tn"] = "<CMD>call VSCodeNotify('workbench.action.terminal.new')<CR>",
+
+          -- " Format
+          ["<Leader>lf"] = "<CMD>call VSCodeNotify('editor.action.formatDocument')<CR>",
+
+          -- " Better Navigation
+          ["<C-j>"] = "<CMD>call VSCodeNotify('workbench.action.navigateDown')<CR>",
+          ["<C-k>"] = "<CMD>call VSCodeNotify('workbench.action.navigateUp')<CR>",
+          ["<C-h>"] = "<CMD>call VSCodeNotify('workbench.action.navigateLeft')<CR>",
+          ["<C-l>"] = "<CMD>call VSCodeNotify('workbench.action.navigateRight')<CR>",
+
+          -- nnoremap <silent> <C-w>_ :<C-u>call VSCodeNotify('workbench.action.toggleEditorWidths')<CR>
         },
       },
     },

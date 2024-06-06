@@ -5,9 +5,9 @@
 -- fit in the normal config locations above can go here
 --
 
--- Move between buffers
-vim.keymap.set("n", "<S-L>", ":bnext<CR>")
-vim.keymap.set("n", "<S-H>", ":bprev<CR>")
+-- Navigate buffer tabs with `H` and `L`
+vim.keymap.set("n", "<S-L>", function() require('astrocore.buffer').nav(vim.v.count1) end)
+vim.keymap.set("n", "<S-H>", function() require('astrocore.buffer').nav(-vim.v.count1) end)
 
 -- Move between quicklist items
 vim.keymap.set("n", "<C-n>", "<cmd>cnext<CR>zz")
@@ -19,6 +19,7 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 -- ## Whichkey ##
 
 if not vim.g.vscode then
+  -- This module also loads when using vscode launches.
   require("lspconfig").gleam.setup({})
 end
 
