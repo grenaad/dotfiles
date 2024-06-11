@@ -3,8 +3,8 @@
 
 # setup ssh and git
   tasks:
-    - include: tasks/ssh.yaml
-    - include: tasks/git.yaml
+    - include_tasks: tasks/git.yaml
+    - include_tasks: tasks/ssh.yaml
 
     - name: Install nvm(node version manager) and node lts
       shell: | 

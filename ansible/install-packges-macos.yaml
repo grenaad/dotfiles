@@ -28,8 +28,6 @@
       - btop
       - ata
       - httpie
-      - koekeishiya/formulae/yabai
-      - skhd
       - jira-cli
 
     homebrew_cask_apps:
@@ -41,7 +39,6 @@
       - chromedriver
       - intellij-idea
       - mpv
-      - onedrive
       - slack
       - zoom
       - firefox
@@ -50,13 +47,9 @@
       - obs
       - postman
       - transmission
-      - visual-studio-code
-      - mailspring
       - onlyoffice
       - zotero
       - authy
-      - derailed/k9s/k9s
-      - foxitreader
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
@@ -78,13 +71,13 @@
   #       - core
   #       - yabai
 
-    - name: Install rust
-      shell: rustup-init
-      args:
-        executable: /bin/bash
-      tags:
-        - install
-        - core
-        - rust
+  #  - name: Install rust
+  #    shell: rustup-init
+  #    args:
+  #      executable: /bin/bash
+  #    tags:
+  #      - install
+  #      - core
+  #      - rust
 
-    - include: tasks/mpv.yaml
+  #  - include_tasks: tasks/mpv.yaml
