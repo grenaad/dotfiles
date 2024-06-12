@@ -4,6 +4,7 @@
 
   vars:
     homebrew_installed_packages:
+      - neovim
       - docker
       - docker-compose
       - jq
@@ -29,6 +30,7 @@
       - ata
       - httpie
       - jira-cli
+      - stow
 
     homebrew_cask_apps:
       - docker
@@ -37,12 +39,10 @@
       - brave-browser
       - slack
       - chromedriver
-      - intellij-idea
       - mpv
       - slack
       - zoom
       - firefox
-      - google-cloud-sdk
       - iterm2
       - obs
       - postman
