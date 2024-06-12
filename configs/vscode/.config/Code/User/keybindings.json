@@ -263,7 +263,7 @@
   {
     "key": "shift+k",
     "command": "editor.action.showHover",
-    "when": "editorTextFocus"
+    "when": "editorTextFocus && neovim.mode == 'normal'"
   },
   {
     "key": "ctrl+k ctrl+i",
@@ -273,7 +273,7 @@
   {
     "key": "shift+tab",
     "command": "-acceptAlternativeSelectedSuggestion",
-    "when": "suggestWidgetVisible && textInputFocus && textInputFocus"
+    "when": "suggestWidgetVisible && textInputFocus"
   },
   {
     "key": "ctrl+f",
