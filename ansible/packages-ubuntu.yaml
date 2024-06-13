@@ -1,5 +1,4 @@
 - name: Install Ubuntu Packages
-  hosts: localhost
 
   pre_tasks:
   - name: Update Apt
@@ -23,8 +22,7 @@
       become: true
 
     - import_tasks: tasks/lazygit.yaml
-    - import_tasks: tasks/rust.yaml
-    - import_tasks: tasks/neovim.yaml
+    # - import_tasks: tasks/rust.yaml
     # - include: tasks/kubectx.yaml
     # - include: tasks/stern.yaml
 

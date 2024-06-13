@@ -1,14 +1,11 @@
 # Ansible installation and setup
-When running as root, execute script first:`root_user.sh` and restart bash
 
 - `installl_ansible.sh`
     - To install `ansible` and the roles that it will use.
-- `ansible-playbook install-packges-ubuntu.yaml --ask-become-pass`
-    - Install packages per OS `ubuntu` or `macos`
-- `ansible-playbook general.yaml --ask-become-pass --ask-vault-pass`
+- `ansible-playbook main.yaml --ask-become-pass --ask-vault-pass`
     - Setup ssh, git, rustup, python, nvim, lunar vim
-- `ansible-playbook configure.yaml`
-    - Add configs for all the applications
+
+When running as root, execute script first:`root_user.sh` and restart bash
 
 ### If some brew commands fail, need to agree to Xcode's license or fix them using:
 `brew doctor`

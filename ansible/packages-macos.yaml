@@ -1,6 +1,5 @@
 ---
 - name: Install MacOS Packages
-  hosts: localhost
 
   vars:
     homebrew_installed_packages:
@@ -80,4 +79,4 @@
   #      - core
   #      - rust
 
-  #  - include_tasks: tasks/mpv.yaml
+    - include_tasks: tasks/mpv.yaml
