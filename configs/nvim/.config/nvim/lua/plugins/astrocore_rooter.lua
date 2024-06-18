@@ -11,7 +11,7 @@ return {
       detector = {
         "lsp", -- highest priority is getting workspace from running language servers
         { ".git", "_darcs", ".hg", ".bzr", ".svn" }, -- next check for a version controlled parent directory
-        { "lua", "MakeFile", "package.json" }, -- lastly check for known project root files
+        { "lua", "MakeFile", "package.json", "pubspec.yaml" }, -- lastly check for known project root files
       },
       -- ignore things from root detection
       ignore = {
