@@ -2,7 +2,8 @@
 
 alias lg="lazygit"
 alias r="ranger"
-alias vim="~/.local/bin/nvim"
+alias vim="/opt/homebrew/bin/nvim"
+alias clear_vim="rm -rf ~/.local/share/nvim  ~/.local/state/nvim  ~/.cache/nvim"
 alias youtube-dl="yt-dlp"
 alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="
 alias d="cd ~/projects/dotfiles"
