@@ -63,7 +63,7 @@ return {
         ["<Leader>Fq"] = { function() require("flutter-tools.commands").quit() end, desc = "Quit"},
         ["<Leader>FR"] = { function() require("flutter-tools.commands").restart() end, desc = "Restart"},
         ["<Leader>Fr"] = { function() require("flutter-tools.commands").reload() end, desc = "Reload"},
-        ["<Leader>Ff"] = { function() os.execute('dart format --line-length 120 .') end, desc = "Format"},
+        -- ["<Leader>Ff"] = { function() os.execute('dart format --line-length 120 .') end, desc = "Format"},
 
         ["<Leader>Fd"] = { function() require("flutter-tools.devices").list_devices() end, desc = "List Devices"},
         ["<Leader>Fe"] = { function() require("flutter-tools.devices").list_emulators() end, desc = "List Emulators"},
@@ -75,16 +75,19 @@ return {
         ["<Leader>FD"] = {
           function()
             local handle = io.popen('readlink $(which flutter)')
+            if handle == nil then
+              print("Could not delete lock file, no handle to shell")
+              return
+            end
             local output = handle:read('*a')
             local flutter_bin_path = output:gsub('[\n\r]', '') -- remove newlines
             local lock_file_path = flutter_bin_path .. '/lockfile'
             handle:close()
             print('DEBUG: flutter_lock_file_path : ' .. lock_file_path  )
-
             if (output  ~= nil and output ~= '') then
               -- os.execute("rm " .. lock_file_path)
+              print('remove lockfile: ' .. lock_file_path)
             end
-
           end,
           desc = "Delete Lock File"},
 
