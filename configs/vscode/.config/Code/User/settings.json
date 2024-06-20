@@ -89,7 +89,7 @@
     "editor.wordBasedSuggestions": "off"
   },
   "dart.openDevTools": "flutter",
-  "dart.lineLength": 150,
+  "dart.lineLength": 120,
 
   "liveshare.audio.joinCallBehavior": "accept",
   "workbench.colorTheme": "Gruvbox Dark Hard",

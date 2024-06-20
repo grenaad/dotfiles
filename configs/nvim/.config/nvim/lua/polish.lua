@@ -3,11 +3,7 @@
 -- This will run last in the setup process and is a good place to configure
 -- things like custom filetypes. This just pure lua so anything that doesn't
 -- fit in the normal config locations above can go here
---
 
--- Navigate buffer tabs with `H` and `L`
--- vim.keymap.set("n", "<S-L>", function() require('astrocore.buffer').nav(vim.v.count1) end)
--- vim.keymap.set("n", "<S-H>", function() require('astrocore.buffer').nav(-vim.v.count1) end)
 
 -- Move between quicklist items
 vim.keymap.set("n", "<C-n>", "<cmd>cnext<CR>zz")
@@ -29,11 +25,6 @@ vim.keymap.set("v", ">", ">gv")
 --     },
 --    },
 -- })
-
--- if not vim.g.vscode then
---   -- This module also loads when using vscode launches.
---   require("lspconfig").gleam.setup({})
--- end
 
 -- Set up custom filetypes
 vim.filetype.add {

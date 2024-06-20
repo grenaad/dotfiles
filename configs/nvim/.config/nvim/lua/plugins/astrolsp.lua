@@ -47,6 +47,20 @@ return {
     ---@diagnostic disable: missing-fields
     config = {
       -- clangd = { capabilities = { offsetEncoding = "utf-8" } },
+          dartls = {
+            -- any changes you want to make to the LSP setup, for example
+            color = {
+              enabled = true,
+            },
+            settings = {
+              dart = {
+                -- lineLength = 120,
+                lineLength = vim.o.textwidth
+              },
+              showTodos = true,
+              completeFunctionCalls = true,
+            },
+          },
     },
     -- customize how language servers are attached
     handlers = {

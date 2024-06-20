@@ -32,6 +32,7 @@ return {
         spell = false, -- sets vim.opt.spell
         signcolumn = "yes", -- sets vim.opt.signcolumn to yes
         wrap = false, -- sets vim.opt.wrap
+        textwidth = 120,
       },
       g = { -- vim.g.<key>
         -- configure global vim variables (vim.g)
@@ -47,12 +48,28 @@ return {
       -- first key is the mode
       n = {
         -- second key is the lefthand side of the map
-        -- navigate buffer tabs
-        ["]b"] = { function() require("astrocore.buffer").nav(vim.v.count1) end, desc = "Next buffer" },
-        ["[b"] = { function() require("astrocore.buffer").nav(-vim.v.count1) end, desc = "Previous buffer" },
-
+        -- Navigate buffer tabs with `H` and `L`
         L = { function() require('astrocore.buffer').nav(vim.v.count1) end, desc = "Navigate to next buffer in tabs" },
         H = { function() require('astrocore.buffer').nav(-vim.v.count1) end, desc = "Navigate to previous buffer in tabs"  },
+
+        -- Diagnostic
+        ["<Leader>dj"] = { function() vim.diagnostic.goto_next({buffer=0}) end, desc = "GotoNextError"},
+        ["<Leader>dk"] = { function() vim.diagnostic.goto_prev({buffer=0}) end, desc = "GotoPrevError"},
+
+        -- https://github.com/akinsho/flutter-tools.nvim/blob/main/lua/flutter-tools.lua
+        -- Flutter
+        ["<Leader>F"] = { desc = "Flutter"},
+        ["<Leader>Fc"] = { function() require('telescope').extensions.flutter.commands() end, desc = "Commands"},
+        ["<Leader>Fq"] = { function() require("flutter-tools.commands").quit() end, desc = "FlutterQuit"},
+        ["<Leader>FR"] = { function() require("flutter-tools.commands").restart() end, desc = "FlutterRestart"},
+        ["<Leader>Fr"] = { function() require("flutter-tools.commands").reload() end, desc = "Reload"},
+        ["<Leader>Ff"] = { function() os.execute('dart format --line-length 120 .') end, desc = "FlutterFormat"},
+
+        ["<Leader>Fd"] = { function() require("flutter-tools.devices").list_devices() end, desc = "FlutterDevices"},
+        ["<Leader>Fe"] = { function() require("flutter-tools.devices").list_emulators() end, desc = "FlutterEmulators"},
+
+        ["<Leader>Ft"] = { function() require("flutter-tools.commands").open_dev_tools() end, desc = "FlutterOpenDevTools"},
+        ["<Leader>Fg"] = { function() require("flutter-tools.commands").pub_get() end, desc = "FlutterPubGet"},
 
         -- mappings seen under group name "Buffer"
         ["<Leader>bd"] = {
@@ -63,21 +80,6 @@ return {
           end,
           desc = "Close buffer from tabline",
         },
-
-        -- https://github.com/akinsho/flutter-tools.nvim/blob/main/lua/flutter-tools.lua
-        ["<Leader>F"] = { desc = "Flutter"},
-        ["<Leader>Fc"] = { function() require('telescope').extensions.flutter.commands() end, desc = "Commands"},
-        ["<Leader>Fl"] = { function() require("flutter-tools.commands").reload() end, desc = "Reload"},
-        ["<Leader>Fq"] = { function() require("flutter-tools.commands").quit() end, desc = "FlutterQuit"},
-        ["<Leader>FR"] = { function() require("flutter-tools.commands").restart() end, desc = "FlutterRestart"},
-        ["<Leader>Fr"] = { function() require("flutter-tools.lsp.rename").rename() end, desc = "FlutterRename"},
-
-        ["<Leader>Fd"] = { function() require("flutter-tools.devices").list_devices() end, desc = "FlutterDevices"},
-        ["<Leader>Fe"] = { function() require("flutter-tools.devices").list_emulators() end, desc = "FlutterEmulators"},
-
-        ["<Leader>Ft"] = { function() require("flutter-tools.commands").open_dev_tools() end, desc = "FlutterOpenDevTools"},
-        ["<Leader>Fg"] = { function() require("flutter-tools.commands").pub_get() end, desc = "FlutterPubGet"},
-        ["<Leader>Fu"] = { function() require("flutter-tools.commands").pub_upgrade_command("*") end, desc = "FlutterPubUpgrade"},
 
         -- tables with just a `desc` key will be registered with which-key if it's installed
         -- this is useful for naming menus
