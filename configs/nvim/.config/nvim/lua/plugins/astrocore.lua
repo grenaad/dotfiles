@@ -60,16 +60,33 @@ return {
         -- Flutter
         ["<Leader>F"] = { desc = "Flutter"},
         ["<Leader>Fc"] = { function() require('telescope').extensions.flutter.commands() end, desc = "Commands"},
-        ["<Leader>Fq"] = { function() require("flutter-tools.commands").quit() end, desc = "FlutterQuit"},
-        ["<Leader>FR"] = { function() require("flutter-tools.commands").restart() end, desc = "FlutterRestart"},
+        ["<Leader>Fq"] = { function() require("flutter-tools.commands").quit() end, desc = "Quit"},
+        ["<Leader>FR"] = { function() require("flutter-tools.commands").restart() end, desc = "Restart"},
         ["<Leader>Fr"] = { function() require("flutter-tools.commands").reload() end, desc = "Reload"},
-        ["<Leader>Ff"] = { function() os.execute('dart format --line-length 120 .') end, desc = "FlutterFormat"},
+        ["<Leader>Ff"] = { function() os.execute('dart format --line-length 120 .') end, desc = "Format"},
 
-        ["<Leader>Fd"] = { function() require("flutter-tools.devices").list_devices() end, desc = "FlutterDevices"},
-        ["<Leader>Fe"] = { function() require("flutter-tools.devices").list_emulators() end, desc = "FlutterEmulators"},
+        ["<Leader>Fd"] = { function() require("flutter-tools.devices").list_devices() end, desc = "List Devices"},
+        ["<Leader>Fe"] = { function() require("flutter-tools.devices").list_emulators() end, desc = "List Emulators"},
 
-        ["<Leader>Ft"] = { function() require("flutter-tools.commands").open_dev_tools() end, desc = "FlutterOpenDevTools"},
-        ["<Leader>Fg"] = { function() require("flutter-tools.commands").pub_get() end, desc = "FlutterPubGet"},
+        ["<Leader>Ft"] = { function() require("flutter-tools.commands").open_dev_tools() end, desc = "Open Dev Tools"},
+        ["<Leader>Fg"] = { function() require("flutter-tools.commands").pub_get() end, desc = "PubGet"},
+
+        -- Remove lockfile when flutter run does not shutdown correctly
+        ["<Leader>FD"] = {
+          function()
+            local handle = io.popen('readlink $(which flutter)')
+            local output = handle:read('*a')
+            -- remove newlines
+            local flutter_bin_path = output:gsub('[\n\r]', '')
+            local flutter_lock_file_path = flutter_bin_path .. '/lockfile'
+            handle:close()
+            print('DEBUG: flutter_lock_file_path : ' .. flutter_lock_file_path  )
+
+            if (output  ~= nil and output ~= '') then
+              -- os.execute("rm " .. flutter_lock_file_path)
+            end
+          end,
+          desc = "Delete Lock File"},
 
         -- mappings seen under group name "Buffer"
         ["<Leader>bd"] = {
