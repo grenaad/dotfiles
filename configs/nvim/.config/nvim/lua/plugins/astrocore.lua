@@ -76,15 +76,15 @@ return {
           function()
             local handle = io.popen('readlink $(which flutter)')
             local output = handle:read('*a')
-            -- remove newlines
-            local flutter_bin_path = output:gsub('[\n\r]', '')
-            local flutter_lock_file_path = flutter_bin_path .. '/lockfile'
+            local flutter_bin_path = output:gsub('[\n\r]', '') -- remove newlines
+            local lock_file_path = flutter_bin_path .. '/lockfile'
             handle:close()
-            print('DEBUG: flutter_lock_file_path : ' .. flutter_lock_file_path  )
+            print('DEBUG: flutter_lock_file_path : ' .. lock_file_path  )
 
             if (output  ~= nil and output ~= '') then
-              -- os.execute("rm " .. flutter_lock_file_path)
+              -- os.execute("rm " .. lock_file_path)
             end
+
           end,
           desc = "Delete Lock File"},
 
