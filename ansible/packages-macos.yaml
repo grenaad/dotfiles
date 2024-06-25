@@ -49,6 +49,7 @@
       - onlyoffice
       - zotero
       - authy
+      - whatsapp
 
     homebrew_taps:
       - ankitpokhrel/jira-cli

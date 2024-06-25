@@ -28,10 +28,20 @@
     - install
     - ssh
 
-- name: Copy the key add to authorized_keys using Ansible module
-  authorized_key:
-    user: "{{ lookup('env', 'USER') }}"
-    state: present
-    key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+- name: Copy config file
+  copy:
+    src: ./ssh/config
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - ssh
 
-
+# - name: Copy the key add to authorized_keys using Ansible module
+#   authorized_key:
+#     user: "{{ lookup('env', 'USER') }}"
+#     state: present
+#     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+#
+#

@@ -1,0 +1,19 @@
+# Replace "git@github" with "work" eg. git@github:username/reponame.git
+# git clone work:username/reponame.git
+# https://stackoverflow.com/questions/7548158/having-trouble-switching-github-accounts-on-terminal/7550935#7550935
+Host personal
+    HostName      github.com
+    User           git
+    IdentityFile   ~/.ssh/id_rsa
+    IdentitiesOnly yes
+
+Host work
+    HostName      github.com
+    User           git
+    IdentityFile   ~/.ssh/id_rsa_work
+    IdentitiesOnly yes
+
+Host github.com *.github.com
+    Hostname       github.com
+    User           git
+    IdentitiesOnly yes

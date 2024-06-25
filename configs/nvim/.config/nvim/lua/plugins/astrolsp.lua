@@ -54,8 +54,8 @@ return {
         },
         settings = {
           dart = {
-            -- lineLength = 120,
-            lineLength = vim.o.textwidth
+            lineLength = 120,
+            -- lineLength = vim.o.textwidth
           },
           showTodos = true,
           completeFunctionCalls = true,

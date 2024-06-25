@@ -74,19 +74,19 @@ return {
         -- Remove lockfile when flutter run does not shutdown correctly
         ["<Leader>FD"] = {
           function()
-            local handle = io.popen('readlink $(which flutter)')
+            local handle = io.popen('dirname $(readlink $(which flutter))')
             if handle == nil then
               print("Could not delete lock file, no handle to shell")
               return
             end
             local output = handle:read('*a')
             local flutter_bin_path = output:gsub('[\n\r]', '') -- remove newlines
-            local lock_file_path = flutter_bin_path .. '/lockfile'
+            local lock_file_path = flutter_bin_path .. '/cache/lockfile'
+
             handle:close()
-            print('DEBUG: flutter_lock_file_path : ' .. lock_file_path  )
             if (output  ~= nil and output ~= '') then
-              -- os.execute("rm " .. lock_file_path)
-              print('remove lockfile: ' .. lock_file_path)
+              os.execute('rm  ' .. lock_file_path)
+              -- print('rm  ' .. lock_file_path)
             end
           end,
           desc = "Delete Lock File"},
