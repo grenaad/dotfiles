@@ -100,7 +100,7 @@ nmap <leader>si <Action>(SelectIn)
 " nmap <leader>rp <Action>(ReplaceInPath)
 " nmap <leader>sw <Action>($SearchWeb)
 map <leader>sw <Action>(ActivateFindToolWindow)
-map <leader>f <Action>(GotoFile)
+map <leader>ff <Action>(GotoFile)
 
 " tag
 " nmap grr <Action>(FindUsages)
@@ -186,11 +186,11 @@ nmap ]c <Action>(JumpToNextChange)
 
 " goto
 nmap <leader>sa <Action>(GotoAction)
-nmap <leader>sc <Action>(GotoClass)
+nmap <leader>fc <Action>(GotoClass)
 nmap <leader>sf <Action>(GotoFile)
 nmap <leader>ss <Action>(GotoSymbol)
 nmap <leader>sT <Action>(GoToTest)
-nmap <leader>st <Action>(TextSearchAction)
+nmap <leader>fW <Action>(TextSearchAction)
 nmap go <Action>(GotoSuperMethod)
 nmap gd <Action>(GotoDeclaration)
 nmap gD <Action>(GotoTypeDeclaration)
@@ -204,7 +204,7 @@ nnoremap <leader>Lc :e ~\.ideavimrc<CR>
 nnoremap <leader>Lr :action IdeaVim.ReloadVimRc.reload<CR>
 
 " terminal
-nmap <C-\> <Action>(ActivateTerminalToolWindow)
+nmap <leader>th <Action>(ActivateTerminalToolWindow)
 nmap <leader>tc <Action>(Terminal.OpenInTerminal)
 
 " bookmark

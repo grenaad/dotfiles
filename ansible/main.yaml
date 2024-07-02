@@ -17,6 +17,8 @@
 
     - include_tasks: tasks/rust.yaml
 
+    - include_tasks: tasks/ssh.yaml
+
     - name: Stow all config files
       shell: | 
           cd ../configs/

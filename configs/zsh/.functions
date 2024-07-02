@@ -88,6 +88,6 @@ function dkill() {
 }
 
 function cdf() {
-  cd $(find ~/work/shoprite ~/work/old/checkout ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+  cd $(find ~/work/focaldata ~/work/old/checkout ~/work ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
 }
 

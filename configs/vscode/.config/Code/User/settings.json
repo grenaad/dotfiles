@@ -730,5 +730,9 @@
 "git.replaceTagsWhenPull": true,
 "[gleam]": {
     "editor.defaultFormatter": "gleam.gleam"
+},
+"[python]": {
+    "editor.defaultFormatter": "black",
+    "editor.formatOnSave": true,
 }
 }
