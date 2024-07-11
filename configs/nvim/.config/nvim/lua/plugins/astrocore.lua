@@ -101,6 +101,28 @@ return {
           desc = "Close buffer from tabline",
         },
 
+        ["<Leader>gy"] = {
+          -- Reference:
+          -- https://github.com/linrongbin16/gitlinker.nvim/blob/542f51784f20107ef9ecdadc47825204837efed5/minimal_init/lazy_api.lua
+         function()
+            require("gitlinker") .link({
+              action = require("gitlinker.actions").clipboard,
+              router_type = "current_branch",
+            })
+          end,
+          desc = "Copy repo link",
+        },
+
+        ["<Leader>gY"] = {
+          function()
+            require("gitlinker").link({
+              action = require("gitlinker.actions").clipboard,
+              router_type = "default_branch",
+            })
+          end,
+          desc = "Copy repo link default_branch",
+        },
+
         -- tables with just a `desc` key will be registered with which-key if it's installed
         -- this is useful for naming menus
         -- ["<Leader>b"] = { desc = "Buffers" },

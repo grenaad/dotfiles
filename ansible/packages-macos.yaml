@@ -50,6 +50,7 @@
       - zotero
       - authy
       - whatsapp
+      - utm
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
