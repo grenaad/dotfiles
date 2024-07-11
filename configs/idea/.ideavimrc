@@ -124,6 +124,7 @@ nmap <leader>ic <Action>(InspectCode)
 nmap <leader>so <Action>(SelectAllOccurrences)
 nmap <leader>gc <Action>(Generate)
 nmap <leader>gt <Action>(GoToTest)
+nmap <leader>gy <Action>(uk.co.ben_gibson.git.link.ui.actions.gutter.CopyAction)
 
 nmap ge <Action>(ShowErrorDescription)
 nmap <leader>lf <Action>(ReformatCode)
