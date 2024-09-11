@@ -18,6 +18,7 @@
       - tldr
       - tmux
       - gnu-sed
+      - bat
       - rustup
       - duti
       - kustomize
