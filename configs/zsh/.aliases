@@ -73,3 +73,8 @@ alias gofocal="create_tmux_session ~/work/focaldata" # ; if [[ -z "$TMUX" ]]; th
 export PATH="$PATH:$HOME/go/bin"
 # Open IntelliJ with command: idea
 export PATH="/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
+
+# Where user-specific configurations should be written
+# Lazygit requires this for MacOS, other wise the configs need to be in:
+# ~/Library/Application\ Support/lazygit/config.yml
+export XDG_CONFIG_HOME="$HOME/.config"

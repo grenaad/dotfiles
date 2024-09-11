@@ -18,7 +18,6 @@
       - tldr
       - tmux
       - gnu-sed
-      - bat
       - rustup
       - duti
       - kustomize
@@ -30,6 +29,7 @@
       - httpie
       - jira-cli
       - stow
+      - git-delta
 
     homebrew_cask_apps:
       - docker

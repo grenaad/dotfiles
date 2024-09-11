@@ -4,6 +4,7 @@ tags
 .zshrc.zwc
 *.swp
 .git/
+.DS_Store
 
 configs/lvim/.config/lvim/plugin/packer_compiled.lua
 *wget-log*
