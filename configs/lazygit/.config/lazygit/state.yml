@@ -1,6 +1,10 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
+- /Users/ice/work/focaldata/fd-monitoring/CH-280
+- /Users/ice/work/focaldata/cin-dashboard/main
+- /Users/ice/work/focaldata/fd-core/main
+- /Users/ice/work/focaldata/cin-autobots/CH-280
 startuppopupversion: 5
 customcommandshistory: []
 hidecommandlog: false

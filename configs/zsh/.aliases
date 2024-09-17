@@ -4,7 +4,7 @@ alias lg="lazygit"
 alias r="ranger"
 alias vim="/opt/homebrew/bin/nvim"
 alias clear_vim="rm -rf ~/.local/share/nvim  ~/.local/state/nvim  ~/.cache/nvim"
-alias youtube-dl="yt-dlp"
+alias youtube-dl="yt-dlp -S ext" # "-S ext" will sort the mp4 formats to be ahead and should be default
 alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="
 alias d="cd ~/projects/dotfiles"
 alias ed="vim ~/projects/dotfiles/configs/zsh/.aliases"
