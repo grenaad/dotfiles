@@ -47,6 +47,9 @@ return {
       },
       -- first key is the mode
       n = {
+
+        ["<C-t>"] = { function() require("toggleterm").send_lines_to_terminal("visual_selection", false, { args = vim.v.count }) end, desc = "Toggle terminal"},
+
         -- second key is the lefthand side of the map
         -- Navigate buffer tabs with `H` and `L`
         L = { function() require('astrocore.buffer').nav(vim.v.count1) end, desc = "Navigate to next buffer in tabs" },

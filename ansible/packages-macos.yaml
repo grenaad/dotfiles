@@ -32,6 +32,7 @@
       - stow
       - git-delta
       - ruff
+      - go
 
     homebrew_cask_apps:
       - docker
