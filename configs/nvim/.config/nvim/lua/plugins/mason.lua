@@ -12,9 +12,11 @@ return {
       -- add more things to the ensure_installed table protecting against community packs modifying it
       opts.ensure_installed = require("astrocore").list_insert_unique(opts.ensure_installed, {
         "lua_ls",
+        "gopls",
         "templ",
         "html-lsp",
         "htmx-lsp",
+        "tailwindcss-language-server",
         -- add more arguments for adding more language servers
       })
     end,
