@@ -47,6 +47,12 @@ return {
     ---@diagnostic disable: missing-fields
     config = {
       -- clangd = { capabilities = { offsetEncoding = "utf-8" } },
+      html = {
+        filetypes = { "html", "templ" }
+      },
+      htmx = {
+        filetypes = { "html", "templ" }
+      },
       dartls = {
         -- any changes you want to make to the LSP setup, for example
         color = {
