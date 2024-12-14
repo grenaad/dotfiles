@@ -33,6 +33,7 @@
       - git-delta
       - ruff
       - go
+      - delve
       - parallel
 
     homebrew_cask_apps:

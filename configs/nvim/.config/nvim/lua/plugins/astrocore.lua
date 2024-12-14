@@ -203,6 +203,12 @@ return {
           end,
           desc = "Jumps to prev request",
         },
+        ["<Leader>rq"] = {
+          function()
+            require('kulala').close()
+          end,
+          desc = "Quits buffer and response window",
+        },
 
         -- tables with just a `desc` key will be registered with which-key if it's installed
         -- this is useful for naming menus
