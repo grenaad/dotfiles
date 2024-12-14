@@ -33,6 +33,7 @@
       - git-delta
       - ruff
       - go
+      - parallel
 
     homebrew_cask_apps:
       - docker
