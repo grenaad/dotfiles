@@ -126,6 +126,39 @@ return {
           desc = "Copy repo link default_branch",
         },
 
+        ["<Leader>Gj"] = {
+          function()
+              require('go.tags').add('json')
+          end,
+          desc = "Add json tag to Go struct",
+        },
+
+        ["<Leader>Gt"] = {
+            "<cmd>GoTestFunc<CR>",
+            desc = "Run Test Func",
+        },
+        ["<Leader>GT"] = {
+            "<cmd>GoTestFile<CR>",
+            desc = "Run Test File",
+        },
+
+        ["<Leader>Ge"] = {
+          "<cmd>GoIfErr<CR>",
+          desc = "Generate if err",
+        },
+
+        ["<Leader>Gf"] = {
+            function()
+                vim.cmd("GoFillStruct")
+            end,
+          desc = "Fill Struct",
+        },
+
+        ["<Leader>GF"] = {
+          "<cmd>GoFillSwitch<CR>",
+          desc = "Fill Switch",
+        },
+
         -- tables with just a `desc` key will be registered with which-key if it's installed
         -- this is useful for naming menus
         -- ["<Leader>b"] = { desc = "Buffers" },
