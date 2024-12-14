@@ -20,7 +20,7 @@ vim.keymap.set("v", ">", ">gv")
 -- Set up custom filetypes
 vim.filetype.add {
   extension = {
-    foo = "fooscript",
+    ['http'] = 'http',
   },
   filename = {
     ["Foofile"] = "fooscript",
@@ -63,5 +63,4 @@ vim.api.nvim_create_autocmd("LspAttach", {
   end,
   desc = 'LSP: Disable hover capability from Ruff',
 })
-
 

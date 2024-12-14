@@ -103,7 +103,7 @@ return {
           end,
           desc = "Close buffer from tabline",
         },
-
+-- gitlinker
         ["<Leader>gy"] = {
           -- Reference:
           -- https://github.com/linrongbin16/gitlinker.nvim/blob/542f51784f20107ef9ecdadc47825204837efed5/minimal_init/lazy_api.lua
@@ -125,14 +125,13 @@ return {
           end,
           desc = "Copy repo link default_branch",
         },
-
-        ["<Leader>Gj"] = {
+    -- golang
+          ["<Leader>Gj"] = {
           function()
               require('go.tags').add('json')
           end,
           desc = "Add json tag to Go struct",
         },
-
         ["<Leader>Gt"] = {
             "<cmd>GoTestFunc<CR>",
             desc = "Run Test Func",
@@ -141,22 +140,68 @@ return {
             "<cmd>GoTestFile<CR>",
             desc = "Run Test File",
         },
-
         ["<Leader>Ge"] = {
           "<cmd>GoIfErr<CR>",
           desc = "Generate if err",
         },
-
         ["<Leader>Gf"] = {
             function()
                 vim.cmd("GoFillStruct")
             end,
           desc = "Fill Struct",
         },
-
         ["<Leader>GF"] = {
           "<cmd>GoFillSwitch<CR>",
           desc = "Fill Switch",
+        },
+-- http kulala
+        ["<Leader>ra"] = {
+          function()
+            require('kulala').run_all()
+          end,
+          desc = "Run all requests",
+        },
+        ["<Leader>rr"] = {
+          function()
+            require('kulala').run()
+          end,
+          desc = "Run current request",
+        },
+        ["<Leader>ri"] = {
+          function()
+            require('kulala').inspect()
+          end,
+          desc = "Inspect current request",
+        },
+        ["<Leader>rs"] = {
+          function()
+            require('kulala').show_stats()
+          end,
+          desc = "Show stats of response",
+        },
+        ["<Leader>rc"] = {
+          function()
+            require('kulala').copy()
+          end,
+          desc = "Copy request as Curl to clipboard",
+        },
+        ["<Leader>rt"] = {
+          function()
+            require('kulala').toggle_view()
+          end,
+          desc = "Toggles body and headers view",
+        },
+        ["<Leader>rn"] = {
+          function()
+            require('kulala').jump_next()
+          end,
+          desc = "Jumps to next request",
+        },
+        ["<Leader>rp"] = {
+          function()
+            require('kulala').jump_prev()
+          end,
+          desc = "Jumps to prev request",
         },
 
         -- tables with just a `desc` key will be registered with which-key if it's installed
