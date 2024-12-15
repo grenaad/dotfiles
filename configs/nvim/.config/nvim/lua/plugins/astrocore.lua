@@ -48,6 +48,13 @@ return {
         -- setting a mapping to false will disable it
         -- ["<C-S>"] = false,
       v = { -- Visual mode
+          ["<Leader>tt"] = {
+              function()
+                  local trim_spaces = true
+              -- single_line, visual_lines, visual_selection    
+                require("toggleterm").send_lines_to_terminal("visual_lines", trim_spaces, { args = vim.v.count })
+              end,
+            desc = "Toggle terminal"},
       },
       i = { -- Insert mode
         ["<Leader>tt"] = { "<Esc><Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
@@ -56,23 +63,13 @@ return {
         ["<Leader>tt"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
       },
       n = { -- Normal mode
-
+-- ToggleTerm
         ["<Leader>tt"] = { '<Cmd>execute v:count . "ToggleTerm"<CR>', desc = "Toggle terminal" },
         ["<Leader>tb"] = {
           function()
             require("astrocore").toggle_term_cmd { cmd = "btm", direction = "float" }
           end, desc = "ToggleTerm btm" },
-
-        -- maps.n["<F7>"] = { '<Cmd>execute v:count . "ToggleTerm"<CR>', desc = "Toggle terminal" }
-        -- maps.t["<F7>"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" }
-        -- maps.i["<F7>"] = { "<Esc><Cmd>ToggleTerm<CR>", desc = "Toggle terminal" }
-
-          -- ["<C-t>"] = {
-          --     function()
-          --         require("toggleterm").send_lines_to_terminal("visual_selection", false, { args = vim.v.count })
-          --     end,
-          --   desc = "Toggle terminal"},
-
+-- Buffers
         -- second key is the lefthand side of the map
         -- Navigate buffer tabs with `H` and `L`
         L = { function() require('astrocore.buffer').nav(vim.v.count1) end, desc = "Navigate to next buffer in tabs" },
@@ -158,8 +155,13 @@ return {
         ["<Leader>rq"] = { function() require('kulala').close() end, desc = "Quits buffer and response window", },
 -- Metals
         ["<Leader>m"] = { desc = "Metals"},
-
+-- DBUI
+        ["<leader>D"] = { desc = "󰆼 Db Tools" },
+        ["<leader>DD"] = { "<cmd>DBUIToggle<cr>", desc = " DB UI Toggle" },
+        ["<leader>Df"] = { "<cmd>DBUIFindBuffer<cr>", desc = " DB UI Find buffer" },
+        ["<leader>Dr"] = { "<cmd>DBUIRenameBuffer<cr>", desc = " DB UI Rename buffer" },
+        ["<leader>Dl"] = { "<cmd>DBUILastQueryInfo<cr>", desc = " DB UI Last query infos" },
+        },
       },
     },
-  },
-}
+  }

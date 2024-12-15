@@ -64,3 +64,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
   desc = 'LSP: Disable hover capability from Ruff',
 })
 
+-- Setup up vim-dadbod
+vim.g.dbs = {
+    { name = 'local default', url = 'postgres://postgres:postgres@localhost:5432' },
+}
+require("cmp").setup.filetype({ "sql" }, {
+  sources = {
+    { name = "vim-dadbod-completion" },
+    { name = "buffer" },
+  },
+})
