@@ -1,5 +1,3 @@
--- if true then return {} end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
 -- AstroCore provides a central place to modify mappings, vim options, autocommands, and more!
 -- Configuration documentation can be found with `:h astrocore`
 -- NOTE: We highly recommend setting up the Lua Language Server (`:LspInstall lua_ls`)
@@ -43,24 +41,49 @@ return {
     -- Mappings can be configured through AstroCore as well.
     -- NOTE: keycodes follow the casing in the vimdocs. For example, `<Leader>` must be capitalized
     mappings = {
-      v = {
-      },
-      -- first key is the mode
-      n = {
+        -- tables with just a `desc` key will be registered with which-key if it's installed
+        -- this is useful for naming menus
+        -- ["<Leader>b"] = { desc = "Buffers" },
 
-        ["<C-t>"] = { function() require("toggleterm").send_lines_to_terminal("visual_selection", false, { args = vim.v.count }) end, desc = "Toggle terminal"},
+        -- setting a mapping to false will disable it
+        -- ["<C-S>"] = false,
+      v = { -- Visual mode
+      },
+      i = { -- Insert mode
+        ["<Leader>tt"] = { "<Esc><Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
+      },
+      t = { -- Terminal mode
+        ["<Leader>tt"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
+      },
+      n = { -- Normal mode
+
+        ["<Leader>tt"] = { '<Cmd>execute v:count . "ToggleTerm"<CR>', desc = "Toggle terminal" },
+        ["<Leader>tb"] = {
+          function()
+            require("astrocore").toggle_term_cmd { cmd = "btm", direction = "float" }
+          end, desc = "ToggleTerm btm" },
+
+        -- maps.n["<F7>"] = { '<Cmd>execute v:count . "ToggleTerm"<CR>', desc = "Toggle terminal" }
+        -- maps.t["<F7>"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" }
+        -- maps.i["<F7>"] = { "<Esc><Cmd>ToggleTerm<CR>", desc = "Toggle terminal" }
+
+          -- ["<C-t>"] = {
+          --     function()
+          --         require("toggleterm").send_lines_to_terminal("visual_selection", false, { args = vim.v.count })
+          --     end,
+          --   desc = "Toggle terminal"},
 
         -- second key is the lefthand side of the map
         -- Navigate buffer tabs with `H` and `L`
         L = { function() require('astrocore.buffer').nav(vim.v.count1) end, desc = "Navigate to next buffer in tabs" },
         H = { function() require('astrocore.buffer').nav(-vim.v.count1) end, desc = "Navigate to previous buffer in tabs"  },
 
-        -- Diagnostic
+-- Diagnostic
         ["<Leader>dj"] = { function() vim.diagnostic.goto_next({buffer=0}) end, desc = "GotoNextError"},
         ["<Leader>dk"] = { function() vim.diagnostic.goto_prev({buffer=0}) end, desc = "GotoPrevError"},
 
         -- https://github.com/akinsho/flutter-tools.nvim/blob/main/lua/flutter-tools.lua
-        -- Flutter
+-- Flutter
         ["<Leader>F"] = { desc = "Flutter"},
         ["<Leader>Fc"] = { function() require('telescope').extensions.flutter.commands() end, desc = "Commands"},
         ["<Leader>Fq"] = { function() require("flutter-tools.commands").quit() end, desc = "Quit"},
@@ -93,29 +116,18 @@ return {
             end
           end,
           desc = "Delete Lock File"},
-
-        -- mappings seen under group name "Buffer"
-        ["<Leader>bd"] = {
-          function()
-            require("astroui.status.heirline").buffer_picker(
-              function(bufnr) require("astrocore.buffer").close(bufnr) end
-            )
-          end,
-          desc = "Close buffer from tabline",
-        },
--- gitlinker
+-- Gitlinker
         ["<Leader>gy"] = {
           -- Reference:
           -- https://github.com/linrongbin16/gitlinker.nvim/blob/542f51784f20107ef9ecdadc47825204837efed5/minimal_init/lazy_api.lua
          function()
-            require("gitlinker") .link({
+            require("gitlinker").link({
               action = require("gitlinker.actions").clipboard,
               router_type = "current_branch",
             })
           end,
           desc = "Copy repo link",
         },
-
         ["<Leader>gY"] = {
           function()
             require("gitlinker").link({
@@ -123,99 +135,30 @@ return {
               router_type = "default_branch",
             })
           end,
-          desc = "Copy repo link default_branch",
+          desc = "Copy repo link for default branch",
         },
-    -- golang
-          ["<Leader>Gj"] = {
-          function()
-              require('go.tags').add('json')
-          end,
-          desc = "Add json tag to Go struct",
-        },
-        ["<Leader>Gt"] = {
-            "<cmd>GoTestFunc<CR>",
-            desc = "Run Test Func",
-        },
-        ["<Leader>GT"] = {
-            "<cmd>GoTestFile<CR>",
-            desc = "Run Test File",
-        },
-        ["<Leader>Ge"] = {
-          "<cmd>GoIfErr<CR>",
-          desc = "Generate if err",
-        },
-        ["<Leader>Gf"] = {
-            function()
-                vim.cmd("GoFillStruct")
-            end,
-          desc = "Fill Struct",
-        },
-        ["<Leader>GF"] = {
-          "<cmd>GoFillSwitch<CR>",
-          desc = "Fill Switch",
-        },
+-- Golang
+        ["<Leader>G"] = { desc = "Golang"},
+        ["<Leader>Gj"] = { function() require('go.tags').add('json') end, desc = "Add json tag to Go struct",},
+        ["<Leader>Gt"] = { "<cmd>GoTestFunc<CR>", desc = "Run Test Func",},
+        ["<Leader>GT"] = {"<cmd>GoTestFile<CR>", desc = "Run Test File",},
+        ["<Leader>Ge"] = { "<cmd>GoIfErr<CR>", desc = "Generate if err", },
+        ["<Leader>Gf"] = { function() vim.cmd("GoFillStruct") end, desc = "Fill Struct",},
+        ["<Leader>GF"] = { "<cmd>GoFillSwitch<CR>", desc = "Fill Switch",},
 -- http kulala
-        ["<Leader>ra"] = {
-          function()
-            require('kulala').run_all()
-          end,
-          desc = "Run all requests",
-        },
-        ["<Leader>rr"] = {
-          function()
-            require('kulala').run()
-          end,
-          desc = "Run current request",
-        },
-        ["<Leader>ri"] = {
-          function()
-            require('kulala').inspect()
-          end,
-          desc = "Inspect current request",
-        },
-        ["<Leader>rs"] = {
-          function()
-            require('kulala').show_stats()
-          end,
-          desc = "Show stats of response",
-        },
-        ["<Leader>rc"] = {
-          function()
-            require('kulala').copy()
-          end,
-          desc = "Copy request as Curl to clipboard",
-        },
-        ["<Leader>rt"] = {
-          function()
-            require('kulala').toggle_view()
-          end,
-          desc = "Toggles body and headers view",
-        },
-        ["<Leader>rn"] = {
-          function()
-            require('kulala').jump_next()
-          end,
-          desc = "Jumps to next request",
-        },
-        ["<Leader>rp"] = {
-          function()
-            require('kulala').jump_prev()
-          end,
-          desc = "Jumps to prev request",
-        },
-        ["<Leader>rq"] = {
-          function()
-            require('kulala').close()
-          end,
-          desc = "Quits buffer and response window",
-        },
+        ["<Leader>r"] = { desc = "HTTP Request"},
+        ["<Leader>ra"] = { function() require('kulala').run_all() end, desc = "Run all requests", },
+        ["<Leader>rr"] = { function() require('kulala').run() end, desc = "Run current request", },
+        ["<Leader>ri"] = { function() require('kulala').inspect() end, desc = "Inspect current request", },
+        ["<Leader>rs"] = { function() require('kulala').show_stats() end, desc = "Show stats of response", },
+        ["<Leader>rc"] = { function() require('kulala').copy() end, desc = "Copy request as Curl to clipboard", },
+        ["<Leader>rt"] = { function() require('kulala').toggle_view() end, desc = "Toggles body and headers view", },
+        ["<Leader>rn"] = { function() require('kulala').jump_next() end, desc = "Jumps to next request",},
+        ["<Leader>rp"] = { function() require('kulala').jump_prev() end, desc = "Jumps to prev request", },
+        ["<Leader>rq"] = { function() require('kulala').close() end, desc = "Quits buffer and response window", },
+-- Metals
+        ["<Leader>m"] = { desc = "Metals"},
 
-        -- tables with just a `desc` key will be registered with which-key if it's installed
-        -- this is useful for naming menus
-        -- ["<Leader>b"] = { desc = "Buffers" },
-
-        -- setting a mapping to false will disable it
-        -- ["<C-S>"] = false,
       },
     },
   },
