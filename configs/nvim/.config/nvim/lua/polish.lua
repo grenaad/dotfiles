@@ -67,6 +67,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- Setup up vim-dadbod
 vim.g.dbs = {
     { name = 'local default', url = 'postgres://postgres:postgres@localhost:5432' },
+    -- {
+    --   name = 'prod autobods',
+    --   url = function()
+    --     local result = vim.fn.system('./database.sh prod_autobots')
+    --     return result
+    --   end
+    -- },
 }
 require("cmp").setup.filetype({ "sql" }, {
   sources = {

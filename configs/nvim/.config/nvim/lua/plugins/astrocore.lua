@@ -152,7 +152,7 @@ return {
         ["<Leader>rt"] = { function() require('kulala').toggle_view() end, desc = "Toggles body and headers view", },
         ["<Leader>rn"] = { function() require('kulala').jump_next() end, desc = "Jumps to next request",},
         ["<Leader>rp"] = { function() require('kulala').jump_prev() end, desc = "Jumps to prev request", },
-        ["<Leader>rq"] = { function() require('kulala').close() end, desc = "Quits buffer and response window", },
+        ["<Leader>ru"] = { function() require('kulala').close() end, desc = "Quits buffer and response window", },
 -- Metals
         ["<Leader>m"] = { desc = "Metals"},
 -- DBUI

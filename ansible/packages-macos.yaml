@@ -57,6 +57,7 @@
       - authy
       - whatsapp
       - utm
+      - font-meslo-lg-nerd-font
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
