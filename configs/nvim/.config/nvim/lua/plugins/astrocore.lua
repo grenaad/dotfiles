@@ -165,26 +165,12 @@ return {
         ["<leader>DdR"] = { function() vim.fn.system('./database.sh prod_respondent') end, desc = "prod respondent" },
         ["<leader>DdP"] = { function() vim.fn.system('./database.sh prod_dashboard') end, desc = "prod dashboard" },
 
+        grr = {function () require('telescope.builtin').lsp_references() end , desc="References using Telescope"}
     --   url = function()
     --     local result = vim.fn.system('./database.sh prod_autobots')
     --     return result
     --   end
         },
       },
-    },{
--- LSP
--- this mapping will only be set in buffers with an LSP attached
-    "AstroNvim/astrolsp",
-    ---@type AstroLSPOpts
-    opts = {
-      mappings = {
-        n = { -- normal mode
-          -- condition for only server with declaration capabilities
-           ["<leader>lx"] = { function() require('telescope.builtin').lsp_references() end, desc = "Search references",
-            cond = "textDocument/declaration",
-          },
-        },
-      },
     },
-  },
   }

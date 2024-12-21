@@ -5,7 +5,7 @@
 -- fit in the normal config locations above can go here
 
 -- open lsp references in telescope
-vim.keymap.set("n", "gR", "<cmd>lua require('telescope.builtin').lsp_references()<CR>")
+vim.keymap.set("n", "grr", "<cmd>lua require('telescope.builtin').lsp_references()<CR>")
 
 -- Move between quicklist items
 vim.keymap.set("n", "<C-n>", "<cmd>cnext<CR>zz")
