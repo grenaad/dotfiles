@@ -4,6 +4,8 @@
 -- things like custom filetypes. This just pure lua so anything that doesn't
 -- fit in the normal config locations above can go here
 
+-- open lsp references in telescope
+vim.keymap.set("n", "gR", "<cmd>lua require('telescope.builtin').lsp_references()<CR>")
 
 -- Move between quicklist items
 vim.keymap.set("n", "<C-n>", "<cmd>cnext<CR>zz")
@@ -67,13 +69,20 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- Setup up vim-dadbod
 vim.g.dbs = {
     { name = 'local default', url = 'postgres://postgres:postgres@localhost:5432' },
-    -- {
-    --   name = 'prod autobods',
-    --   url = function()
-    --     local result = vim.fn.system('./database.sh prod_autobots')
-    --     return result
-    --   end
-    -- },
+    {
+      name = 'dev autobots',
+      url = function()
+        local result = vim.fn.system('./database.sh dev_autobots')
+        return result
+      end
+    },
+    {
+      name = 'dev respondent',
+      url = function()
+        local result = vim.fn.system('./database.sh dev_respondent')
+        return result
+      end
+    },
 }
 require("cmp").setup.filetype({ "sql" }, {
   sources = {

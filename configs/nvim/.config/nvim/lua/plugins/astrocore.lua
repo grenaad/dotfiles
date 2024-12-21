@@ -57,7 +57,6 @@ return {
             desc = "Toggle terminal"},
       },
       i = { -- Insert mode
-        ["<Leader>tt"] = { "<Esc><Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
       },
       t = { -- Terminal mode
         ["<Leader>tt"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
@@ -161,7 +160,31 @@ return {
         ["<leader>Df"] = { "<cmd>DBUIFindBuffer<cr>", desc = " DB UI Find buffer" },
         ["<leader>Dr"] = { "<cmd>DBUIRenameBuffer<cr>", desc = " DB UI Rename buffer" },
         ["<leader>Dl"] = { "<cmd>DBUILastQueryInfo<cr>", desc = " DB UI Last query infos" },
+        ["<leader>Dd"] = { desc = "󱘖 Connect" },
+        ["<leader>DdA"] = { function() vim.fn.system('./database.sh prod_autobots') end, desc = "prod autobots" },
+        ["<leader>DdR"] = { function() vim.fn.system('./database.sh prod_respondent') end, desc = "prod respondent" },
+        ["<leader>DdP"] = { function() vim.fn.system('./database.sh prod_dashboard') end, desc = "prod dashboard" },
+
+    --   url = function()
+    --     local result = vim.fn.system('./database.sh prod_autobots')
+    --     return result
+    --   end
+        },
+      },
+    },{
+-- LSP
+-- this mapping will only be set in buffers with an LSP attached
+    "AstroNvim/astrolsp",
+    ---@type AstroLSPOpts
+    opts = {
+      mappings = {
+        n = { -- normal mode
+          -- condition for only server with declaration capabilities
+           ["<leader>lx"] = { function() require('telescope.builtin').lsp_references() end, desc = "Search references",
+            cond = "textDocument/declaration",
+          },
         },
       },
     },
+  },
   }
