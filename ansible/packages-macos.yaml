@@ -36,6 +36,7 @@
       - delve
       - parallel
       - bottom
+      - goose
 
     homebrew_cask_apps:
       - docker
