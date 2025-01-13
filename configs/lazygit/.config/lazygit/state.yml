@@ -1,11 +1,13 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
-- /Users/ice/work/focaldata/cin-respondent/CH-472
 - /Users/ice/projects/stamp_core
+- /Users/ice/work/focaldata/fd-local
+- /Users/ice/work/focaldata/cin-respondent/CH-468
+- /Users/ice/work/focaldata/cin-respondent/CH-521-split-quota-count-logic
+- /Users/ice/work/focaldata/cin-respondent/CH-472
 - /Users/ice/work/focaldata/cin-respondent/CH-530
 - /Users/ice/work/focaldata/fd-respondent-app/main
-- /Users/ice/work/focaldata/fd-local
 - /Users/ice/work/focaldata/cin-questionnaire/master
 - /Users/ice/work/focaldata/cin-respondent/CH-525
 - /Users/ice/work/focaldata/fd-core/main

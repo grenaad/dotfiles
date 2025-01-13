@@ -71,14 +71,14 @@ vim.g.dbs = {
     {
       name = 'dev autobots',
       url = function()
-        local result = vim.fn.system('./database.sh dev_autobots')
+        local result = vim.fn.system('~/work/focaldata/database.sh dev_autobots')
         return result
       end
     },
     {
       name = 'dev respondent',
       url = function()
-        local result = vim.fn.system('./database.sh dev_respondent')
+        local result = vim.fn.system('~/work/focaldata/database.sh dev_respondent')
         return result
       end
     },
