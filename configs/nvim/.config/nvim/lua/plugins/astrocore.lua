@@ -59,7 +59,7 @@ return {
       i = { -- Insert mode
       },
       t = { -- Terminal mode
-        ["<Leader>tt"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
+        ["<C-t>"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
       },
       n = { -- Normal mode
 -- ToggleTerm
