@@ -201,8 +201,8 @@ nmap gI <Action>(QuickImplementations)
 nmap gR <Action>(ShowUsages)
 
 " vimrc loading
-nnoremap <leader>Lc :e ~\.ideavimrc<CR>
-nnoremap <leader>Lr :action IdeaVim.ReloadVimRc.reload<CR>
+nnoremap <leader>fa :e ~\.ideavimrc<CR>
+nnoremap <leader>fr :action IdeaVim.ReloadVimRc.reload<CR>
 
 " terminal
 nmap <leader>th <Action>(ActivateTerminalToolWindow)

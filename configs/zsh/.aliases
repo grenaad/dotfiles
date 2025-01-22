@@ -1,5 +1,6 @@
 ###### Aliases  ######
-
+#
+alias iterm="open -a iTerm"
 alias lg="lazygit"
 alias r="ranger"
 alias vim="/opt/homebrew/bin/nvim"

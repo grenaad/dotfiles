@@ -1,9 +1,17 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
-- /Users/ice/projects/stamp_core
-- /Users/ice/work/focaldata/cin-respondent/CH-513
+- /Users/ice/work/focaldata/cin-dashboard/CH-502
+- /Users/ice/work/focaldata/cin-respondent/CH-502
+- /Users/ice/work/focaldata/fd-core/main
 - /Users/ice/work/focaldata/fd-local
+- /Users/ice/work/focaldata/cin-questionnaire/CH-502
+- /Users/ice/work/focaldata/fd-monitoring/CH-575
+- /Users/ice/work/focaldata/cin-questionnaire/test_smoke_Test
+- /Users/ice/projects/stamp_core
+- /Users/ice/work/focaldata/fd-core-smoke-tests/main
+- /Users/ice/work/focaldata/cin-respondent/CH-527
+- /Users/ice/work/focaldata/cin-respondent/CH-513
 - /Users/ice/work/focaldata/cin-respondent/CH-468
 - /Users/ice/work/focaldata/cin-respondent/CH-521-split-quota-count-logic
 - /Users/ice/work/focaldata/cin-respondent/CH-472
@@ -11,7 +19,6 @@ recentrepos:
 - /Users/ice/work/focaldata/fd-respondent-app/main
 - /Users/ice/work/focaldata/cin-questionnaire/master
 - /Users/ice/work/focaldata/cin-respondent/CH-525
-- /Users/ice/work/focaldata/fd-core/main
 - /Users/ice/work/focaldata/cin-respondent/master
 - /Users/ice/work/focaldata/cin-respondent/CH-469
 - /Users/ice/work/focaldata/cin-survey-processing-pipeline

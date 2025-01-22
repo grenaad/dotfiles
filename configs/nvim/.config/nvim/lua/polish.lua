@@ -69,16 +69,17 @@ vim.api.nvim_create_autocmd("LspAttach", {
 vim.g.dbs = {
     { name = 'local default', url = 'postgres://postgres:postgres@localhost:5432' },
     {
-      name = 'dev autobots',
+      name = 'dev_autobots',
       url = function()
-        local result = vim.fn.system('~/work/focaldata/database.sh dev_autobots')
+        local result = os.getenv("DEV_AUTOBOTS")
+        -- local result = vim.fn.system('~/work/focaldata/database.sh dev_autobots')
         return result
       end
     },
     {
       name = 'dev respondent',
       url = function()
-        local result = vim.fn.system('~/work/focaldata/database.sh dev_respondent')
+        local result = os.getenv("DEV_RESPONDENT")
         return result
       end
     },
