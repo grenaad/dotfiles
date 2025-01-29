@@ -83,6 +83,14 @@ vim.g.dbs = {
         return result
       end
     },
+    {
+      name = 'prod respondent',
+      url = function()
+        local result = os.getenv("PROD_RESPONDENT")
+
+        return result
+      end
+    },
 }
 require("cmp").setup.filetype({ "sql" }, {
   sources = {

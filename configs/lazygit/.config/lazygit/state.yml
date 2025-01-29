@@ -1,10 +1,17 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
+- /Users/ice/work/focaldata/cin-respondent/CH-471
+- /Users/ice/work/focaldata/cin-dashboard/main
+- /Users/ice/work/focaldata/cin-questionnaire/test
+- /Users/ice/work/focaldata/cin-questionnaire/master
+- /Users/ice/projects/stamp
+- /Users/ice/projects/mql
+- /Users/ice/work/focaldata/fd-local
+- /Users/ice/work/focaldata/cin-respondent/CH-590
 - /Users/ice/work/focaldata/cin-dashboard/CH-502
 - /Users/ice/work/focaldata/cin-respondent/CH-502
 - /Users/ice/work/focaldata/fd-core/main
-- /Users/ice/work/focaldata/fd-local
 - /Users/ice/work/focaldata/cin-questionnaire/CH-502
 - /Users/ice/work/focaldata/fd-monitoring/CH-575
 - /Users/ice/work/focaldata/cin-questionnaire/test_smoke_Test
@@ -17,17 +24,14 @@ recentrepos:
 - /Users/ice/work/focaldata/cin-respondent/CH-472
 - /Users/ice/work/focaldata/cin-respondent/CH-530
 - /Users/ice/work/focaldata/fd-respondent-app/main
-- /Users/ice/work/focaldata/cin-questionnaire/master
 - /Users/ice/work/focaldata/cin-respondent/CH-525
 - /Users/ice/work/focaldata/cin-respondent/master
 - /Users/ice/work/focaldata/cin-respondent/CH-469
 - /Users/ice/work/focaldata/cin-survey-processing-pipeline
 - /Users/ice/work/focaldata/auto-data-quality/main
 - /Users/ice/work/focaldata/cin-autobots/main
-- /Users/ice/work/focaldata/cin-dashboard/main
 - /Users/ice/work/focaldata/cin-questionnaire/CH-477
 - /Users/ice/work/focaldata/cin-dashboard/CH-473
-- /Users/ice/projects/stamp
 - /Users/ice/projects/nurture_go
 - /Users/ice/work/focaldata/cin-questionnaire/CH-417
 - /Users/ice/work/focaldata/fd-monitoring/CH-414
@@ -45,7 +49,6 @@ recentrepos:
 - /Users/ice/projects/senior_go_dancing-pony-qxmcqs
 - /Users/ice/work/focaldata/cin-autobots/CH-322
 - /Users/ice/work/focaldata/cin-autobots/CH-281
-- /Users/ice/projects/mql
 - /Users/ice/work/focaldata/cin-dashboard/CH-305
 - /Users/ice/work/focaldata/cin-dashboard/CH-222
 - /Users/ice/work/focaldata/cin-respondent/CH-305

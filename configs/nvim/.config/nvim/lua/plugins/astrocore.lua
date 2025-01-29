@@ -165,6 +165,10 @@ return {
         ["<leader>DdR"] = { function() vim.fn.system('./database.sh prod_respondent') end, desc = "prod respondent" },
         ["<leader>DdP"] = { function() vim.fn.system('./database.sh prod_dashboard') end, desc = "prod dashboard" },
 
+        ["<leader>fj"] = { function() vim.fn.system('./database.sh prod_dashboard') end, desc = "prod dashboard" },
+
+        -- Format json
+        ["<Leader>fj"] = { "<cmd>:%!jq .<CR>", noremap = true, silent = true, desc = "Run Test Func",},
 -- Open lsp references in telescope
         grr = {function () require('telescope.builtin').lsp_references() end , desc="Telescope References"}
     --   url = function()
