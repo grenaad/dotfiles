@@ -48,6 +48,8 @@ return {
         -- setting a mapping to false will disable it
         -- ["<C-S>"] = false,
       v = { -- Visual mode
+
+          ["<Leader>jf"] = { "<cmd>'<,'>!jq .<CR>", noremap = true, silent = true, desc = "Format selected lines to json",},
           ["<Leader>tt"] = {
               function()
                   local trim_spaces = true
@@ -57,6 +59,8 @@ return {
             desc = "Toggle terminal"},
       },
       i = { -- Insert mode
+        -- ["<Leader>pu"] = {  "<c-u> :trim(system('uuidgen'))<cr>", noremap = true, silent = true, desc = "Generate UUID",},
+        --
       },
       t = { -- Terminal mode
         ["<C-t>"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
@@ -161,14 +165,12 @@ return {
         ["<leader>Dr"] = { "<cmd>DBUIRenameBuffer<cr>", desc = " DB UI Rename buffer" },
         ["<leader>Dl"] = { "<cmd>DBUILastQueryInfo<cr>", desc = " DB UI Last query infos" },
         ["<leader>Dd"] = { desc = "󱘖 Connect" },
-        ["<leader>DdA"] = { function() vim.fn.system('./database.sh prod_autobots') end, desc = "prod autobots" },
-        ["<leader>DdR"] = { function() vim.fn.system('./database.sh prod_respondent') end, desc = "prod respondent" },
-        ["<leader>DdP"] = { function() vim.fn.system('./database.sh prod_dashboard') end, desc = "prod dashboard" },
-
-        ["<leader>fj"] = { function() vim.fn.system('./database.sh prod_dashboard') end, desc = "prod dashboard" },
 
         -- Format json
-        ["<Leader>fj"] = { "<cmd>:%!jq .<CR>", noremap = true, silent = true, desc = "Run Test Func",},
+        ["<Leader>j"] = { desc = "Json"},
+        ["<Leader>jf"] = { "<cmd>:%!jq .<CR>", noremap = true, silent = true, desc = "Format file to json",},
+        ["<Leader>ju"] = { "<cmd>:read!uuidgen<cr>", noremap = true, silent = true, desc = "Generate UUID",},
+
 -- Open lsp references in telescope
         grr = {function () require('telescope.builtin').lsp_references() end , desc="Telescope References"}
     --   url = function()
