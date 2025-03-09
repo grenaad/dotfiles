@@ -1,9 +1,15 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
+- /Users/ice/work/focaldata/fd-core-respondent/CH-713
+- /Users/ice/work/focaldata/fd-template-service/main
+- /Users/ice/work/focaldata/fd-core-respondent/main
+- /Users/ice/work/focaldata/fd-template-service/CH-664
+- /Users/ice/work/focaldata/raincloud-playground/cint_openapi
+- /Users/ice/work/focaldata/fd-core/main
+- /Users/ice/work/focaldata/cin-respondent/CH-367
 - /Users/ice/work/focaldata/cin-iac-application/master
 - /Users/ice/work/focaldata/cin-iac-manual/master
-- /Users/ice/work/focaldata/cin-respondent/CH-367
 - /Users/ice/work/focaldata/fd-monitoring/main
 - /Users/ice/work/focaldata/cin-respondent/CH-501
 - /Users/ice/work/focaldata/cin-respondent/fork-demo
@@ -33,7 +39,6 @@ recentrepos:
 - /Users/ice/work/focaldata/cin-respondent/CH-590
 - /Users/ice/work/focaldata/cin-dashboard/CH-502
 - /Users/ice/work/focaldata/cin-respondent/CH-502
-- /Users/ice/work/focaldata/fd-core/main
 - /Users/ice/work/focaldata/cin-questionnaire/CH-502
 - /Users/ice/work/focaldata/fd-monitoring/CH-575
 - /Users/ice/work/focaldata/cin-questionnaire/test_smoke_Test

@@ -4,6 +4,8 @@
   path = ~/.gitconfig-personal
 [includeIf "gitdir:~/work/"]
   path = ~/.gitconfig-work
+[includeIf "gitdir:~/work2/"]
+  path = ~/.gitconfig-work2
 [push]
 	default = current
 [pull]

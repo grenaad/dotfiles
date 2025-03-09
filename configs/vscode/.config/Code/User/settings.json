@@ -737,5 +737,6 @@
     "editor.defaultFormatter": "black",
     "editor.formatOnSave": true,
 },
-"terminal.integrated.inheritEnv": false
+"terminal.integrated.inheritEnv": false,
+"githubLocalActions.dockerDesktopPath": "/Applications/Docker.app"
 }
