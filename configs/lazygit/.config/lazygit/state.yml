@@ -1,14 +1,24 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
+- /Users/ice/work2/fleetcontrol-app/feat-risk-module
+- /Users/ice/work/focaldata/fd-core-respondent/CH-767
+- /Users/ice/work/focaldata/fd-core-respondent/CH-764
+- /Users/ice/work/focaldata/fd-core-respondent/CH-795
+- /Users/ice/work/focaldata/fd-core-respondent/CH-794
+- /Users/ice/work/focaldata/fd-core-respondent/CH-786
 - /Users/ice/work/focaldata/fd-core-respondent/CH-713
+- /Users/ice/work/focaldata/cin-autobots/main
+- /Users/ice/work/focaldata/cin-iac-application/master
+- /Users/ice/work/focaldata/fd-core-respondent/CH-717
+- /Users/ice/work/focaldata/raincloud-playground/master
+- /Users/ice/work/focaldata/cin-fd-surveys/CH-749
+- /Users/ice/work2/fleetcontrol-app/feat-local
 - /Users/ice/work/focaldata/fd-template-service/main
 - /Users/ice/work/focaldata/fd-core-respondent/main
-- /Users/ice/work/focaldata/fd-template-service/CH-664
 - /Users/ice/work/focaldata/raincloud-playground/cint_openapi
 - /Users/ice/work/focaldata/fd-core/main
 - /Users/ice/work/focaldata/cin-respondent/CH-367
-- /Users/ice/work/focaldata/cin-iac-application/master
 - /Users/ice/work/focaldata/cin-iac-manual/master
 - /Users/ice/work/focaldata/fd-monitoring/main
 - /Users/ice/work/focaldata/cin-respondent/CH-501
@@ -17,7 +27,6 @@ recentrepos:
 - /Users/ice/work/focaldata/cin-respondent/CH-636
 - /Users/ice/work/focaldata/cin-respondent/CH-631
 - /Users/ice/work/focaldata/cin-respondent/master
-- /Users/ice/work/focaldata/cin-autobots/main
 - /Users/ice/projects/honeyposv2
 - /Users/ice/projects/stamp_core
 - /Users/ice/work/focaldata/cin-dashboard/CH-367

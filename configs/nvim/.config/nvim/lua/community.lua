@@ -10,6 +10,7 @@ return {
   -- { import = "astrocommunity.pack.lua" },
   -- { import = "astrocommunity.recipes.vscode" },
   -- { import = "astrocommunity.pack.dart" },
+  { import = "astrocommunity.lsp.nvim-java" },
   { import = "astrocommunity.utility.noice-nvim" },
   { import = "astrocommunity.completion.avante-nvim"},
   { "yetone/avante.nvim",

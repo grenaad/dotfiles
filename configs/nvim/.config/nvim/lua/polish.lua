@@ -33,22 +33,22 @@ vim.filetype.add {
 
 -- Python setup
 -- pyright and ruff 
-require('lspconfig').pyright.setup {
-  settings = {
-    pyright = {
-      -- Using Ruff's import organizer
-      disableOrganizeImports = true,
-      -- disableLanguageServices = false,
-      -- disableTaggedHints  = false,
-    },
-    python = {
-      analysis = {
-        -- Ignore all files for analysis to exclusively use Ruff for linting
-        ignore = { '*' },
-      },
-    },
-  },
-}
+-- require('lspconfig').pyright.setup {
+--   settings = {
+--     pyright = {
+--       -- Using Ruff's import organizer
+--       disableOrganizeImports = true,
+--       -- disableLanguageServices = false,
+--       -- disableTaggedHints  = false,
+--     },
+--     python = {
+--       analysis = {
+--         -- Ignore all files for analysis to exclusively use Ruff for linting
+--         ignore = { '*' },
+--       },
+--     },
+--   },
+-- }
 
 vim.api.nvim_create_autocmd("LspAttach", {
   group = vim.api.nvim_create_augroup('lsp_attach_disable_ruff_hover', { clear = true }),

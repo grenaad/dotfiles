@@ -157,7 +157,7 @@ return {
         ["<Leader>rp"] = { function() require('kulala').jump_prev() end, desc = "Jumps to prev request", },
         ["<Leader>ru"] = { function() require('kulala').close() end, desc = "Quits buffer and response window", },
 -- Metals
-        ["<Leader>m"] = { desc = "Metals"},
+        -- ["<Leader>m"] = { desc = "Metals"},
 -- DBUI
         ["<leader>D"] = { desc = "󰆼 Db Tools" },
         ["<leader>DD"] = { "<cmd>DBUIToggle<cr>", desc = " DB UI Toggle" },
@@ -170,6 +170,18 @@ return {
         ["<Leader>j"] = { desc = "Json"},
         ["<Leader>jf"] = { "<cmd>:%!jq .<CR>", noremap = true, silent = true, desc = "Format file to json",},
         ["<Leader>ju"] = { "<cmd>:read!uuidgen<cr>", noremap = true, silent = true, desc = "Generate UUID",},
+
+        ["<Leader>m"] = { desc = "Harpoon"},
+        ["<Leader>ma"] = { function() require("harpoon"):list():add() end, desc = "Add", },
+        ["<Leader>mm"] = { function() require("harpoon").ui:toggle_quick_menu(require("harpoon"):list()) end, desc = "QuickMenu", },
+        ["<Leader>m1"] = { function() require("harpoon"):list():select(1) end, desc = "Select 1", },
+        ["<Leader>m2"] = { function() require("harpoon"):list():select(2) end, desc = "Select 2", },
+        ["<Leader>m3"] = { function() require("harpoon"):list():select(3) end, desc = "Select 3", },
+        ["<Leader>mp"] = { function() require("harpoon"):list():prev() end, desc = "Buffer Prev", },
+        ["<Leader>mn"] = { function() require("harpoon"):list():next() end, desc = "Buffer Next", },
+
+        ["<Leader>Tt"] = { function() require("neotest").run.run() end, desc = "Run nearest test", },
+        ["<Leader>Tf"] = { function() require("neotest").run.run(vim.fn.expand("%")) end, desc = "Run current file", },
 
 -- Open lsp references in telescope
         grr = {function () require('telescope.builtin').lsp_references() end , desc="Telescope References"}

@@ -40,7 +40,7 @@ return {
     },
     -- enable servers that you already have installed without mason
     servers = {
-      "pyright",
+      -- "pyright",
       "gleam",
     },
     -- customize language server configuration options passed to `lspconfig`
@@ -50,9 +50,9 @@ return {
       html = {
         filetypes = { "html", "templ" }
       },
-      htmx = {
-        filetypes = { "html", "templ" }
-      },
+      -- htmx = {
+      --   filetypes = { "html", "templ" }
+      -- },
       dartls = {
         -- any changes you want to make to the LSP setup, for example
         color = {

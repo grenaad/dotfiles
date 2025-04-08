@@ -15,7 +15,7 @@ return {
         "gopls",
         "templ",
         "html-lsp",
-        "htmx-lsp",
+        -- "htmx-lsp",
         "tailwindcss-language-server",
         -- add more arguments for adding more language servers
       })
