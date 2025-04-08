@@ -181,7 +181,7 @@ return {
         ["<Leader>mn"] = { function() require("harpoon"):list():next() end, desc = "Buffer Next", },
 
         -- NeoTest
-        ["<Leader>Tt"] = { function() require("neotest").run.run() end, desc = "Run nearest test", },
+        ["<Leader>TT"] = { function() require("neotest").run.run() end, desc = "Run nearest test", },
         ["<Leader>Tf"] = { function() require("neotest").run.run(vim.fn.expand("%")) end, desc = "Run current file", },
         ["<Leader>Ts"] = { function() require("neotest").summary.toggle() end, desc = "Toggle test summary", },
         ["<Leader>To"] = { function() require("neotest").output.open({ enter = true, auto_close = true }) end, desc = "Show test output", },
