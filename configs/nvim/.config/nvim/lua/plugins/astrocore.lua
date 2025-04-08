@@ -185,6 +185,7 @@ return {
         ["<Leader>Tf"] = { function() require("neotest").run.run(vim.fn.expand("%")) end, desc = "Run current file", },
         ["<Leader>Ts"] = { function() require("neotest").summary.toggle() end, desc = "Toggle test summary", },
         ["<Leader>To"] = { function() require("neotest").output.open({ enter = true, auto_close = true }) end, desc = "Show test output", },
+        ["<Leader>Td"] = { function() require("neotest").run.run({strategy = "dap"}) end, desc = "Debug nearest test", },
 
 -- Open lsp references in telescope
         grr = {function () require('telescope.builtin').lsp_references() end , desc="Telescope References"}
