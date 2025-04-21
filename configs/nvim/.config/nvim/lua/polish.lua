@@ -41,38 +41,38 @@ vim.filetype.add {
 
 -- Setup up vim-dadbod
 vim.g.dbs = {
-    { name = 'local default', url = 'postgres://postgres:postgres@localhost:5432' },
-    {
-      name = 'dev_autobots',
-      url = function()
-        local result = os.getenv("DEV_AUTOBOTS")
-        -- local result = vim.fn.system('~/work/focaldata/database.sh dev_autobots')
-        return result
-      end
-    },
-    {
-      name = 'dev respondent',
-      url = function()
-        local result = os.getenv("DEV_RESPONDENT")
-        return result
-      end
-    },
-    {
-      name = 'prod respondent',
-      url = function()
-        local result = os.getenv("PROD_RESPONDENT")
+  { name = 'local default', url = 'postgres://postgres:postgres@localhost:5432' },
+  {
+    name = 'dev_autobots',
+    url = function()
+      local result = os.getenv("DEV_AUTOBOTS")
+      -- local result = vim.fn.system('~/work/focaldata/database.sh dev_autobots')
+      return result
+    end
+  },
+  {
+    name = 'dev respondent',
+    url = function()
+      local result = os.getenv("DEV_RESPONDENT")
+      return result
+    end
+  },
+  {
+    name = 'prod respondent',
+    url = function()
+      local result = os.getenv("PROD_RESPONDENT")
 
-        return result
-      end
-    },
-    {
-      name = 'prod questionnaire',
-      url = function()
-        local result = os.getenv("PROD_QUESTIONNAIRE")
+      return result
+    end
+  },
+  {
+    name = 'prod questionnaire',
+    url = function()
+      local result = os.getenv("PROD_QUESTIONNAIRE")
 
-        return result
-      end
-    },
+      return result
+    end
+  },
 
 }
 require("cmp").setup.filetype({ "sql" }, {
