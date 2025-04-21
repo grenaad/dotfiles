@@ -13,6 +13,9 @@ return {
       inline = {
         adapter = "openai",
       },
+      cmd = {
+        adapter = "openai",
+      },
     },
     adapters = {
       openapi = function()
