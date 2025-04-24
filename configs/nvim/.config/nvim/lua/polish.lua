@@ -12,9 +12,9 @@ vim.keymap.set("v", "<", "<gv")
 vim.keymap.set("v", ">", ">gv")
 
 -- Set up custom filetypes
-vim.filetype.add {
+vim.filetype.add({
   extension = {
-    ['http'] = 'http',
+    ["http"] = "http",
   },
   filename = {
     ["Foofile"] = "fooscript",
@@ -22,7 +22,7 @@ vim.filetype.add {
   pattern = {
     ["~/%.config/foo/.*"] = "fooscript",
   },
-}
+})
 
 -- vim.api.nvim_create_autocmd("LspAttach", {
 --   group = vim.api.nvim_create_augroup('lsp_attach_disable_ruff_hover', { clear = true }),
@@ -41,43 +41,54 @@ vim.filetype.add {
 
 -- Setup up vim-dadbod
 vim.g.dbs = {
-  { name = 'local default', url = 'postgres://postgres:postgres@localhost:5432' },
+  { name = "local default", url = "postgres://postgres:postgres@localhost:5432" },
   {
-    name = 'dev_autobots',
+    name = "dev_autobots",
     url = function()
       local result = os.getenv("DEV_AUTOBOTS")
       -- local result = vim.fn.system('~/work/focaldata/database.sh dev_autobots')
       return result
-    end
+    end,
   },
   {
-    name = 'dev respondent',
+    name = "dev respondent",
     url = function()
       local result = os.getenv("DEV_RESPONDENT")
       return result
-    end
+    end,
   },
   {
-    name = 'prod respondent',
+    name = "prod respondent",
     url = function()
       local result = os.getenv("PROD_RESPONDENT")
 
       return result
-    end
+    end,
   },
   {
-    name = 'prod questionnaire',
+    name = "prod questionnaire",
     url = function()
       local result = os.getenv("PROD_QUESTIONNAIRE")
 
       return result
-    end
+    end,
   },
-
 }
 require("cmp").setup.filetype({ "sql" }, {
   sources = {
     { name = "vim-dadbod-completion" },
     { name = "buffer" },
+  },
+})
+
+require("flutter-tools").setup_project({
+  -- can have mulitple projects
+  {
+    name = "web",
+    device = "chrome",
+    -- flavor = "staging", only for Android/ios
+    web_port = "4000",
+    target = "lib/main_staging.dart",
+    -- additional_args = { "--wasm" },
   },
 })
