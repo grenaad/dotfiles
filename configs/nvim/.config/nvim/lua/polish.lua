@@ -86,9 +86,13 @@ require("flutter-tools").setup_project({
   {
     name = "web",
     device = "chrome",
-    -- flavor = "staging", only for Android/ios
     web_port = "4000",
     target = "lib/main_staging.dart",
-    -- additional_args = { "--wasm" },
+  },
+  {
+    name = "android",
+    flavor = "staging",
+    target = "lib/main_staging.dart",
+    device = "emulator-5554", -- the device ID, which you can get by running `flutter devices`
   },
 })
