@@ -1,4 +1,5 @@
 ###### Aliases  ######
+alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 alias shop="ssh terminal.shop"
 alias iterm="open -a iTerm"
 alias lg="lazygit"

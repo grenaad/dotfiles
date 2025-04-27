@@ -40,6 +40,11 @@ return {
       -- ["<C-S>"] = false,
       v = { -- Visual mode
 
+        -- Codecompanion
+        -- Add the selected text to the chat window
+        ["<Leader>AA"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+        ["<Leader>Ac"] = { "<cmd>CodeCompanionChat Add<CR>", desc = "Chat" },
+
         ["<Leader>jf"] = {
           "<cmd>'<,'>!jq .<CR>",
           noremap = true,
@@ -385,6 +390,15 @@ return {
           end,
           desc = "Debug nearest test",
         },
+
+        -- Codecompanion
+        ["<Leader>A"] = { desc = "Codecompanion" },
+        ["<Leader>AA"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+        ["<Leader>Ac"] = { "<cmd>CodeCompanionChat Toggle<CR>", desc = "Chat" },
+
+        -- vim.keymap.set({ "n", "v" }, "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
+        -- vim.keymap.set({ "n", "v" }, "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })
+        -- vim.keymap.set("v", "ga", "<cmd>CodeCompanionChat Add<cr>", { noremap = true, silent = true })
       },
     },
   },

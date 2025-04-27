@@ -1,6 +1,10 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
+- /Users/ice/projects/mql
+- /Users/ice/work/focaldata/cin-questionnaire/CH-782
+- /Users/ice/work2/fleetcontrol-app/feat-risk-driver-app
+- /Users/ice/work2/fleetcontrol-app/feat-risk-module
 - /Users/ice/work/focaldata/fd-core-respondent/CH-768
 - /Users/ice/work/focaldata/fd-core-respondent/CH-765
 - /Users/ice/work/focaldata/cin-respondent/master
@@ -50,7 +54,6 @@ recentrepos:
 - /Users/ice/work/focaldata/cin-respondent/CH-471
 - /Users/ice/work/focaldata/cin-questionnaire/test
 - /Users/ice/projects/stamp
-- /Users/ice/projects/mql
 - /Users/ice/work/focaldata/cin-respondent/CH-590
 - /Users/ice/work/focaldata/cin-dashboard/CH-502
 - /Users/ice/work/focaldata/cin-respondent/CH-502
