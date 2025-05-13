@@ -96,3 +96,6 @@ require("flutter-tools").setup_project({
     device = "emulator-5554", -- the device ID, which you can get by running `flutter devices`
   },
 })
+
+-- required
+require("harpoon"):setup()

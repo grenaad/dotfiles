@@ -59,34 +59,35 @@
       - whatsapp
       - utm
       - font-meslo-lg-nerd-font
+      - repo-prompt
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
 
-# brew tap ankitpokhrel/jira-cli
-# brew install jira-cli
+  # brew tap ankitpokhrel/jira-cli
+  # brew install jira-cli
 
   roles:
     - geerlingguy.mac.homebrew
 
-  # tasks:
-  #   - name: Setup yabai
-  #     file:
-  #       src: ~/projects/dotfiles/configs/macos/.yabairc
-  #       path: ~/
-  #       state: hard
-  #     tags:
-  #       - install
-  #       - core
-  #       - yabai
+    # tasks:
+    #   - name: Setup yabai
+    #     file:
+    #       src: ~/projects/dotfiles/configs/macos/.yabairc
+    #       path: ~/
+    #       state: hard
+    #     tags:
+    #       - install
+    #       - core
+    #       - yabai
 
-  #  - name: Install rust
-  #    shell: rustup-init
-  #    args:
-  #      executable: /bin/bash
-  #    tags:
-  #      - install
-  #      - core
-  #      - rust
+    #  - name: Install rust
+    #    shell: rustup-init
+    #    args:
+    #      executable: /bin/bash
+    #    tags:
+    #      - install
+    #      - core
+    #      - rust
 
     - include_tasks: tasks/mpv.yaml

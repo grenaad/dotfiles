@@ -1,9 +1,14 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
-- /Users/ice/projects/mql
-- /Users/ice/work/focaldata/cin-questionnaire/CH-782
+- /Users/ice/work2/fleetcontrol-app/feat-local
 - /Users/ice/work2/fleetcontrol-app/feat-risk-driver-app
+- /Users/ice/work/focaldata/fd-panel-supplier/CH-821
+- /Users/ice/work/focaldata/pub-sub-wrapper/ch-833_create_wrapper_pub_sub
+- /Users/ice/work/focaldata/raincloud-playground/master
+- /Users/ice/work/focaldata/cin-questionnaire/CH-782
+- /Users/ice/work/focaldata/cin-autobots/main/CH-782
+- /Users/ice/projects/mql
 - /Users/ice/work2/fleetcontrol-app/feat-risk-module
 - /Users/ice/work/focaldata/fd-core-respondent/CH-768
 - /Users/ice/work/focaldata/fd-core-respondent/CH-765
@@ -24,9 +29,7 @@ recentrepos:
 - /Users/ice/work/focaldata/cin-autobots/main
 - /Users/ice/work/focaldata/cin-iac-application/master
 - /Users/ice/work/focaldata/fd-core-respondent/CH-717
-- /Users/ice/work/focaldata/raincloud-playground/master
 - /Users/ice/work/focaldata/cin-fd-surveys/CH-749
-- /Users/ice/work2/fleetcontrol-app/feat-local
 - /Users/ice/work/focaldata/fd-template-service/main
 - /Users/ice/work/focaldata/raincloud-playground/cint_openapi
 - /Users/ice/work/focaldata/fd-core/main
