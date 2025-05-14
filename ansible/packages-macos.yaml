@@ -59,7 +59,6 @@
       - whatsapp
       - utm
       - font-meslo-lg-nerd-font
-      - repo-prompt
 
     homebrew_taps:
       - ankitpokhrel/jira-cli

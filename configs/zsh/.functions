@@ -32,8 +32,18 @@ function f () {
 }
 
 # Kill any application that is using a giving port
+# function kill_port() {
+# 	kill -9 $(lsof -i TCP:$1 | grep LISTEN | awk '{print $2}')
+# }
+#
 function kill_port() {
-	kill -9 $(lsof -i TCP:$1 | grep LISTEN | awk '{print $2}')
+    pid=$(lsof -ti TCP:$1)
+    if [ -n "$pid" ]; then
+        kill $pid
+        echo "Process on port $1 killed."
+    else
+        echo "No process found on port $1."
+    fi
 }
 
 function cd() {
