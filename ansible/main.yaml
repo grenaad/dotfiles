@@ -1,28 +1,25 @@
 ---
 - name: Intro to Ansible Playbooks
   hosts: all
-
   tasks:
     # Install OS specific packages
     - include_tasks: packages-ubuntu.yaml
       when: ansible_facts['distribution'] == "Ubuntu"
 
     - include_tasks: packages-macos.yaml
-      when: ansible_facts[‘os_family’] == "Darwin"
+      when: ansible_facts['os_family'] == "Darwin"
 
     - include_tasks: tasks/nvm.yaml
 
     # Install youtube-dl using pip
     - include_tasks: tasks/yt-dlp.yaml
-
     - include_tasks: tasks/rust.yaml
-
     - include_tasks: tasks/ssh.yaml
 
     - name: Stow all config files
-      shell: | 
-          cd ../configs/
-          stow -t "{{ lookup('env', 'HOME') }}" */
+      shell: |
+        cd ../configs/
+        stow -t "{{ lookup('env', 'HOME') }}" */
       args:
         executable: /bin/bash
       tags:
@@ -32,15 +29,15 @@
     - name: Add zsh to .bashrc
       lineinfile:
         path: "{{ lookup('env', 'HOME') }}/.bashrc"
-        regexp: 'zsh'
-        line: 'zsh'
+        regexp: "zsh"
+        line: "zsh"
         state: present
         create: yes
 
     - name: Add zsh configs to main .zshrc
       lineinfile:
         path: "{{ lookup('env', 'HOME') }}/.zshrc"
-        regexp: '^source ~/.zshrc_'
-        line: 'source ~/.zshrc_'
+        regexp: "^source ~/.zshrc_"
+        line: "source ~/.zshrc_"
         state: present
         create: yes
