@@ -12,7 +12,7 @@
     - include_tasks: tasks/nvm.yaml
 
     # Install youtube-dl using pip
-    - include_tasks: tasks/yt-dlp.yaml
+    # - include_tasks: tasks/yt-dlp.yaml
     - include_tasks: tasks/rust.yaml
     - include_tasks: tasks/ssh.yaml
 
