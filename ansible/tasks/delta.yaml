@@ -1,4 +1,4 @@
-- name: Install Neovim and Lunar vim
+- name: Install Delta, fancy diff
   become: true # sudo
   become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
   shell: |
