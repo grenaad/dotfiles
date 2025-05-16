@@ -8,3 +8,6 @@ tags
 
 configs/lvim/.config/lvim/plugin/packer_compiled.lua
 *wget-log*
+
+configs/scripts/.local/share/
+configs/scripts/.local/state/

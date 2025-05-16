@@ -1,0 +1,19 @@
+- name: Install Neovim
+  become: true # sudo
+  become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
+  shell: |
+        curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+        chmod u+x nvim-linux-x86_64.appimage
+        ./nvim-linux-x86_64.appimage
+
+        mkdir -p /opt/nvim
+        mv nvim-linux-x86_64.appimage /opt/nvim/nvim
+
+        echo 'export PATH="$PATH:/opt/nvim/"' >> ~/.zshrc
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - core
+    - neovim
+

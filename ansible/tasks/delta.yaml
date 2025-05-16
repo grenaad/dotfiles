@@ -1,0 +1,21 @@
+- name: Install Delta, fancy diff
+  become: true # sudo
+  become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
+  shell: |
+        # Get the latest release version
+        DELTA_VERSION=$(curl -sL "https://api.github.com/repos/dandavison/delta/releases/latest" | grep -Po '"tag_name": "\K[^"]*')
+
+        # Download the .deb package (for amd64 architecture)
+        curl -LO "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/git-delta_${DELTA_VERSION}_amd64.deb"
+
+        # Install
+        apt install ./git-delta_${DELTA_VERSION}_amd64.deb
+        rm ./git-delta_${DELTA_VERSION}_amd64.deb
+#
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - core
+    - delta
+

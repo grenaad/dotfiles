@@ -1,6 +1,7 @@
 ---
 - name: Intro to Ansible Playbooks
   hosts: localhost
+  gather_facts: yes  # Ensure facts are gathered, aka the distribution
   tasks:
     # Install OS specific packages
     - include_tasks: packages-ubuntu.yaml
@@ -12,7 +13,7 @@
     - include_tasks: tasks/nvm.yaml
 
     # Install youtube-dl using pip
-    - include_tasks: tasks/yt-dlp.yaml
+    # - include_tasks: tasks/yt-dlp.yaml
     - include_tasks: tasks/rust.yaml
     - include_tasks: tasks/ssh.yaml
 

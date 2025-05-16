@@ -34,6 +34,7 @@
     - core
 
 - import_tasks: tasks/lazygit.yaml
+- import_tasks: tasks/delta.yaml
 # Commented tasks if you need them later
 - import_tasks: tasks/rust.yaml
 # - include_tasks: tasks/kubectx.yaml
