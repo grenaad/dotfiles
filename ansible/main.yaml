@@ -1,6 +1,6 @@
 ---
 - name: Intro to Ansible Playbooks
-  hosts: all
+  hosts: localhost
   tasks:
     # Install OS specific packages
     - include_tasks: packages-ubuntu.yaml

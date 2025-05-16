@@ -9,6 +9,8 @@ return {
   "AstroNvim/astrocommunity",
   { import = "astrocommunity.pack.lua" },
   { import = "astrocommunity.pack.dart" },
+  { import = "astrocommunity.markdown-and-latex.markview-nvim" },
+
   -- { import = "astrocommunity.completion.avante-nvim"},
   -- { import = "astrocommunity.utility.noice-nvim" },
 }

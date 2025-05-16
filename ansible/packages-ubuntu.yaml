@@ -34,6 +34,6 @@
 
 - import_tasks: tasks/lazygit.yaml
 # Commented tasks if you need them later
-# - import_tasks: tasks/rust.yaml
+- import_tasks: tasks/rust.yaml
 # - include_tasks: tasks/kubectx.yaml
-- include_tasks: tasks/stern.yaml
+# - include_tasks: tasks/stern.yaml
