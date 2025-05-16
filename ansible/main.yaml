@@ -1,6 +1,7 @@
 ---
 - name: Intro to Ansible Playbooks
   hosts: localhost
+  gather_facts: yes  # Ensure facts are gathered, aka the distribution
   tasks:
     # Install OS specific packages
     - include_tasks: packages-ubuntu.yaml
