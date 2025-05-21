@@ -11,11 +11,9 @@
       when: ansible_facts['os_family'] == "Darwin"
 
     - include_tasks: tasks/nvm.yaml
-
-    # Install youtube-dl using pip
-    # - include_tasks: tasks/yt-dlp.yaml
     - include_tasks: tasks/rust.yaml
     - include_tasks: tasks/ssh.yaml
+    - include_tasks: tasks/git.yaml
 
     - name: Stow all config files
       shell: |

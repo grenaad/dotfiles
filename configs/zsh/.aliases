@@ -1,10 +1,15 @@
 ###### Aliases  ######
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  alias vim="/opt/homebrew/bin/nvim"  # macOS
+elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  alias vim="/opt/nvim/nvim"  # Linux
+fi
+
 alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 alias shop="ssh terminal.shop"
 alias iterm="open -a iTerm"
 alias lg="lazygit"
 alias r="ranger"
-alias vim="/opt/homebrew/bin/nvim"
 alias clear_vim="rm -rf ~/.local/share/nvim  ~/.local/state/nvim  ~/.cache/nvim"
 alias youtube-dl="yt-dlp -S ext" # "-S ext" will sort the mp4 formats to be ahead and should be default
 alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="

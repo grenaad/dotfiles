@@ -6,6 +6,8 @@
   path = ~/.gitconfig-work
 [includeIf "gitdir:~/work2/"]
   path = ~/.gitconfig-work2
+[includeIf "gitdir:~/work3/"]
+  path = ~/.gitconfig-work3
 [push]
 	default = current
 [pull]

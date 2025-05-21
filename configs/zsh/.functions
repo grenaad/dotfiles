@@ -98,11 +98,18 @@ function dkill() {
 }
 
 function cdf() {
-  cd $(find ~/work/focaldata ~/work/old/checkout ~/work ~/work2 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+  cd $(find ~/work/focaldata ~/work/old/checkout ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
 }
 
 function ip() {
   MYIP=`dig +short myip.opendns.com @resolver1.opendns.com`
   DATE=`date +%F`
   echo "$MYIP" 
+}
+
+function activate_venv() {
+	if [ ! -d "./.venv" ]; then \
+		conda create --prefix ./.venv python=3.12; \
+	fi
+	conda activate ./.venv
 }

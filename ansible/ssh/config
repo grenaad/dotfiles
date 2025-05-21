@@ -13,6 +13,18 @@ Host work
     IdentityFile   ~/.ssh/id_rsa_work
     IdentitiesOnly yes
 
+Host work2
+    HostName      github.com
+    User           git
+    IdentityFile   ~/.ssh/id_rsa_work2
+    IdentitiesOnly yes
+
+Host work3
+    HostName      github.com
+    User           git
+    IdentityFile   ~/.ssh/id_rsa
+    IdentitiesOnly yes
+
 Host github.com *.github.com
     Hostname       github.com
     User           git
