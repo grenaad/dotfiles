@@ -26,6 +26,7 @@
         "make",
         "python3-pip",
         "parallel",
+        "ripgrep",
       ]
   become: true
   tags:
