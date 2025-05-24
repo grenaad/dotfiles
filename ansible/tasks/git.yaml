@@ -1,6 +1,6 @@
 - name: Manage Git Configurations
   hosts: localhost
-  become: yes  # Optional: Use this if you need to run as a different user (e.g., root)
+  become: true
   tasks:
     - name: Create Global Git config
       copy:

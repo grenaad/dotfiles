@@ -1,11 +1,11 @@
 ---
 - name: Intro to Ansible Playbooks
   hosts: localhost
-  gather_facts: yes  # Ensure facts are gathered, aka the distribution
+  gather_facts: yes # Ensure facts are gathered, aka the distribution
   tasks:
     # Install OS specific packages
     - include_tasks: packages-ubuntu.yaml
-      when: ansible_facts['distribution'] == "Ubuntu"
+      when: ansible_facts['distribution'] == "Ubuntu" or ansible_facts['distribution'] == "Pop!_OS"
 
     - include_tasks: packages-macos.yaml
       when: ansible_facts['os_family'] == "Darwin"

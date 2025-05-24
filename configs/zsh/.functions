@@ -31,11 +31,34 @@ function f () {
 	find $1 -name $2 2>/dev/null
 }
 
-# Kill any application that is using a giving port
-# function kill_port() {
-# 	kill -9 $(lsof -i TCP:$1 | grep LISTEN | awk '{print $2}')
-# }
-#
+kill_docker_port() {
+  local port="$1"
+
+  if [ -z "$port" ]; then
+    echo "Error: Please provide a port number as an argument."
+    return 1
+  fi
+
+  # Check if the port is a valid integer
+  if ! [[ "$port" =~ ^[0-9]+$ ]]; then
+    echo "Error: Port number must be an integer."
+    return 1
+  fi
+
+  # Find containers using the specified port
+  containers=$(docker ps -q --filter "port=$port")
+
+  if [ -z "$containers" ]; then
+    echo "No containers are currently using port $port."
+    return 0
+  fi
+
+  # Kill the containers
+  echo "Killing containers using port $port..."
+  docker kill $containers
+  echo "Containers using port $port have been killed."
+}
+
 function kill_port() {
     pid=$(lsof -ti TCP:$1)
     if [ -n "$pid" ]; then
