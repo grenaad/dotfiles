@@ -15,14 +15,14 @@ return {
       --   string[] : a list of directory patterns to look for
       --   fun(bufnr: integer): string|string[] : a function that takes a buffer number and outputs detected roots
       detector = {
-        "lsp",                                                                         -- highest priority is getting workspace from running language servers
-        { "pyproject.toml", "pubspec.yaml", ".git",        "_darcs", ".hg", ".bzr", ".svn" }, -- next check for a version controlled parent directory
-        { "lua",            "MakeFile",     "package.json" },                          -- lastly check for known project root files
+        "lsp", -- highest priority is getting workspace from running language servers
+        { "pyproject.toml", "pubspec.yaml", ".git", "_darcs", ".hg", ".bzr", ".svn" }, -- next check for a version controlled parent directory
+        { "lua", "MakeFile", "package.json" }, -- lastly check for known project root files
       },
       -- ignore things from root detection
       ignore = {
         servers = {}, -- list of language server names to ignore (Ex. { "efm" })
-        dirs = {},    -- list of directory patterns (Ex. { "~/.cargo/*" })
+        dirs = {}, -- list of directory patterns (Ex. { "~/.cargo/*" })
       },
       -- automatically update working directory (update manually with `:AstroRoot`)
       autochdir = true,
@@ -42,8 +42,15 @@ return {
 
         -- Codecompanion
         -- Add the selected text to the chat window
-        ["<Leader>AA"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
-        ["<Leader>Ac"] = { "<cmd>CodeCompanionChat Add<CR>", desc = "Chat" },
+        -- ["<Leader>AA"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+        -- ["<Leader>Ac"] = { "<cmd>CodeCompanionChat Add<CR>", desc = "Chat" },
+        -- Avante
+        ["<Leader>Ae"] = {
+          function()
+            require("avante.api").edit()
+          end,
+          desc = "AvanteEdit",
+        },
 
         ["<Leader>jf"] = {
           "<cmd>'<,'>!jq .<CR>",
@@ -392,9 +399,66 @@ return {
         },
 
         -- Codecompanion
-        ["<Leader>A"] = { desc = "Codecompanion" },
-        ["<Leader>AA"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
-        ["<Leader>Ac"] = { "<cmd>CodeCompanionChat Toggle<CR>", desc = "Chat" },
+        -- ["<Leader>A"] = { desc = "Codecompanion" },
+        -- ["<Leader>AA"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+        -- ["<Leader>Ac"] = { "<cmd>CodeCompanionChat Toggle<CR>", desc = "Chat" },
+        -- Avante
+        ["<Leader>A"] = { desc = "Avante" },
+        ["<Leader>AA"] = {
+          function()
+            require("avante.api").ask()
+          end,
+          desc = "AvanteAsk",
+        },
+        ["<Leader>Ac"] = {
+          function()
+            require("avante.api").ask({ ask = false })
+          end,
+          desc = "AvanteChat",
+        },
+        ["<Leader>Ar"] = {
+          function()
+            require("avante.api").refresh()
+          end,
+          desc = "AvanteRefresh",
+        },
+        ["<Leader>Af"] = {
+          function()
+            require("avante.api").focus()
+          end,
+          desc = "AvanteFocus",
+        },
+        ["<Leader>Ab"] = {
+          function()
+            require("avante.api").build()
+          end,
+          desc = "AvanteBuild",
+        },
+        ["<Leader>At"] = { desc = "AvanteToggle" },
+        ["<Leader>Att"] = {
+          function()
+            require("avante").toggle() -- Assuming M refers to the avante module
+          end,
+          desc = "AvanteToggle",
+        },
+        ["<Leader>Atd"] = {
+          function()
+            require("avante").toggle.debug()
+          end,
+          desc = "AvanteToggleDebug",
+        },
+        ["<Leader>Ath"] = {
+          function()
+            require("avante").toggle.hint()
+          end,
+          desc = "AvanteToggleHint",
+        },
+        ["<Leader>Ats"] = {
+          function()
+            require("avante").toggle.suggestion()
+          end,
+          desc = "AvanteToggleSuggestion",
+        },
 
         -- vim.keymap.set({ "n", "v" }, "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
         -- vim.keymap.set({ "n", "v" }, "<LocalLeader>a", "<cmd>CodeCompanionChat Toggle<cr>", { noremap = true, silent = true })

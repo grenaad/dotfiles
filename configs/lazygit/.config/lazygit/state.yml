@@ -1,6 +1,20 @@
 lastupdatecheck: 0
 recentrepos:
 - /Users/ice/projects/dotfiles
+- /Users/ice/work/focaldata/cin-autobots/CH-980
+- /Users/ice/work/focaldata/cin-questionnaire/CH-978-add-interlock-logic
+- /Users/ice/work/focaldata/fd-local
+- /Users/ice/work/focaldata/cin-dashboard/CH-980
+- /Users/ice/work/focaldata/cin-respondent/master
+- /Users/ice/work/focaldata/cin-dashboard/CH-965
+- /Users/ice/work/focaldata/fd-panel-supplier/ch-896_update_question
+- /Users/ice/projects/solvy
+- /Users/ice/work/focaldata/fd-core-respondent/main
+- /Users/ice/work3/OTA_PRECAMPAIGN_WEBAPP/OTAMON-95
+- /Users/ice/work/focaldata/cin-autobots/CH-954
+- /Users/ice/work/focaldata/cin-respondent/CH-861
+- /Users/ice/work/focaldata/cin-questionnaire/master
+- /Users/ice/work/focaldata/cin-dashboard/main
 startuppopupversion: 5
 customcommandshistory: []
 hidecommandlog: false
