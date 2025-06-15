@@ -1,0 +1,10 @@
+- name: Install rustup for Ubuntu
+  shell: | 
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -y | sh
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - core
+    - rust
+  become: true

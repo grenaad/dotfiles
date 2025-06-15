@@ -1,0 +1,68 @@
+- name: Ensure .ssh directory exists.
+  file:
+    dest: ~/.ssh
+    mode: 0700
+    state: directory
+  tags:
+    - dotfiles
+    - install
+    - ssh
+
+- name: Install ssh private key
+  copy:
+    src: ./ssh/id_rsa
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - ssh
+
+- name: Install ssh public key
+  copy:
+    src: ./ssh/id_rsa.pub
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa.pub"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - ssh
+
+- name: Install work ssh private key
+  copy:
+    src: ./ssh/id_rsa
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa_work"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - ssh
+
+- name: Install work ssh public key
+  copy:
+    src: ./ssh/id_rsa.pub
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/id_rsa_work.pub"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - ssh
+
+
+- name: Copy config file
+  copy:
+    src: ./ssh/config
+    dest: "{{ lookup('env', 'HOME') }}/.ssh/config"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - ssh
+
+# - name: Copy the key add to authorized_keys using Ansible module
+#   authorized_key:
+#     user: "{{ lookup('env', 'USER') }}"
+#     state: present
+#     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+#
+#

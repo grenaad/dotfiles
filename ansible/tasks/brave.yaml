@@ -1,0 +1,12 @@
+- name: Install Brave browser
+  become: true # sudo
+  become_flags: -i # Execute config files such as .profile (Ansible uses non-interactive login shells)
+  shell: |
+    curl -fsS https://dl.brave.com/install.sh | sh
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - core
+    - brave
+    - browser

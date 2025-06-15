@@ -1,0 +1,9 @@
+# Load alias
+source ~/.aliases
+
+# Load functions
+source ~/.functions
+
+# Load zsh plugins
+source ~/.zsh_plugins
+

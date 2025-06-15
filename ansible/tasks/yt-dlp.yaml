@@ -1,0 +1,4 @@
+- name: Install yt-dlp (youtube-dl)
+  pip:
+    name: yt-dlp
+

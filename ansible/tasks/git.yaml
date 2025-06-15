@@ -1,0 +1,26 @@
+- name: Create Global Git config
+  copy:
+    src: "{{ playbook_dir }}/git/.gitconfig"
+    dest: "{{ lookup('env', 'HOME') }}/.gitconfig"
+  tags:
+    - dotfiles
+    - install
+    - git
+
+- name: Create personal Git config
+  copy:
+    src: "{{ playbook_dir }}/git/.gitconfig-personal"
+    dest: "{{ lookup('env', 'HOME') }}/.gitconfig-personal"
+  tags:
+    - dotfiles
+    - install
+    - git
+
+- name: Create work Git config
+  copy:
+    src: "{{ playbook_dir }}/git/.gitconfig-work"
+    dest: "{{ lookup('env', 'HOME') }}/.gitconfig-work"
+  tags:
+    - dotfiles
+    - install
+    - git

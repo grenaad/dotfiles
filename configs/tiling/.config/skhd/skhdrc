@@ -1,0 +1,95 @@
+
+# if you're having troubles finding key codes for a key just type skhd --observe in a terminal and type a key.
+
+# Reference: https://github.com/julian-heng/yabai-config/blob/master/skhdrc
+
+## Quickly restart the yabai launch agent
+cmd + alt - r : launchctl kickstart -k "gui/${UID}/homebrew.mxcl.yabai"
+cmd + alt - s : launchctl stop "gui/${UID}/homebrew.mxcl.yabai"
+
+## Close active application
+alt - q : $(yabai -m window $(yabai -m query --windows --window | jq -re ".id") --close)
+
+# opens iTerm2
+# alt - return : ~/projects/dotfiles/macos/open_iterm2.sh
+alt  - return : open -na iTerm
+
+# Window Navigation
+alt - h : yabai -m window --focus west
+alt - j : yabai -m window --focus south
+alt - k : yabai -m window --focus north
+alt - l : yabai -m window --focus east
+# Same, just using directional keys
+alt - left : yabai -m window --focus west
+alt - down : yabai -m window --focus south
+alt - up : yabai -m window --focus north
+alt - right : yabai -m window --focus east
+
+# Moving windows
+shift + alt - h : yabai -m window --warp west
+shift + alt - j : yabai -m window --warp south
+shift + alt - k : yabai -m window --warp north
+shift + alt - l : yabai -m window --warp east
+# Same just using arrows
+shift + alt - left : yabai -m window --warp west
+shift + alt - down : yabai -m window --warp south
+shift + alt - up : yabai -m window --warp north
+shift + alt - right : yabai -m window --warp east
+
+# Move focus container to workspace
+# Have to disable SIP for these commands
+# shift + alt - m : yabai -m window --space last; yabai -m space --focus last
+# shift + alt - p : yabai -m window --space prev; yabai -m space --focus prev
+# shift + alt - n : yabai -m window --space next; yabai -m space --focus next
+
+# Using macos keybord shortcuts for this. These do not always work
+# shift + alt - 1 : yabai -m window --space 1; yabai -m space --focus 1
+# shift + alt - 2 : yabai -m window --space 2; yabai -m space --focus 2
+# shift + alt - 3 : yabai -m window --space 3; yabai -m space --focus 3
+# shift + alt - 4 : yabai -m window --space 4; yabai -m space --focus 4
+
+# Equalize size of windows
+alt - e : yabai -m space --balance
+
+# Rotate windows clockwise and anticlockwise
+alt - r         : yabai -m space --rotate 270
+shift + alt - r : yabai -m space --rotate 90
+
+# Float and center window / Unfloat window
+alt - g : \
+    yabai -m window --toggle float; \
+    yabai -m window --toggle border; \
+    yabai -m window --grid 4:4:1:1:2:2
+
+# Make window native fullscreen
+alt - f         : yabai -m window --toggle zoom-fullscreen
+shift + alt - f : yabai -m window --toggle native-fullscreen
+
+# Resize windows
+lctrl + alt - h : yabai -m window --resize left:-50:0; \
+                  yabai -m window --resize right:-50:0
+lctrl + alt - j : yabai -m window --resize bottom:0:50; \
+                  yabai -m window --resize top:0:50
+lctrl + alt - k : yabai -m window --resize top:0:-50; \
+                  yabai -m window --resize bottom:0:-50
+lctrl + alt - l : yabai -m window --resize right:50:0; \
+                  yabai -m window --resize left:50:0
+
+# open mpv
+alt - m : open -na /Applications/mpv.app $(pbpaste)
+
+# focus the first window that yabai knows about on space #, if there are any
+alt - 1 : yabai -m query --spaces --space 1 | jq -r '.windows[0] // empty' | xargs yabai -m window --focus
+alt - 2 : yabai -m query --spaces --space 2 | jq -r '.windows[0] // empty' | xargs yabai -m window --focus
+alt - 3 : yabai -m query --spaces --space 3 | jq -r '.windows[0] // empty' | xargs yabai -m window --focus
+
+##### No SID #####
+# See work around above
+# These options are not available when not SID is enabled
+# Focus display
+# alt - 1 : yabai -m window --display 1 yabai -m display --focus 1
+# alt - 2 : yabai -m window --display 2 yabai -m display --focus 2
+# alt - 3 : yabai -m window --display 3 yabai -m display --focus 3
+# cmd - 1 : yabai -m space --focus 1
+# cmd - 2 : yabai -m space --focus 2
+

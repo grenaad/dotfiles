@@ -1,0 +1,85 @@
+###### SIP ######
+
+# window_border must be turned off
+# It caused random window server crash and new windows of a application can become invisible
+yabai -m config                 \
+   window_border off            \
+   window_shadow off            \
+   window_opacity off           \
+   window_opacity_duration 0.00 \
+   active_window_opacity 1.0    \
+
+###### General ######
+# New window spawns to the right if vertical split, or bottom if horizontal split
+yabai -m config window_placement second_child
+
+# floating windows are always on top (default: off)
+yabai -m config window_topmost off
+
+###### Window Layout ######
+# 3 different layouts: float, stack or bsp (binary space partition)
+yabai -m config layout                       bsp
+
+###### Padding ######
+yabai -m config \
+   top_padding                  10 \ 
+   bottom_padding               10 \ 
+   left_padding                 10 \ 
+   right_padding                10 \ 
+   window_gap                   10
+
+###### Custom space names ######
+yabai -m space 1 --label browser
+yabai -m space 2 --label iterm
+yabai -m space 3 --label vscode
+yabai -m space 4 --label intellij
+
+###### Debug ######
+# Debug info is turned on
+yabai -m config debug_output on
+# or launch with yabai with --verbose flag
+# View logs at:
+# tail -f $HOMEBREW_PREFIX/var/log/yabai/yabai.err.log
+# tail -f $HOMEBREW_PREFIX/var/log/yabai/yabai.out.log
+
+###### Window Ignore list ######
+# Do not tile list
+yabai -m rule --add app=Stickies manage=off
+yabai -m rule --add app="^System Preferences$" sticky=on layer=above manage=off
+yabai -m rule --add app="^Finder$" sticky=on layer=above manage=off
+yabai -m rule --add app="^Disk Utility$" sticky=on layer=above manage=off
+yabai -m rule --add app="^System Information$" sticky=on layer=above manage=off
+yabai -m rule --add app="^Activity Monitor$" sticky=on layer=above manage=off
+yabai -m rule --add app="^TeamViewer$" sticky=off layer=above manage=off
+yabai -m rule --add app="^Spotify$" manage=off
+yabai -m rule --add app="^mpv$" manage=off
+yabai -m rule --add app="^YouTube Music Desktop App$" manage=off
+yabai -m rule --add app="^Library$" manage=off
+yabai -m rule --add app="^OBS$" manage=off
+yabai -m rule --add app="System Information" label="About This Mac" title="About This Mac" manage=off
+yabai -m rule --add label="Software Update" title="Software Update" manage=off
+yabai -m rule --add app="^Calculater$" manage=off
+yabai -m rule --add app="^Calendar$" manage=off
+yabai -m rule --add title="^Calculator$" manage=off
+yabai -m rule --add app="^Docker Desktop$" manage=off
+yabai -m rule --add app="^System Settings$" manage=off
+
+# Go to IntelliJ IDEA > Preferences > Appearance & behavior > Appearance > UI Options > Always show full path in window header
+yabai -m rule --add app="^IntelliJ IDEA$" manage=off
+yabai -m rule --add app="^IntelliJ IDEA$" title=".*\[(.*)\].*" manage=on
+yabai -m rule --add title="^Slack call" manage=off
+
+###### Mouse ######
+# when changing window focus with the keyboard, move the mouse to that window
+yabai -m config mouse_follows_focus on
+
+# Keep alt key pressed to switch to mouse mode for the following commands
+# cmd works, but not alt, and can't change
+# yabai -m config mouse_modifier alt
+
+# when left click + drag, this will move the window
+yabai -m config mouse_action1 move
+# when right click + drag, this will resize the window
+yabai -m config mouse_action2 resize
+# when an window is dragged to the center of another window, swap them
+yabai -m mouse_drop_action swap

@@ -1,0 +1,14 @@
+tags
+*.netrwhist
+**/.ionide
+.zshrc.zwc
+*.swp
+.git/
+.DS_Store
+
+configs/lvim/.config/lvim/plugin/packer_compiled.lua
+*wget-log*
+
+configs/scripts/.local/share/
+configs/scripts/.local/state/
+configs/lazygit/.config/lazygit/state.yml

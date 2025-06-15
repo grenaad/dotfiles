@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# tmux-windowizer [path] [command]
+#
+# Description
+# This must be executed in a tmux session
+# This will create a new window in the current tmux session.
+# The new window's name will be the basename of the path eg. bar if path=/foo/bar.
+# If no path is giving, use fzf to search for folder
+# The giving command argument are executed in the new window.
+#
+# options:
+# command       execute this command in the new window.
+#
+# example:
+# tmux-windowizer /foo/bar echo "Hello"
+
+# Debugging
+if [[ $# -eq 1 ]]; then
+    path=$1
+else
+    path=$(find ~/work/focaldata ~/work/old/checkout ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+fi
+
+path="$path"
+base_name=$(basename $path)
+session_name=$(tmux display-message -p "#S")
+window_name=$(echo $base_name | tr "./" "__")
+target="$session_name:$window_name"
+
+if ! tmux has-session -t $target 2> /dev/null; then
+  tmux neww -dn $window_name
+fi
+
+tmux send-keys -t $target "cd $path" ENTER
+tmux send-keys -t $target "clear" ENTER
+
+shift # remove the first arg, eg $2 becomes $1, $1 falls away
+# execute the rest of the args in the new window if a command is giving
+if [ "$1" != "" ]; then
+  tmux send-keys -t $target "$*"
+fi
+
+tmux select-window -t $window_name
+

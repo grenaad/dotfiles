@@ -1,0 +1,138 @@
+# List hidden files as well
+function v () {
+  selected=$(fd --max-depth 6 --type file --hidden | fzf)
+  if [[ -z $selected ]]; then
+    exit 0
+  fi
+  vim $selected
+}
+
+function cdl(){
+  VAR=$(ls -td -- */ | head -n 1 | cut -d'/' -f1); cd ${VAR}
+}
+
+function vimz() {
+  vim "$(fz $1)"
+ }
+
+function remove_carriage_returns () {
+	sed -i 's/\r//g' $1
+}
+
+function myip() {
+  ifconfig | awk '/inet /&&!/127.0.0.1/{print $2;exit}'
+}
+
+function remove_all_carriage_returns (){
+    find . -name $1 | xargs sed -i 's/\r//g'
+}
+
+function f () {
+	find $1 -name $2 2>/dev/null
+}
+
+kill_docker_port() {
+  local port="$1"
+
+  if [ -z "$port" ]; then
+    echo "Error: Please provide a port number as an argument."
+    return 1
+  fi
+
+  # Check if the port is a valid integer
+  if ! [[ "$port" =~ ^[0-9]+$ ]]; then
+    echo "Error: Port number must be an integer."
+    return 1
+  fi
+
+  # Find containers using the specified port
+  containers=$(docker ps -q --filter "port=$port")
+
+  if [ -z "$containers" ]; then
+    echo "No containers are currently using port $port."
+    return 0
+  fi
+
+  # Kill the containers
+  echo "Killing containers using port $port..."
+  docker kill $containers
+  echo "Containers using port $port have been killed."
+}
+
+function kill_port() {
+    pid=$(lsof -ti TCP:$1)
+    if [ -n "$pid" ]; then
+        kill $pid
+        echo "Process on port $1 killed."
+    else
+        echo "No process found on port $1."
+    fi
+}
+
+function cd() {
+    builtin cd "$@" && ls -F
+}
+
+# convert_vid inputfile outputfile
+function convert_vid() {
+	ffmpeg -i $1 -vcodec libx264 -acodec aac $2.mp4
+}
+
+function convert_scale_to_phone() {
+  ffmpeg -i $1 -vf scale=480:-1 $2
+}
+
+# convert_vid inputfile outputfile
+function convert_audio() {
+	ffmpeg -i $1 -acodec aac $2.aac
+}
+
+function fz() {
+  rg --files --follow -g '!{node_modules,.git,.bare}' $1 | fzf
+ }
+
+function list_dir_with_fzf() {
+  # giving a path, pipe all the directories in the path to fzf
+  # cd $(ls -d $1*/ | fzf)
+  # ls -d $1*/ | fzf
+  find $1 -maxdepth 1 -type d -not -path '*/\.*' |
+  fzf
+}
+
+function git_fetch()  {
+    # for some reason git fetch does not work without removing/adding remote repo
+    remote=$(git remote -v | sed -e 's/([^()]*)//g' | head -n 1)
+    git remote rm origin
+    bash -c "git remote add $remote"
+    git fetch --prune --all
+}
+
+function clone_worktree()  {
+# clone the git repo into a bare repo and setup the directory structure
+		REPO_NAME=$(echo "$1" | awk -F "[./]" '{print $(NF-1)}')
+		mkdir $REPO_NAME
+		git clone --bare $1 $REPO_NAME/.bare/
+		echo "gitdir: ./.bare" > $REPO_NAME/.git
+    cd $REPO_NAME
+}
+
+function dkill() {
+  docker rm -vf $(docker ps -aq)
+}
+
+function cdf() {
+  cd $(find ~/work/focaldata ~/work/old/checkout ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+}
+
+function ip() {
+  MYIP=`dig +short myip.opendns.com @resolver1.opendns.com`
+  DATE=`date +%F`
+  echo "$MYIP" 
+}
+
+function activate_venv() {
+	if [ ! -d "./.venv" ]; then \
+		conda create --prefix ./.venv python=3.12; \
+	fi
+	conda activate ./.venv
+}

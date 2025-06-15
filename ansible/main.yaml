@@ -1,0 +1,42 @@
+---
+- name: Intro to Ansible Playbooks
+  hosts: localhost
+  gather_facts: yes # Ensure facts are gathered, aka the distribution
+  tasks:
+    # Install OS specific packages
+    - include_tasks: packages-ubuntu.yaml
+      when: ansible_facts['distribution'] == "Ubuntu" or ansible_facts['distribution'] == "Pop!_OS"
+
+    - include_tasks: packages-macos.yaml
+      when: ansible_facts['os_family'] == "Darwin"
+
+    - include_tasks: tasks/nvm.yaml
+    - include_tasks: tasks/rust.yaml
+    - include_tasks: tasks/ssh.yaml
+    - include_tasks: tasks/git.yaml
+
+    - name: Stow all config files
+      shell: |
+        cd ../configs/
+        stow -t "{{ lookup('env', 'HOME') }}" */
+      args:
+        executable: /bin/bash
+      tags:
+        - install
+        - core
+
+    - name: Add zsh to .bashrc
+      lineinfile:
+        path: "{{ lookup('env', 'HOME') }}/.bashrc"
+        regexp: "zsh"
+        line: "zsh"
+        state: present
+        create: yes
+
+    - name: Add zsh configs to main .zshrc
+      lineinfile:
+        path: "{{ lookup('env', 'HOME') }}/.zshrc"
+        regexp: "^source ~/.zshrc_"
+        line: "source ~/.zshrc_"
+        state: present
+        create: yes

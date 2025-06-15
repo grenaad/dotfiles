@@ -1,0 +1,92 @@
+---
+- name: Install MacOS Packages
+
+  vars:
+    homebrew_installed_packages:
+      - neovim
+      - docker
+      - docker-compose
+      - jq
+      - tmux
+      - ffmpeg
+      - fzf
+      - kubectx
+      - nvm
+      - pyenv
+      - ranger
+      - stern
+      - tldr
+      - tmux
+      - gnu-sed
+      - bat
+      - rustup
+      - duti
+      - kustomize
+      - lazygit
+      - k9s
+      - shc
+      - btop
+      - ata
+      - httpie
+      - jira-cli
+      - stow
+      - git-delta
+      - ruff
+      - go
+      - delve
+      - parallel
+      - bottom
+      - goose
+
+    homebrew_cask_apps:
+      - docker
+      - firefox
+      - google-chrome
+      - brave-browser
+      - slack
+      - chromedriver
+      - mpv
+      - slack
+      - zoom
+      - firefox
+      - iterm2
+      - obs
+      - postman
+      - transmission
+      - onlyoffice
+      - zotero
+      - authy
+      - whatsapp
+      - utm
+      - font-meslo-lg-nerd-font
+
+    homebrew_taps:
+      - ankitpokhrel/jira-cli
+
+  # brew tap ankitpokhrel/jira-cli
+  # brew install jira-cli
+
+  roles:
+    - geerlingguy.mac.homebrew
+
+    # tasks:
+    #   - name: Setup yabai
+    #     file:
+    #       src: ~/projects/dotfiles/configs/macos/.yabairc
+    #       path: ~/
+    #       state: hard
+    #     tags:
+    #       - install
+    #       - core
+    #       - yabai
+
+    #  - name: Install rust
+    #    shell: rustup-init
+    #    args:
+    #      executable: /bin/bash
+    #    tags:
+    #      - install
+    #      - core
+    #      - rust
+
+    - include_tasks: tasks/mpv.yaml
