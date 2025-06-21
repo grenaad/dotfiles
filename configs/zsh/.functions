@@ -136,3 +136,24 @@ function activate_venv() {
 	fi
 	conda activate ./.venv
 }
+
+# OpenCode wrapper function
+# Usage: oc <input>
+oc() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: oc <input>"
+        return 1
+    fi
+    
+    opencode -p "$*"
+}
+
+# in Json format
+ocj() {
+    if [ $# -eq 0 ]; then
+        echo "Usage: oc <input>"
+        return 1
+    fi
+    
+    opencode -p "$*" -f json
+}

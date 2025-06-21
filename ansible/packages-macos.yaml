@@ -37,6 +37,7 @@
       - parallel
       - bottom
       - goose
+      - opencode-ai/tap/opencode
 
     homebrew_cask_apps:
       - docker
@@ -62,9 +63,6 @@
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
-
-  # brew tap ankitpokhrel/jira-cli
-  # brew install jira-cli
 
   roles:
     - geerlingguy.mac.homebrew

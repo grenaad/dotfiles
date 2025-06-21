@@ -15,6 +15,9 @@ vim.keymap.set("v", ">", ">gv")
 vim.filetype.add({
   extension = {
     ["http"] = "http",
+    ["mq5"] = "cpp", -- MQL5 files as C++
+    ["mq4"] = "cpp", -- MQL4 files (if needed)
+    ["mqh"] = "cpp", -- MQL header files (if needed)
   },
   filename = {
     ["Foofile"] = "fooscript",
@@ -99,4 +102,3 @@ require("flutter-tools").setup_project({
 
 -- required
 require("harpoon"):setup()
-
