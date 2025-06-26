@@ -4,9 +4,7 @@ return {
   cmd = { "SupermavenUseFree", "SupermavenUsePro" },
   opts = {
     keymaps = {
-      accept_suggestion = "<S-tab>",
-      clear_suggestion = "<A-c>",
-      accept_word = "<A-w>",
+      accept_suggestion = nil, -- handled by completion engine
     },
   },
   specs = {
