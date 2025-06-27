@@ -7,3 +7,5 @@ source ~/.functions
 # Load zsh plugins
 source ~/.zsh_plugins
 
+# Load env vars
+source ~/.env

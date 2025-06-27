@@ -11,21 +11,6 @@ return {
   { import = "astrocommunity.pack.dart" },
   { import = "astrocommunity.markdown-and-latex.markview-nvim" },
   { import = "astrocommunity.recipes.ai" },
-  -- { import = "astrocommunity.completion.avante-nvim" },
-  -- {
-  --   "yetone/avante.nvim",
-  --   opts = {
-  --     provider = "claude",
-  --     hints = { enabled = false },
-  --     providers = {
-  --       claude = {
-  --         -- claude-sonnet-4-20250514, claude-opus-4-20250514
-  --         model = "claude-sonnet-4-20250514",
-  --       },
-  --       hints = { enabled = false },
-  --     },
-  --   },
-  -- },
   -- { import = "astrocommunity.completion.avante-nvim"},
   -- { import = "astrocommunity.utility.noice-nvim" },
 }

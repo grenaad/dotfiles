@@ -10,6 +10,7 @@
     - include_tasks: packages-macos.yaml
       when: ansible_facts['os_family'] == "Darwin"
 
+    - include_tasks: tasks/env.yaml
     - include_tasks: tasks/nvm.yaml
     - include_tasks: tasks/rust.yaml
     - include_tasks: tasks/ssh.yaml
