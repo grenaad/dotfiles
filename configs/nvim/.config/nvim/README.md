@@ -32,3 +32,17 @@ git clone https://github.com/<your_user>/<your_repository> ~/.config/nvim
 ```shell
 nvim
 ```
+
+Update the each plugin's lua file with the spec, use supermaven.lua as an example.
+Each plugins keymaps must be in this format:
+
+specs = {
+{
+"AstroNvim/astrocore",
+opts = {
+mappings = {
+i = {
+....
+...
+
+Move all the keymaps in astro_core.lua to each plugin's lua file using the above method.

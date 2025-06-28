@@ -40,4 +40,22 @@ return {
       end,
     },
   },
+  specs = {
+    {
+      "AstroNvim/astrocore",
+      opts = {
+        mappings = {
+          n = {
+            ["<Leader>a"] = { desc = "Codecompanion" },
+            ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+            ["<Leader>ac"] = { "<cmd>CodeCompanionChat Toggle<CR>", desc = "Chat" },
+          },
+          v = {
+            ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
+            ["<Leader>ac"] = { "<cmd>CodeCompanionChat Add<CR>", desc = "Chat" },
+          },
+        },
+      },
+    },
+  },
 }

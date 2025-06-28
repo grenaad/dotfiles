@@ -18,5 +18,46 @@ return {
         },
       })
     end,
+  specs = {
+    {
+      "AstroNvim/astrocore",
+      opts = {
+        mappings = {
+          n = {
+            ["<Leader>TT"] = {
+              function()
+                require("neotest").run.run()
+              end,
+              desc = "Run nearest test",
+            },
+            ["<Leader>Tf"] = {
+              function()
+                require("neotest").run.run(vim.fn.expand("%"))
+              end,
+              desc = "Run current file",
+            },
+            ["<Leader>Ts"] = {
+              function()
+                require("neotest").summary.toggle()
+              end,
+              desc = "Toggle test summary",
+            },
+            ["<Leader>To"] = {
+              function()
+                require("neotest").output.open({ enter = true, auto_close = true })
+              end,
+              desc = "Show test output",
+            },
+            ["<Leader>Td"] = {
+              function()
+                require("neotest").run.run({ strategy = "dap" })
+              end,
+              desc = "Debug nearest test",
+            },
+          },
+        },
+      },
+    },
+  },
 }
 
