@@ -68,15 +68,12 @@ return {
         },
       },
       i = { -- Insert mode
-        -- ["<Leader>pu"] = {  "<c-u> :trim(system('uuidgen'))<cr>", noremap = true, silent = true, desc = "Generate UUID",},
-        --
       },
       t = { -- Terminal mode
         ["<C-t>"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
       },
       n = { -- Normal mode
-        -- second key is the lefthand side of the map
-
+        ["<C-t>"] = { "<Cmd>ToggleTerm<CR>", desc = "Toggle terminal" },
         -- navigate buffer tabs
         ["]b"] = {
           function()
