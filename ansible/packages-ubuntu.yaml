@@ -1,11 +1,11 @@
 ---
 # Update package cache before installing packages
-- name: Update Apt
-  apt:
-    force_apt_get: true
-    update_cache: true
-    state: present
-  become: true
+# - name: Update Apt
+#   apt:
+#     force_apt_get: true
+#     update_cache: true
+#     state: present
+#   become: true
 
 # Install packages with sudo
 - name: Install System Packages
@@ -28,7 +28,6 @@
         "parallel",
         "ripgrep",
         "delta",
-        "kubectx",
       ]
   become: true
   tags:

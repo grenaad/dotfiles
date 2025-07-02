@@ -1,9 +1,9 @@
 - name: Install nvm(node version manager) and node lts
-  shell: | 
-        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash 
-        source "{{ lookup('env', 'HOME') }}/.nvm/nvm.sh" 
-        nvm install --lts
-        nvm alias default node
+  shell: |
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+    source "{{ lookup('env', 'HOME') }}/.nvm/nvm.sh" 
+    nvm install --lts
+    nvm alias default node
   args:
     executable: /bin/bash
   tags:

@@ -24,3 +24,21 @@
     - dotfiles
     - install
     - git
+
+- name: Create work 2 Git config
+  copy:
+    src: "{{ playbook_dir }}/git/.gitconfig-work2"
+    dest: "{{ lookup('env', 'HOME') }}/.gitconfig-work2"
+  tags:
+    - dotfiles
+    - install
+    - git
+
+- name: Create work 3 Git config
+  copy:
+    src: "{{ playbook_dir }}/git/.gitconfig-work3"
+    dest: "{{ lookup('env', 'HOME') }}/.gitconfig-work3"
+  tags:
+    - dotfiles
+    - install
+    - git
