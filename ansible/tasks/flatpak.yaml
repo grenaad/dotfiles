@@ -1,0 +1,17 @@
+- name: Ensure Flatpak is installed
+  package:
+    name: flatpak
+    state: present
+
+- name: Add Flathub remote if not exists (system-wide)
+  command: >
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  args:
+    creates: /var/lib/flatpak/repo/flathub.trustedkeys.gpg
+
+- name: Install Zen Browser from Flatpak
+  community.general.flatpak:
+    name: app.zen_browser.zen
+    remote: flathub
+    state: present
+    system: true # system-wide installation

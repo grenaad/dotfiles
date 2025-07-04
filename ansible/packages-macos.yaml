@@ -54,6 +54,7 @@
       - whatsapp
       - font-meslo-lg-nerd-font
       - ghostty
+      - zen
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
