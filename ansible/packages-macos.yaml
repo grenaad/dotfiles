@@ -4,8 +4,6 @@
   vars:
     homebrew_installed_packages:
       - neovim
-      - docker
-      - docker-compose
       - jq
       - tmux
       - ffmpeg
@@ -24,7 +22,6 @@
       - kustomize
       - lazygit
       - k9s
-      - shc
       - btop
       - ata
       - httpie
@@ -44,21 +41,17 @@
       - firefox
       - google-chrome
       - brave-browser
-      - slack
       - chromedriver
       - mpv
       - slack
       - zoom
       - firefox
-      - iterm2
       - obs
       - postman
       - transmission
       - onlyoffice
       - zotero
-      - authy
       - whatsapp
-      - utm
       - font-meslo-lg-nerd-font
       - ghostty
 
