@@ -1,0 +1,9 @@
+- name: Install OpenCode
+  shell: |
+    curl -fsSL https://opencode.ai/install | bash
+  tags:
+    - install
+    - dotfiles
+    - lvim
+    - nvim
+    - opencode

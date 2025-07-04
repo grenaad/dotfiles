@@ -1,0 +1,27 @@
+- name: Install Ghostty
+  shell: |
+    # Download the latest AppImage package from releases
+    VERSION=1.1.3
+    ARCH=x86_64
+    wget https://github.com/pkgforge-dev/ghostty-appimage/releases/download/${VERSION}/Ghostty-${VERSION}-${ARCH}.AppImage
+
+    # Make the AppImage executable
+    chmod +x Ghostty-${VERSION}-${ARCH}.AppImage
+
+    # Optionally, add the AppImage to your PATH for easier access
+
+    # With sudo for system wide availability
+    sudo install ./Ghostty-${VERSION}-${ARCH}.AppImage /usr/local/bin/ghostty
+
+    # Without sudo, XDG base spec mandate
+    # install ./Ghostty-${VERSION}-${ARCH}.AppImage $HOME/.local/bin/ghostty
+
+    # Remove the original AppImage file
+    rm Ghostty-${VERSION}-${ARCH}.AppImage
+
+  tags:
+    - install
+    - dotfiles
+    - lvim
+    - nvim
+    - opencode

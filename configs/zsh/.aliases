@@ -5,8 +5,9 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
   alias vim="/opt/nvim/nvim"  # Linux
 fi
 
-# cd ~/.wine/drive_c/Program\ Files/GoMetaTrader5/MQL5
-# alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
+# Macos Automator:
+# export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+# WINEPREFIX="/Users/ice/.wine" wine ~/.wine/drive_c/Program\ Files/GoMetaTrader7/terminal64.exe
 
 alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 alias shop="ssh terminal.shop"
