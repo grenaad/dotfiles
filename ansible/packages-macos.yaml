@@ -37,7 +37,7 @@
       - parallel
       - bottom
       - goose
-      - opencode-ai/tap/opencode
+      - sst/tap/opencode
 
     homebrew_cask_apps:
       - docker
@@ -60,6 +60,7 @@
       - whatsapp
       - utm
       - font-meslo-lg-nerd-font
+      - ghostty
 
     homebrew_taps:
       - ankitpokhrel/jira-cli

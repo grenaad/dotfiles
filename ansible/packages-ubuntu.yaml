@@ -34,6 +34,8 @@
     - install
     - core
 
+- import_tasks: tasks/ghostty.yaml
+- import_tasks: tasks/opencode.yaml
 - import_tasks: tasks/lazygit.yaml
 - import_tasks: tasks/delta.yaml
 - import_tasks: tasks/brave.yaml
