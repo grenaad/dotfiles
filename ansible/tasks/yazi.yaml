@@ -1,0 +1,20 @@
+- name: Install Yazi
+  shell: |
+    # Set the version and platform-specific values
+    YAZI_URL="https://github.com/sxyazi/yazi/releases/download/v25.5.31/yazi-x86_64-unknown-linux-gnu.zip"
+
+    # Download the zip file
+    curl -Lo yazi.zip "$YAZI_URL"
+
+    # Extract and install to /usr/local/bin
+    unzip -j yazi.zip "*/yazi" -d /tmp/
+    sudo mv /tmp/yazi /usr/local/bin/yazi
+    sudo chmod +x /usr/local/bin/yazi
+
+    # Clean up
+    rm yazi.zip
+
+  tags:
+    - install
+    - dotfiles
+    - yazi

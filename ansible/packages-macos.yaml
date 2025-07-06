@@ -34,7 +34,19 @@
       - bottom
       - goose
       - sst/tap/opencode
-      - lf
+
+      - yazi # yazi, and it's dependencies
+      - ffmpeg # for video thumbnails
+      - sevenzip # for archive extraction and preview
+      - jq # for JSON preview
+      - poppler # for PDF preview
+      - fd # for file searching
+      - ripgrep # for file content searching
+      - fzf # for quick file subtree navigation, >= 0.53.0
+      - zoxide # for historical directories navigation, requires fzf
+      - resvg # for SVG preview
+      - imagemagick # for Font, HEIC, and JPEG XL preview
+      - font-symbols-only-nerd-font
 
     homebrew_cask_apps:
       - docker

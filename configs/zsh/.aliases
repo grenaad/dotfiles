@@ -67,9 +67,9 @@ export PATH="$PATH:$HOME/.local/bin"
 
 ###### General Settings ######
 
-# Ranger set editor
-# export EDITOR=nvim
-# export VISUAL=nvim
+# Ranger/LF set editor
+export EDITOR=nvim
+export VISUAL=nvim
 
 # Activate vi mode with <Escape>
 set -o vi
