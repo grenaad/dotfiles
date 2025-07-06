@@ -16,7 +16,6 @@
         "ffmpeg",
         "fzf",
         "bat",
-        "ranger",
         "unzip",
         "zip",
         "tldr",
@@ -34,6 +33,7 @@
     - install
     - core
 
+- import_tasks: tasks/lf.yaml
 - import_tasks: tasks/ghostty.yaml
 - import_tasks: tasks/flatpak.yaml
 - import_tasks: tasks/opencode.yaml

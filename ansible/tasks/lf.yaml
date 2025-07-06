@@ -1,0 +1,21 @@
+- name: Install lf (as in "list files")
+  shell: |
+    # Set the version and platform-specific values
+    LF_VERSION="r35"
+    LF_TARBALL="lf-linux-amd64.tar.gz"
+    LF_URL="https://github.com/gokcehan/lf/releases/download/${LF_VERSION}/${LF_TARBALL}"
+
+    # Download the tarball
+    curl -Lo lf.tar.gz "$LF_URL"
+
+    # Extract and install to /usr/local/bin
+    sudo tar xf lf.tar.gz -C /usr/local/bin lf
+
+    # Clean up
+    rm lf.tar.gz
+
+    # echo "✅ lf ${LF_VERSION} installed to /usr/local/bin"
+  tags:
+    - install
+    - dotfiles
+    - lf

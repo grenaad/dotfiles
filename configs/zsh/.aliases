@@ -13,7 +13,6 @@ alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Fi
 alias shop="ssh terminal.shop"
 alias iterm="open -a iTerm"
 alias lg="lazygit"
-alias r="ranger"
 alias clear_vim="rm -rf ~/.local/share/nvim  ~/.local/state/nvim  ~/.cache/nvim"
 alias youtube-dl="yt-dlp -S ext" # "-S ext" will sort the mp4 formats to be ahead and should be default
 alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="
@@ -69,8 +68,8 @@ export PATH="$PATH:$HOME/.local/bin"
 ###### General Settings ######
 
 # Ranger set editor
-export EDITOR=nvim
-export VISUAL=nvim
+# export EDITOR=nvim
+# export VISUAL=nvim
 
 # Activate vi mode with <Escape>
 set -o vi

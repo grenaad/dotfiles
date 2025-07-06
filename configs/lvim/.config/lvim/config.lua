@@ -8,7 +8,7 @@ lvim.builtin.alpha.active = true
 lvim.builtin.terminal.active = true
 lvim.builtin.nvimtree.setup.view.side = "left"
 
-vim.cmd [[autocmd FileType markdown set tw=80 wrap]]
+vim.cmd([[autocmd FileType markdown set tw=80 wrap]])
 
 -- lvim.builtin.nvimtree.show_icons.git = 0
 --
@@ -30,7 +30,7 @@ lvim.builtin.treesitter.ensure_installed = {
   "kotlin",
   "yaml",
   "dart",
-  "json"
+  "json",
 }
 lvim.builtin.treesitter.ignore_install = { "haskell" }
 lvim.builtin.treesitter.highlight.enabled = true
@@ -88,9 +88,9 @@ lvim.plugins = {
     cmd = "TroubleToggle",
     config = function()
       require("trouble").setup({
-        auto_preview = false
+        auto_preview = false,
       })
-    end
+    end,
   },
   -- { "udalov/kotlin-vim" },          -- Syntax for kotlin
   {
@@ -105,19 +105,19 @@ lvim.plugins = {
     "sindrets/diffview.nvim",
     event = "BufRead",
   },
-  { 'kdheepak/lazygit.nvim' },
+  { "kdheepak/lazygit.nvim" },
   {
     "ruifm/gitlinker.nvim",
     event = "BufRead",
     config = function()
-      require("gitlinker").setup {
+      require("gitlinker").setup({
         opts = {
-          add_current_line_on_normal_mode = true,                           -- adds current line nr in the url for normal mode
+          add_current_line_on_normal_mode = true,                      -- adds current line nr in the url for normal mode
           action_callback = require("gitlinker.actions").copy_to_clipboard, -- callback for what to do with the url
-          print_url = true,                                                 -- print the url after performing the action
-          mappings = "<leader>gy",                                          -- mapping to call url generation
+          print_url = true,                                            -- print the url after performing the action
+          mappings = "<leader>gy",                                     -- mapping to call url generation
         },
-      }
+      })
     end,
     dependencies = "nvim-lua/plenary.nvim",
   },
@@ -132,7 +132,7 @@ lvim.plugins = {
 
 local lspconfig = require("lspconfig")
 
-lspconfig.gleam.setup{}
+lspconfig.gleam.setup({})
 
 -- require("mason-lspconfig").setup_handlers {
 --   ["gleam"] = function()
@@ -141,15 +141,15 @@ lspconfig.gleam.setup{}
 --   end
 -- }
 
-lspconfig.dartls.setup {
+lspconfig.dartls.setup({
   settings = {
     dart = {
       lineLength = 150,
       completeFunctionCalls = true,
-      showTodos = true
-    }
-  }
-}
+      showTodos = true,
+    },
+  },
+})
 
 -- Hoos into LSP to extend it with external apps
 -- local null_ls = require("null-ls")
@@ -186,12 +186,12 @@ vim.cmd("au BufNewFile,BufRead *.js set filetype=typescript")
 -- To have html and tailwind lsp, change the file type for temple files to html
 vim.filetype.add({ extension = { templ = "html" } })
 -- Then add html to templ as filetype to use.
-lspconfig.templ.setup {
+lspconfig.templ.setup({
   filetypes = {
     "templ",
     "html",
   },
-}
+})
 
 -- dotfiles file types
 vim.cmd("au BufNewFile,BufRead *.functions,*.aliases set filetype=bash")
@@ -217,23 +217,26 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 -- ## Whichkey ##
 
 -- Git Linker
-lvim.builtin.which_key.mappings.g.y = { "<cmd>lua require('gitlinker').get_buf_range_url('n')<cr>",
-  "Copy permalink to clipboard" }
+lvim.builtin.which_key.mappings.g.y =
+{ "<cmd>lua require('gitlinker').get_buf_range_url('n')<cr>", "Copy permalink to clipboard" }
 
 -- Telescope
 lvim.builtin.which_key.mappings.s.w = {
   "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.expand('<cword>') })<cr>",
-  "Search Word Under Cursor" }
+  "Search Word Under Cursor",
+}
 lvim.builtin.which_key.mappings.s.d = {
   "<cmd>lua require('telescope.builtin').git_files({hidden=true, prompt_title='< VimRC >', cwd='$HOME/projects/dotfiles/',})<cr>",
-  "Search Dotfiles" }
+  "Search Dotfiles",
+}
 lvim.builtin.which_key.mappings.s.P = lvim.builtin.which_key.mappings.s.p
 lvim.builtin.which_key.mappings.s.p = {
   "<cmd>lua require('telescope.builtin').grep_string({ search = vim.fn.input('Grep > ') })<cr>",
-  "Search Project" }
+  "Search Project",
+}
 lvim.builtin.which_key.mappings["F"] = lvim.builtin.which_key.mappings["f"]
-lvim.builtin.which_key.mappings["f"] = { "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>",
-  "Find all files" }
+lvim.builtin.which_key.mappings["f"] =
+{ "<cmd>lua require('telescope.builtin').git_files({hidden=true})<cr>", "Find all files" }
 
 -- Trouble
 -- jump to the previous item, skipping the groups
@@ -253,10 +256,10 @@ lvim.builtin.which_key.mappings["t"] = {
 }
 
 -- Ranger
-lvim.builtin.which_key.mappings.r = {
-  name = "Ranger",
-  r = { "<cmd>RnvimrToggle<cr>", "Show Ranger in floating window" },
-}
+-- lvim.builtin.which_key.mappings.r = {
+--   name = "Ranger",
+--   r = { "<cmd>RnvimrToggle<cr>", "Show Ranger in floating window" },
+-- }
 
 -- Markdown
 lvim.builtin.which_key.mappings.m = {
@@ -332,21 +335,23 @@ vim.g["fsharp#show_signature_on_cursor_move"] = 0
 vim.g["fsharp#lsp_codelens"] = 0
 lvim.autocommands = {
   {
-    { 'WinEnter' }, {
-    pattern = { "*.fs", "*.fsx", "*.fsi" },
-    callback = vim.lsp.codelens.refresh,
-    group = "fhsarp_codelens"
-  },
+    { "WinEnter" },
+    {
+      pattern = { "*.fs", "*.fsx", "*.fsi" },
+      callback = vim.lsp.codelens.refresh,
+      group = "fhsarp_codelens",
+    },
   },
 }
 
 lvim.autocommands = {
   {
-    { 'TextChanged' }, {
-    pattern = { "*.fs", "*.fsx", "*.fsi" },
-    callback = vim.lsp.codelens.refresh,
-    group = "fhsarp_codelens"
-  },
+    { "TextChanged" },
+    {
+      pattern = { "*.fs", "*.fsx", "*.fsi" },
+      callback = vim.lsp.codelens.refresh,
+      group = "fhsarp_codelens",
+    },
   },
 }
 -- ########### Keymappings  ###########

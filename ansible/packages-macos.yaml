@@ -11,7 +11,6 @@
       - kubectx
       - nvm
       - pyenv
-      - ranger
       - stern
       - tldr
       - tmux
@@ -35,6 +34,7 @@
       - bottom
       - goose
       - sst/tap/opencode
+      - lf
 
     homebrew_cask_apps:
       - docker

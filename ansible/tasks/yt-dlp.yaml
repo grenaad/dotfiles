@@ -2,3 +2,8 @@
   pip:
     name: yt-dlp
 
+  tags:
+    - install
+    - youtube-dl
+    - yt-dlp
+    - youtube

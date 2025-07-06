@@ -1,12 +1,13 @@
 - name: Install sdkman
-  shell: | 
-      export SDKMAN_DIR="{{ lookup('env', 'HOME') }}/.sdkman" && curl -s "https://get.sdkman.io" | bash
-      source "{{ lookup('env', 'HOME') }}/.sdkman/bin/sdkman-init.sh"
-      sdk install gradle
-      sdk install kotlin
-      sdk install java
+  shell: |
+    export SDKMAN_DIR="{{ lookup('env', 'HOME') }}/.sdkman" && curl -s "https://get.sdkman.io" | bash
+    source "{{ lookup('env', 'HOME') }}/.sdkman/bin/sdkman-init.sh"
+    sdk install gradle
+    sdk install kotlin
+    sdk install java
   args:
     executable: /bin/bash
   tags:
     - install
     - core
+    - sdkman
