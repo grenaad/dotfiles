@@ -8,6 +8,8 @@ fi
 # Macos Automator:
 # export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 # WINEPREFIX="/Users/ice/.wine" wine ~/.wine/drive_c/Program\ Files/GoMetaTrader7/terminal64.exe
+#
+alias ghostdir='ghostty --working-directory'
 
 alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 alias shop="ssh terminal.shop"

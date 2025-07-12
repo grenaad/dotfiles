@@ -11,6 +11,9 @@
     sudo mv /tmp/yazi /usr/local/bin/yazi
     sudo chmod +x /usr/local/bin/yazi
 
+    # Optional dependencies:
+    sudo apt install ffmpeg 7zip jq poppler-utils fd-find ripgrep fzf zoxide imagemagick
+
     # Clean up
     rm yazi.zip
 
