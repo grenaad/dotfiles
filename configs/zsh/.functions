@@ -168,3 +168,17 @@ function y() {
 	rm -f -- "$tmp"
 }
 
+# macOS only
+# Open the current directory in a Ghostty Window
+ghost() {
+  osascript <<EOF
+    tell application "Ghostty"
+	    if it is running then
+		    activate
+		    tell application "System Events" to keystroke "t" using {command down}
+	    else
+		    activate
+	    end if
+    end tell
+EOF
+}

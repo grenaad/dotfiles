@@ -34,6 +34,7 @@
       - bottom
       - goose
       - sst/tap/opencode
+      - txn2/tap/kubefwd
 
       - yazi # yazi, and it's dependencies
       - ffmpeg # for video thumbnails
@@ -73,25 +74,5 @@
 
   roles:
     - geerlingguy.mac.homebrew
-
-    # tasks:
-    #   - name: Setup yabai
-    #     file:
-    #       src: ~/projects/dotfiles/configs/macos/.yabairc
-    #       path: ~/
-    #       state: hard
-    #     tags:
-    #       - install
-    #       - core
-    #       - yabai
-
-    #  - name: Install rust
-    #    shell: rustup-init
-    #    args:
-    #      executable: /bin/bash
-    #    tags:
-    #      - install
-    #      - core
-    #      - rust
 
     - include_tasks: tasks/mpv.yaml
