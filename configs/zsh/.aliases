@@ -8,10 +8,9 @@ fi
 # Macos Automator:
 # export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 # WINEPREFIX="/Users/ice/.wine" wine ~/.wine/drive_c/Program\ Files/GoMetaTrader7/terminal64.exe
+alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 
 alias ec="vim ~/Library/Application\ Support/Claude/claude_desktop_config.json"  
-
-alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 alias shop="ssh terminal.shop"
 alias iterm="open -a iTerm"
 alias lg="lazygit"
@@ -24,10 +23,6 @@ alias ev="vim ~/projects/dotfiles/configs/nvim/.config/nvim/init.lua"
 alias ..="cd .."
 alias ....="cd ../../"
 alias mkdir="mkdir -pv"
-alias jupyterlab_docker='docker run -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -v $HOME:/home/jovyan/work jupyter/datascience-notebook start.sh jupyter lab --LabApp.token='
-alias jupyterlab='jupyter lab --LabApp.token='
-alias java_config='sudo update-alternatives --config java'
-# accces with http://localhost:9000 
 alias portainer="docker run -d -p 9000:9000 --restart always -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer"
 # kubernetes
 alias kc="kubectx"

@@ -171,14 +171,18 @@ function y() {
 # macOS only
 # Open the current directory in a Ghostty Window
 ghost() {
+  local dir="${1:-$PWD}"
   osascript <<EOF
     tell application "Ghostty"
-	    if it is running then
-		    activate
-		    tell application "System Events" to keystroke "t" using {command down}
-	    else
-		    activate
-	    end if
+      activate
+      if it is running then
+        tell application "System Events"
+          keystroke "t" using {command down}
+          delay 0.3
+          keystroke "cd ${dir}"
+          keystroke return
+        end tell
+      end if
     end tell
 EOF
 }
