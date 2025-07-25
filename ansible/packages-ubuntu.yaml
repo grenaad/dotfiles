@@ -1,12 +1,4 @@
 ---
-# Update package cache before installing packages
-# - name: Update Apt
-#   apt:
-#     force_apt_get: true
-#     update_cache: true
-#     state: present
-#   become: true
-
 # Install packages with sudo
 - name: Install System Packages
   apt:
@@ -39,7 +31,6 @@
 - import_tasks: tasks/opencode.yaml
 - import_tasks: tasks/lazygit.yaml
 - import_tasks: tasks/delta.yaml
-- import_tasks: tasks/brave.yaml
 # Commented tasks if you need them later
 - import_tasks: tasks/rust.yaml
 # - include_tasks: tasks/kubectx.yaml
