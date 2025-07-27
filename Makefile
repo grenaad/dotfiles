@@ -36,7 +36,7 @@ check:
 	cd ansible && ansible-playbook main.yaml --syntax-check
 
 # Full installation
-install: deps
+install: 
 	cd ansible && ansible-playbook main.yaml
 
 # Core packages and tools
@@ -53,13 +53,13 @@ packages:
 
 # Individual tasks
 env: 
-	cd ansible && ansible-playbook main.yaml --tags env
+	cd ansible && ansible-playbook main.yaml --tags env --ask-vault-pass
 
 ssh: 
-	cd ansible && ansible-playbook main.yaml --tags ssh
+	cd ansible && ansible-playbook main.yaml --tags ssh --ask-vault-pass
 
 git: 
-	cd ansible && ansible-playbook main.yaml --tags git
+	cd ansible && ansible-playbook main.yaml --tags git --ask-vault-pass
 
 neovim:
 	cd ansible && ansible-playbook main.yaml --tags neovim
