@@ -6,6 +6,7 @@ return {
     "antoinemadec/FixCursorHold.nvim",
     "nvim-treesitter/nvim-treesitter",
     "nvim-neotest/neotest-python",
+    "nvim-neotest/neotest-go",
   },
   config = function()
       local neotest = require("neotest")
@@ -14,6 +15,12 @@ return {
           require("neotest-python")({
             dap = { justMyCode = false },
             runner = "pytest",
+          }),
+          require("neotest-go")({
+            experimental = {
+              test_table = true,
+            },
+            args = { "-count=1", "-timeout=60s" }
           }),
         },
       })
