@@ -67,6 +67,7 @@
       - font-meslo-lg-nerd-font
       - ghostty
       - zen
+      - raycast
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
