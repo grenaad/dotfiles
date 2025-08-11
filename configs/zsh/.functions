@@ -145,8 +145,7 @@ oc() {
         echo "Usage: oc <input>"
         return 1
     fi
-    
-    opencode run "$*"
+    opencode run -m anthropic/claude-sonnet-4-20250514 "$*"
 }
 
 # Change the current working directory when exiting Yazi.

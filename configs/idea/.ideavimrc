@@ -35,7 +35,7 @@ nmap <C-o> <Action>(Back)
 nmap <leader>c <Action>(CloseContent)
 nmap <leader>xa <Action>(CloseAllEditors)
 nmap <leader>xp <Action>(CloseAllUnpinnedEditors)
-nmap <C-wo> <Action>(CloseAllEditorsButActive)
+nmap <leader>bc <Action>(CloseAllEditorsButActive)
 
 " window
 nmap <C-Tab> <Action>(PreviousTab)
@@ -201,12 +201,16 @@ nmap gI <Action>(QuickImplementations)
 nmap gR <Action>(ShowUsages)
 
 " vimrc loading
-nnoremap <leader>fa :e ~\.ideavimrc<CR>
-nnoremap <leader>fr :action IdeaVim.ReloadVimRc.reload<CR>
+nmap <leader>Ld :e ~/.ideavimrc<CR>
+nmap <leader>Lr :action IdeaVim.ReloadVimRc.reload<CR>
+
+"open IdeaVim settings
+nmap <leader>Ls <Action>(VimActions)
 
 " terminal
 nmap <leader>th <Action>(ActivateTerminalToolWindow)
 nmap <leader>tc <Action>(Terminal.OpenInTerminal)
+map <C-t> <Action>(ActivateTerminalToolWindow)
 
 " bookmark
 nmap mm <Action>(ToggleBookmark)
@@ -226,9 +230,6 @@ nmap \\cg <Action>(Github.Create.Gist)
 
 " vcs
 nmap <leader>v <Action>(VcsGroups)
-
-" open IdeaVim settings
-nmap <leader>Ls <Action>(VimActions)
 
 " text-object (bundle plugin)
 set vim-paragraph-motion
