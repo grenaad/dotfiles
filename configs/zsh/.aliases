@@ -10,6 +10,8 @@ fi
 # WINEPREFIX="/Users/ice/.wine" wine ~/.wine/drive_c/Program\ Files/GoMetaTrader7/terminal64.exe
 alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 
+alias ccode="ANTHROPIC_BETAS="context-1m-2025-08-07" claude"
+
 alias eoc="vim ~/.config/opencode/opencode.json"  
 alias ec="vim ~/Library/Application\ Support/Claude/claude_desktop_config.json"  
 alias shop="ssh terminal.shop"
