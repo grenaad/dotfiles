@@ -1,0 +1,6 @@
+[mgr]
+prepend_keymap = [
+    # Use different keys for tab navigation if preferred
+    { on = [ "H" ], run = "tab_switch -1", desc = "Previous tab" },
+    { on = [ "L" ], run = "tab_switch 1", desc = "Next tab" },
+]
