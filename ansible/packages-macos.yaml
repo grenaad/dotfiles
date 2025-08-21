@@ -35,6 +35,7 @@
       - goose
       - sst/tap/opencode
       - txn2/tap/kubefwd
+      - openai-whisper
 
       - yazi # yazi, and it's dependencies
       - ffmpeg # for video thumbnails

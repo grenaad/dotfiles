@@ -175,3 +175,27 @@ ghost() {
     end tell
 EOF
 }
+
+create_fd_docs_link() {
+    local target_dir="$HOME/work/focaldata/fd-docs"
+    local link_name="fd-docs"
+    
+    # Check if target directory exists
+    if [[ ! -d "$target_dir" ]]; then
+        echo "Error: Target directory $target_dir does not exist"
+        return 1
+    fi
+    
+    # Remove existing link if it exists
+    if [[ -L "$link_name" ]]; then
+        rm "$link_name"
+        echo "Removed existing symlink"
+    elif [[ -e "$link_name" ]]; then
+        echo "Error: $link_name exists but is not a symlink"
+        return 1
+    fi
+    
+    # Create the symbolic link
+    ln -s "$target_dir" "$link_name"
+    echo "Created symlink: $(pwd)/$link_name -> $target_dir"
+}
