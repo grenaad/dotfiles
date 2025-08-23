@@ -35,7 +35,6 @@
       - goose
       - sst/tap/opencode
       - txn2/tap/kubefwd
-      - openai-whisper
 
       - yazi # yazi, and it's dependencies
       - ffmpeg # for video thumbnails
@@ -69,6 +68,7 @@
       - ghostty
       - zen
       - raycast
+      - nikitabobko/tap/aerospace
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
