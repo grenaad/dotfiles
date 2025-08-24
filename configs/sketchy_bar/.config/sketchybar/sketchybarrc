@@ -1,0 +1,47 @@
+# Load all items from the items/ directory
+for file in "$HOME/.config/sketchybar/items/"*.sh; do
+  source "$file"
+done
+
+default=(
+  icon.font="Hack Nerd Font:Bold:16.0"
+  label.font="Hack Nerd Font:Bold:13.0"
+  icon.color=0xffffffff
+  label.color=0xffffffff
+  icon.padding_left=8
+  icon.padding_right=2
+  label.padding_left=2
+  label.padding_right=8
+  label.align=center
+  background.drawing=on
+  background.color=0xff172121
+  background.border_color=0xffffffff
+  background.border_width=1
+  background.corner_radius=8
+  background.height=27
+)
+sketchybar --default "${default[@]}"
+sketchybar --add event aerospace_workspace_change
+
+# Create workspace items dynamically
+WORKSPACES=$(aerospace list-workspaces --all)
+
+# Array to store workspace items for bracket
+WORKSPACE_ITEMS=()
+
+for WORKSPACE in $WORKSPACES; do
+  sketchybar --add item "space.$WORKSPACE" left \
+             --set "space.$WORKSPACE" \
+             label="$WORKSPACE" \
+             label.align=center \
+             label.width=dynamic \
+             icon.padding_left=2 \
+             icon.padding_right=2 \
+             background.drawing=off \
+             script="$CONFIG_DIR/plugins/aerospace.sh" \
+             --subscribe "space.$WORKSPACE" aerospace_workspace_change
+  
+  # Add to workspace items array
+  WORKSPACE_ITEMS+=("space.$WORKSPACE")
+done
+

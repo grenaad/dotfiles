@@ -69,6 +69,8 @@
       - zen
       - raycast
       - nikitabobko/tap/aerospace
+      - FelixKratz/formulae/sketchybar
+      - FelixKratz/formulae/borders
 
     homebrew_taps:
       - ankitpokhrel/jira-cli

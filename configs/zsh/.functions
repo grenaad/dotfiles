@@ -199,3 +199,8 @@ create_fd_docs_link() {
     ln -s "$target_dir" "$link_name"
     echo "Created symlink: $(pwd)/$link_name -> $target_dir"
 }
+
+def ff() {
+    aerospace list-windows --all \
+      | fzf --bind 'enter:execute(bash -c "aerospace focus --window-id {1}")+abort'
+}
