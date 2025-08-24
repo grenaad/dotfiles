@@ -1,47 +1,92 @@
-# Load all items from the items/ directory
-for file in "$HOME/.config/sketchybar/items/"*.sh; do
-  source "$file"
-done
+#!/usr/bin/env bash
 
-default=(
-  icon.font="Hack Nerd Font:Bold:16.0"
-  label.font="Hack Nerd Font:Bold:13.0"
-  icon.color=0xffffffff
-  label.color=0xffffffff
-  icon.padding_left=8
-  icon.padding_right=2
-  label.padding_left=2
-  label.padding_right=8
-  label.align=center
-  background.drawing=on
-  background.color=0xff172121
-  background.border_color=0xffffffff
-  background.border_width=1
-  background.corner_radius=8
-  background.height=27
-)
-sketchybar --default "${default[@]}"
+source "$HOME/.config/sketchybar/variables.sh"
+
+PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+
+# Bar Appearance
+sketchybar --bar height=40 \
+                 blur_radius=30 \
+                 position=top \
+                 sticky=off \
+                 padding_left=10 \
+                 padding_right=10 \
+                 color="$BAR_COLOR"
+
+# Default styles
+sketchybar --default icon.font="$FONT:Bold:16.0" \
+                     label.font="$FONT:Bold:14.0" \
+                     background.color="$BAR_COLOR" \
+                     background.corner_radius="$CORNER_RADIUS" \
+                     icon.color="$WHITE" \
+                     label.color="$WHITE" \
+                     icon.padding_left=4 \
+                     icon.padding_right=4 \
+                     label.padding_left=4 \
+                     label.padding_right=4
+
+# Aerospace workspace setup with TokyoNight styling
 sketchybar --add event aerospace_workspace_change
 
-# Create workspace items dynamically
-WORKSPACES=$(aerospace list-workspaces --all)
+# Spacer before workspaces
+sketchybar --add item spacer.1 left \
+           --set spacer.1 background.drawing=off \
+                         label.drawing=off \
+                         icon.drawing=off \
+                         width=10
 
-# Array to store workspace items for bracket
+WORKSPACES=$(aerospace list-workspaces --all)
 WORKSPACE_ITEMS=()
 
 for WORKSPACE in $WORKSPACES; do
-  sketchybar --add item "space.$WORKSPACE" left \
-             --set "space.$WORKSPACE" \
-             label="$WORKSPACE" \
-             label.align=center \
-             label.width=dynamic \
-             icon.padding_left=2 \
-             icon.padding_right=2 \
-             background.drawing=off \
-             script="$CONFIG_DIR/plugins/aerospace.sh" \
-             --subscribe "space.$WORKSPACE" aerospace_workspace_change
+  sketchybar --add item "workspace.$WORKSPACE" left \
+             --set "workspace.$WORKSPACE" \
+                   label="$WORKSPACE" \
+                   label.drawing=off \
+                   icon="$WORKSPACE" \
+                   icon.padding_left=10 \
+                   icon.padding_right=10 \
+                   background.padding_left=-5 \
+                   background.padding_right=-5 \
+                   script="$PLUGIN_DIR/aerospace.sh" \
+             --subscribe "workspace.$WORKSPACE" aerospace_workspace_change
   
-  # Add to workspace items array
-  WORKSPACE_ITEMS+=("space.$WORKSPACE")
+  WORKSPACE_ITEMS+=("workspace.$WORKSPACE")
 done
 
+# Spacer after workspaces
+sketchybar --add item spacer.2 left \
+           --set spacer.2 background.drawing=off \
+                         label.drawing=off \
+                         icon.drawing=off \
+                         width=5
+
+# Workspace bracket with TokyoNight styling
+sketchybar --add bracket workspaces "${WORKSPACE_ITEMS[@]}" \
+           --set workspaces background.border_width="$BORDER_WIDTH" \
+                           background.border_color="$RED" \
+                           background.corner_radius="$CORNER_RADIUS" \
+                           background.color="$BAR_COLOR" \
+                           background.height=26 \
+                           background.drawing=on
+
+# Separator
+sketchybar --add item separator left \
+           --set separator icon= \
+                          icon.font="$FONT:Regular:16.0" \
+                          background.padding_left=26 \
+                          background.padding_right=15 \
+                          label.drawing=off \
+                          associated_display=active \
+                          icon.color="$YELLOW"
+
+# Load all items
+source "$HOME/.config/sketchybar/items/front_app.sh"
+source "$HOME/.config/sketchybar/items/spotify.sh" 
+source "$HOME/.config/sketchybar/items/cpu.sh"
+source "$HOME/.config/sketchybar/items/volume.sh"
+source "$HOME/.config/sketchybar/items/battery.sh"
+source "$HOME/.config/sketchybar/items/calendar.sh"
+source "$HOME/.config/sketchybar/items/clock.sh"
+
+sketchybar --update
