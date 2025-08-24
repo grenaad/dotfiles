@@ -27,4 +27,4 @@ if [ "$CHARGING" != "" ]; then
   ICON=""
 fi
 
-sketchybar --set "$NAME" icon="$ICON" label="${PERCENTAGE}%"
+sketchybar --set "$NAME" icon="$ICON" label="${PERCENTAGE}% "

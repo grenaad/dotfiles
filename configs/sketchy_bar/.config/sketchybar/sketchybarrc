@@ -1,92 +1,56 @@
 #!/usr/bin/env bash
 
-source "$HOME/.config/sketchybar/variables.sh"
+source "$HOME/.config/sketchybar/variables.sh" # Loads all defined colors
 
-PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+# General bar and defaults
 
-# Bar Appearance
-sketchybar --bar height=40 \
-                 blur_radius=30 \
-                 position=top \
-                 sticky=off \
-                 padding_left=10 \
-                 padding_right=10 \
-                 color="$BAR_COLOR"
+sketchybar --bar height=30 \
+	color="$BAR_COLOR" \
+	shadow="$SHADOW" \
+	position=top \
+	sticky=on \
+	padding_right=0 \
+	padding_left=3 \
+	corner_radius="$CORNER_RADIUS" \
+	y_offset=5 \
+	margin=5 \
+	blur_radius=20 \
+	notch_width=200 \
+	--default updates=when_shown \
+	icon.font="$FONT:Bold:13.5" \
+	icon.color="$ICON_COLOR" \
+	icon.padding_left="$PADDINGS" \
+	icon.padding_right="$PADDINGS" \
+	label.font="$FONT:Bold:13.0" \
+	label.color="$LABEL_COLOR" \
+	label.padding_left="$PADDINGS" \
+	label.padding_right="$PADDINGS" \
+	background.padding_right="$PADDINGS" \
+	background.padding_left="$PADDINGS" \
+	popup.background.border_width=1 \
+	popup.background.corner_radius=11 \
+	popup.background.border_color="$POPUP_BORDER_COLOR" \
+	popup.background.color="$POPUP_BACKGROUND_COLOR" \
+	popup.background.shadow.drawing="$SHADOW"
 
-# Default styles
-sketchybar --default icon.font="$FONT:Bold:16.0" \
-                     label.font="$FONT:Bold:14.0" \
-                     background.color="$BAR_COLOR" \
-                     background.corner_radius="$CORNER_RADIUS" \
-                     icon.color="$WHITE" \
-                     label.color="$WHITE" \
-                     icon.padding_left=4 \
-                     icon.padding_right=4 \
-                     label.padding_left=4 \
-                     label.padding_right=4
+# Left
+source "$ITEM_DIR/aerospace_spaces.sh"
+source "$ITEM_DIR/front_app.sh"
 
-# Aerospace workspace setup with TokyoNight styling
-sketchybar --add event aerospace_workspace_change
+# Center (of notch)
+source "$ITEM_DIR/spotify.sh"
 
-# Spacer before workspaces
-sketchybar --add item spacer.1 left \
-           --set spacer.1 background.drawing=off \
-                         label.drawing=off \
-                         icon.drawing=off \
-                         width=10
+# Right
+source "$ITEM_DIR/clock.sh"
+source "$ITEM_DIR/calendar.sh"
+source "$ITEM_DIR/battery.sh"
+source "$ITEM_DIR/volume.sh"
+source "$ITEM_DIR/cpu.sh"
 
-WORKSPACES=$(aerospace list-workspaces --all)
-WORKSPACE_ITEMS=()
+#################### Finalizing Setup ####################
 
-for WORKSPACE in $WORKSPACES; do
-  sketchybar --add item "workspace.$WORKSPACE" left \
-             --set "workspace.$WORKSPACE" \
-                   label="$WORKSPACE" \
-                   label.drawing=off \
-                   icon="$WORKSPACE" \
-                   icon.padding_left=10 \
-                   icon.padding_right=10 \
-                   background.padding_left=-5 \
-                   background.padding_right=-5 \
-                   script="$PLUGIN_DIR/aerospace.sh" \
-             --subscribe "workspace.$WORKSPACE" aerospace_workspace_change
-  
-  WORKSPACE_ITEMS+=("workspace.$WORKSPACE")
-done
-
-# Spacer after workspaces
-sketchybar --add item spacer.2 left \
-           --set spacer.2 background.drawing=off \
-                         label.drawing=off \
-                         icon.drawing=off \
-                         width=5
-
-# Workspace bracket with TokyoNight styling
-sketchybar --add bracket workspaces "${WORKSPACE_ITEMS[@]}" \
-           --set workspaces background.border_width="$BORDER_WIDTH" \
-                           background.border_color="$RED" \
-                           background.corner_radius="$CORNER_RADIUS" \
-                           background.color="$BAR_COLOR" \
-                           background.height=26 \
-                           background.drawing=on
-
-# Separator
-sketchybar --add item separator left \
-           --set separator icon= \
-                          icon.font="$FONT:Regular:16.0" \
-                          background.padding_left=26 \
-                          background.padding_right=15 \
-                          label.drawing=off \
-                          associated_display=active \
-                          icon.color="$YELLOW"
-
-# Load all items
-source "$HOME/.config/sketchybar/items/front_app.sh"
-source "$HOME/.config/sketchybar/items/spotify.sh" 
-source "$HOME/.config/sketchybar/items/cpu.sh"
-source "$HOME/.config/sketchybar/items/volume.sh"
-source "$HOME/.config/sketchybar/items/battery.sh"
-source "$HOME/.config/sketchybar/items/calendar.sh"
-source "$HOME/.config/sketchybar/items/clock.sh"
+sketchybar --hotload true
 
 sketchybar --update
+
+echo "sketchybar configuration loaded.."

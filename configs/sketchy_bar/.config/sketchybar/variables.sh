@@ -1,22 +1,55 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-# TokyoNight Color Palette
-export BLACK=0xff15161e
-export WHITE=0xffc0caf5
-export RED=0xfff7768e
-export GREEN=0xff9ece6a
-export BLUE=0xff7aa2f7
-export YELLOW=0xffe0af68
-export ORANGE=0xffff9e64
-export MAGENTA=0xffbb9af7
-export GREY=0xff565f89
-export TRANSPARENT=0x00000000
-export CYAN=0xff7dcfff
-export COMMENT=0xff565f89
+# Color Palette
+# Tokyonight Night
+BLACK=0xff24283b
+WHITE=0xffa9b1d6
+MAGENTA=0xffbb9af7
+BLUE=0xff7aa2f7
+CYAN=0xff7dcfff
+GREEN=0xff9ece6a
+YELLOW=0xffe0af68
+ORANGE=0xffff9e64
+RED=0xfff7768e
+BAR_COLOR=0xff1a1b26
+COMMENT=0xff565f89
 
-# Bar Colors
-export BAR_COLOR=0xff1a1b26
-export BORDER_WIDTH=2
+# Tokyonight Day
+# BLACK=0xffe9e9ed
+# WHITE=0xff3760bf
+# MAGENTA=0xff9854f1
+# BLUE=0xff2e7de9
+# CYAN=0xff007197
+# GREEN=0xff587539
+# YELLOW=0xff8c6c3e
+# ORANGE=0xffb15c00
+# RED=0xfff52a65
+# BAR_COLOR=0xffe1e2e7
+
+TRANSPARENT=0x00000000
+
+# General bar colors
+ICON_COLOR=$WHITE  # Color of all icons
+LABEL_COLOR=$WHITE # Color of all labels
+
+ITEM_DIR="$HOME/.config/sketchybar/items"
+PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
+
+FONT="JetBrainsMono Nerd Font"
+
+PADDINGS=3
+
+POPUP_BORDER_WIDTH=2
+POPUP_CORNER_RADIUS=11
+POPUP_BACKGROUND_COLOR=$BLACK
+POPUP_BORDER_COLOR=$COMMENT
+
+CORNER_RADIUS=15
+BORDER_WIDTH=2
+
+SHADOW=on
+
+SPACE_ICONS=("1" "2" "3" "4" "5" "6" )
 export CORNER_RADIUS=6
 
 # Font
