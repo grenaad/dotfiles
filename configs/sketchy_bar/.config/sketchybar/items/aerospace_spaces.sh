@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-source "$HOME/.config/sketchybar/variables.sh" # Loads all defined colors
-
 sketchybar --add event aerospace_workspace_change
 
 sketchybar --add item spacer.1 left \
