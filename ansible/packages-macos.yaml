@@ -36,6 +36,7 @@
       - sst/tap/opencode
       - txn2/tap/kubefwd
 
+      # yazi and all its dependencies
       - yazi # yazi, and it's dependencies
       - ffmpeg # for video thumbnails
       - sevenzip # for archive extraction and preview
@@ -48,6 +49,10 @@
       - resvg # for SVG preview
       - imagemagick # for Font, HEIC, and JPEG XL preview
       - font-symbols-only-nerd-font
+
+      # SketchyBar font
+      - sf-pro
+      - font-sketchybar-app-font
 
     homebrew_cask_apps:
       - docker
@@ -68,9 +73,11 @@
       - ghostty
       - zen
       - raycast
+      # Aerospace and SketchyBar
       - nikitabobko/tap/aerospace
       - FelixKratz/formulae/sketchybar
       - FelixKratz/formulae/borders
+      - sf-symbols # SketchyBar font
 
     homebrew_taps:
       - ankitpokhrel/jira-cli

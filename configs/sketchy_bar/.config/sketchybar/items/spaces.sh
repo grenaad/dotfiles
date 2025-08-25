@@ -8,6 +8,9 @@ for WORKSPACE in $WORKSPACES; do
   sketchybar --add space space.$WORKSPACE left                                 \
              --set space.$WORKSPACE space=$WORKSPACE                                 \
                               icon=$WORKSPACE                                  \
+                              icon.padding_left=8                             \
+                              icon.padding_right=8                            \
+                              icon.y_offset=0                                 \
                               label.drawing=off                               \
                               script="$PLUGIN_DIR/aerospace.sh"              \
              --subscribe space.$WORKSPACE aerospace_workspace_change
