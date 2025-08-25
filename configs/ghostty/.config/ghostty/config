@@ -1,0 +1,5 @@
+# Make Command+T open a NEW WINDOW (not a tab)
+keybind = super+t=new_window
+
+# (Optional) keep Command+N as “new window” too
+keybind = super+n=new_window
