@@ -1,23 +1,6 @@
-#!/usr/bin/env bash
-
-source "$HOME/.config/sketchybar/variables.sh"
-
-COLOR="$CYAN"
+#!/bin/bash
 
 sketchybar --add item battery right \
- --set battery \
-       update_freq=60 \
-       icon="" \
-       icon.color="$COLOR" \
-       icon.padding_left=10 \
-       label.padding_right=10 \
-       label.color="$COLOR" \
-       background.height=26 \
-       background.corner_radius="$CORNER_RADIUS" \
-       background.padding_right=5 \
-       background.border_width="$BORDER_WIDTH" \
-       background.border_color="$COLOR" \
-       background.color="$BAR_COLOR" \
-       background.drawing=on \
-               script="$PLUGIN_DIR/power.sh" \
- --subscribe battery power_source_change
+           --set battery update_freq=120 \
+                         script="$PLUGIN_DIR/battery.sh" \
+           --subscribe battery system_woke power_source_change
