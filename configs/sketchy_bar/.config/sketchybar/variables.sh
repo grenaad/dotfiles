@@ -35,7 +35,7 @@ LABEL_COLOR=$WHITE # Color of all labels
 ITEM_DIR="$HOME/.config/sketchybar/items"
 PLUGIN_DIR="$HOME/.config/sketchybar/plugins"
 
-FONT="JetBrainsMono Nerd Font"
+FONT="Hack Nerd Font"
 
 PADDINGS=3
 
@@ -44,16 +44,16 @@ POPUP_CORNER_RADIUS=11
 POPUP_BACKGROUND_COLOR=$BLACK
 POPUP_BORDER_COLOR=$COMMENT
 
-CORNER_RADIUS=15
+CORNER_RADIUS=3
 BORDER_WIDTH=2
 
 SHADOW=on
 
 SPACE_ICONS=("1" "2" "3" "4" "5" "6" )
-export CORNER_RADIUS=6
+export CORNER_RADIUS=3
 
 # Font
-export FONT="JetBrains Mono Nerd Font"
+# export FONT="JetBrains Mono Nerd Font"
 
 # Plugin Directory
 export PLUGIN_DIR="$HOME/.config/sketchybar/plugins"

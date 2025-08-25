@@ -8,7 +8,7 @@ sketchybar --add item clock right \
  --set clock update_freq=1 \
        icon.padding_left=10 \
        icon.color="$COLOR" \
-       icon="" \
+       icon="🕐" \
        label.color="$COLOR" \
        label.padding_right=5 \
        label.width=78 \
