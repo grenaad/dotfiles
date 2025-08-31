@@ -3,7 +3,7 @@
 # so it won't be run twice on AeroSpace restart
 after-startup-command = [
 'exec-and-forget sketchybar',
-'exec-and-forget borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=5.0'
+'exec-and-forget borders active_color=0xffe1e3e4 inactive_color=0xff494d64 width=10.0'
 ]
 
 # Notify Sketchybar about workspace change
@@ -61,7 +61,7 @@ automatically-unhide-macos-hidden-apps = false
     inner.vertical =   20
     outer.left =       20
     outer.bottom =     20
-    outer.top =        40
+    outer.top =        45
     outer.right =      20
 
 # 'main' binding mode declaration
@@ -97,6 +97,24 @@ automatically-unhide-macos-hidden-apps = false
     # end tell'
     # '''
 
+    # Alt+Return opens a new floating terminal
+    # alt-enter = '''exec-and-forget osascript -e '
+    # tell application "Ghostty"
+    #     activate
+    # end tell'
+    # '''
+
+    # Take a screenshot
+    alt-shift-s = 'exec-and-forget screencapture -i -c'
+
+    # alt-g = 'exec-and-forget open -a Ghostty'
+    alt-g = '''exec-and-forget osascript -e '
+    tell application "Goshtty"
+        activate
+        do script ""
+    end tell'
+    '''
+
     # See: https://nikitabobko.github.io/AeroSpace/commands#layout
     alt-slash = 'layout tiles horizontal vertical'
     alt-comma = 'layout accordion horizontal vertical'
@@ -123,6 +141,8 @@ automatically-unhide-macos-hidden-apps = false
     alt-3 = 'workspace 3'
     alt-4 = 'workspace 4'
     alt-5 = 'workspace 5'
+    alt-6 = 'workspace 6'
+    alt-7 = 'workspace 7'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#move-node-to-workspace
     alt-shift-1 = 'move-node-to-workspace 1'
@@ -130,6 +150,8 @@ automatically-unhide-macos-hidden-apps = false
     alt-shift-3 = 'move-node-to-workspace 3'
     alt-shift-4 = 'move-node-to-workspace 4'
     alt-shift-5 = 'move-node-to-workspace 5'
+    alt-shift-6 = 'move-node-to-workspace 6'
+    alt-shift-7 = 'move-node-to-workspace 7'
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#workspace-back-and-forth
     alt-tab = 'workspace-back-and-forth'
@@ -142,12 +164,36 @@ automatically-unhide-macos-hidden-apps = false
     # Non-native fullscreen for the focused container (as per the video)
     ctrl-alt-shift-f = 'fullscreen'
 
-    alt-g = 'exec-and-forget open -a Ghostty'
 
 # Ignore these apps for tiling
 [[on-window-detected]]
 if.app-name-regex-substring = 'finder'
 run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'Huddle'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'VNC Viewer'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'Activity Monitor'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'GO Markets Pty Ltd'
+run = 'layout floating'
+
+# Set default workspace for apps
+[[on-window-detected]]
+if.app-name-regex-substring = 'Spotify'
+run = ['move-node-to-workspace 6']
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'Zen'
+run = ['move-node-to-workspace 3']
 
 # 'service' binding mode declaration.
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
@@ -168,3 +214,4 @@ run = 'layout floating'
     down = 'volume down'
     up = 'volume up'
     shift-down = ['volume set 0', 'mode main']
+
