@@ -106,14 +106,14 @@ automatically-unhide-macos-hidden-apps = false
 
     # Take a screenshot
     alt-shift-s = 'exec-and-forget screencapture -i -c'
+    alt-g = 'exec-and-forget open -a Ghostty'
 
-    # alt-g = 'exec-and-forget open -a Ghostty'
-    alt-g = '''exec-and-forget osascript -e '
-    tell application "Goshtty"
-        activate
-        do script ""
-    end tell'
-    '''
+    # alt-g = '''exec-and-forget osascript -e '
+    # tell application "Goshtty"
+    #     activate
+    #     do script ""
+    # end tell'
+    # '''
 
     # See: https://nikitabobko.github.io/AeroSpace/commands#layout
     alt-slash = 'layout tiles horizontal vertical'
@@ -162,38 +162,41 @@ automatically-unhide-macos-hidden-apps = false
     alt-shift-semicolon = 'mode service'
 
     # Non-native fullscreen for the focused container (as per the video)
-    ctrl-alt-shift-f = 'fullscreen'
+    alt-shift-f = 'fullscreen'
 
+    [[on-window-detected]]
+    if.app-id="com.mitchellh.ghostty"
+    run= ["layout tiling"]
 
-# Ignore these apps for tiling
-[[on-window-detected]]
-if.app-name-regex-substring = 'finder'
-run = 'layout floating'
+    # Ignore these apps for tiling
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'finder'
+    run = 'layout floating'
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'Huddle'
-run = 'layout floating'
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'Huddle'
+    run = 'layout floating'
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'VNC Viewer'
-run = 'layout floating'
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'VNC Viewer'
+    run = 'layout floating'
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'Activity Monitor'
-run = 'layout floating'
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'Activity Monitor'
+    run = 'layout floating'
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'GO Markets Pty Ltd'
-run = 'layout floating'
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'GO Markets Pty Ltd'
+    run = 'layout floating'
 
-# Set default workspace for apps
-[[on-window-detected]]
-if.app-name-regex-substring = 'Spotify'
-run = ['move-node-to-workspace 6']
+    # Set default workspace for apps
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'Spotify'
+    run = ['move-node-to-workspace 6']
 
-[[on-window-detected]]
-if.app-name-regex-substring = 'Zen'
-run = ['move-node-to-workspace 3']
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'Zen'
+    run = ['move-node-to-workspace 3']
 
 # 'service' binding mode declaration.
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
