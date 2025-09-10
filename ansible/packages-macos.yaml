@@ -34,7 +34,8 @@
       - bottom
       - goose
       - sst/tap/opencode
-      - txn2/tap/kubefwd
+      - txn2/tap/kubefwd # port forword to kubernetes
+      - gh # Github CLI
 
       # yazi and all its dependencies
       - yazi # yazi, and it's dependencies
