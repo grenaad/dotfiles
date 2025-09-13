@@ -1,0 +1,46 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "mcp": {
+    "spotify": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "/Users/ice/.local/bin/uv",
+        "--directory",
+        "/Users/ice/projects/spotify-mcp",
+        "run",
+        "spotify-mcp"
+      ],
+      "environment": {
+        "SPOTIFY_CLIENT_ID": "{env:SPOTIFY_CLIENT_ID}",
+        "SPOTIFY_CLIENT_SECRET": "{env:SPOTIFY_CLIENT_SECRET}",
+        "SPOTIFY_REDIRECT_URI": "http://127.0.0.1:7070/callback"
+      }
+    },
+    "mcp-obsidian": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "/Users/ice/.local/bin/uv",
+        "--directory",
+        "/Users/ice/projects/mcp-obsidian",
+        "run",
+        "mcp-obsidian"
+      ],
+      "environment": {
+        "OBSIDIAN_API_KEY": "{env:OBSIDIAN_API_KEY}"
+      }
+    },
+    "PureSpectrum": {
+      "type": "local",
+      "enabled": true,
+      "command": ["npx", "-y", "apidog-mcp-server@latest", "--site-id=748984"]
+    },
+    "notionMCP": {
+      "type": "local",
+      "enabled": true,
+      "command": ["npx", "-y", "mcp-remote", "https://mcp.notion.com/mcp"]
+    }
+  }
+}
