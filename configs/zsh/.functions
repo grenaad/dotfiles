@@ -61,12 +61,50 @@ kill_docker_port() {
 }
 
 function kill_port() {
-    pid=$(lsof -ti TCP:$1)
-    if [ -n "$pid" ]; then
-        kill $pid
-        echo "Process on port $1 killed."
+    local port=$1
+    if [ -z "$port" ]; then
+        echo "Usage: kill_port <port_number>"
+        return 1
+    fi
+
+    # Get all PIDs listening on the port
+    local pids=$(lsof -ti TCP:$port)
+
+    if [ -n "$pids" ]; then
+        echo "Found processes on port $port: $pids"
+
+        # Try graceful termination first
+        for pid in $pids; do
+            if kill -0 $pid 2>/dev/null; then
+                echo "Attempting graceful termination of PID $pid..."
+                kill -TERM $pid
+            fi
+        done
+
+        # Wait a bit for graceful termination
+        sleep 2
+
+        # Check if processes are still running and force kill if needed
+        local remaining_pids=$(lsof -ti TCP:$port)
+        if [ -n "$remaining_pids" ]; then
+            echo "Some processes still running, force killing: $remaining_pids"
+            for pid in $remaining_pids; do
+                if kill -0 $pid 2>/dev/null; then
+                    kill -9 $pid
+                    echo "Force killed PID $pid"
+                fi
+            done
+        fi
+
+        # Final check
+        local final_check=$(lsof -ti TCP:$port)
+        if [ -z "$final_check" ]; then
+            echo "All processes on port $port successfully killed."
+        else
+            echo "Warning: Some processes may still be running on port $port: $final_check"
+        fi
     else
-        echo "No process found on port $1."
+        echo "No process found on port $port."
     fi
 }
 

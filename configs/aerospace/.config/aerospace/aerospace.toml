@@ -197,11 +197,11 @@ automatically-unhide-macos-hidden-apps = false
 
     # Set default workspace for apps
     [[on-window-detected]]
-    if.app-name-regex-substring = 'Spotify'
-    run = ['move-node-to-workspace 6']
+    if.app-name-regex-substring = 'Zen'
+    run = ['move-node-to-workspace 3']
 
     [[on-window-detected]]
-    if.app-name-regex-substring = 'Zen'
+    if.app-name-regex-substring = 'Google Chrome'
     run = ['move-node-to-workspace 3']
 
     [[on-window-detected]]
@@ -211,6 +211,14 @@ automatically-unhide-macos-hidden-apps = false
     [[on-window-detected]]
     if.app-name-regex-substring = 'microsoft teams'
     run = ['move-node-to-workspace 4']
+
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'Spotify'
+    run = ['move-node-to-workspace 6']
+
+    [[on-window-detected]]
+    if.app-name-regex-substring = 'WhatsApp'
+    run = ['move-node-to-workspace 6']
 
 # 'service' binding mode declaration.
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
