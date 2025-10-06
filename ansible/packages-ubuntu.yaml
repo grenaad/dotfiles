@@ -25,6 +25,7 @@
     - install
     - core
 
+- import_tasks: tasks/homebrew.yaml
 - import_tasks: tasks/neovim.yaml
 - import_tasks: tasks/yazi.yaml
 - import_tasks: tasks/ghostty_ubuntu.yaml

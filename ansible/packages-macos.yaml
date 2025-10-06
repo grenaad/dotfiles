@@ -74,6 +74,7 @@
       - ghostty
       - zen
       - raycast
+      - font-jetbrains-mono-nerd-font
       # Aerospace and SketchyBar
       - nikitabobko/tap/aerospace
       - FelixKratz/formulae/sketchybar
