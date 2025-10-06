@@ -8,14 +8,13 @@
     - install
     - homebrew
 
-- name: Setup Homebrew environment
+- name: Add Homebrew to bashrc
   become: false
-  shell: |
-        test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-        test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-        echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-  args:
-    executable: /bin/bash
+  lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    create: yes
+  when: ansible_os_family == "Debian"
   tags:
     - install
     - homebrew
