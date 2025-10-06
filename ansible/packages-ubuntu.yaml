@@ -4,6 +4,7 @@
   apt:
     name:
       [
+        "wl-clipboard",
         "zsh",
         "ffmpeg",
         "fzf",
@@ -15,7 +16,6 @@
         "mpv",
         "tmux",
         "make",
-        "python3-pip",
         "parallel",
         "ripgrep",
         "delta",
@@ -25,9 +25,16 @@
     - install
     - core
 
+# - name: Install Neovim with Homebrew
+#   include_role:
+#     name: geerlingguy.homebrew
+#   vars:
+#     homebrew_installed_packages:
+#       - neovim
+#
 - import_tasks: tasks/yazi.yaml
-- import_tasks: tasks/ghostty.yaml
-- import_tasks: tasks/flatpak.yaml
+- import_tasks: tasks/ghostty_ubuntu.yaml
+# - import_tasks: tasks/flatpak.yaml
 - import_tasks: tasks/opencode.yaml
 - import_tasks: tasks/lazygit.yaml
 - import_tasks: tasks/delta.yaml

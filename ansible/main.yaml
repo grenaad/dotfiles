@@ -3,13 +3,6 @@
   hosts: localhost
   gather_facts: yes # Ensure facts are gathered, aka the distribution
   tasks:
-    # Install OS specific packages
-    - include_tasks: packages-ubuntu.yaml
-      when: ansible_facts['distribution'] == "Ubuntu" or ansible_facts['distribution'] == "Pop!_OS"
-
-    - include_tasks: packages-macos.yaml
-      when: ansible_facts['os_family'] == "Darwin"
-
     - include_tasks: tasks/env.yaml
     - include_tasks: tasks/nvm.yaml
     - include_tasks: tasks/rust.yaml
@@ -41,3 +34,10 @@
         line: "source ~/.zshrc_"
         state: present
         create: yes
+
+    # Install OS specific packages
+    - include_tasks: packages-ubuntu.yaml
+      when: ansible_facts['distribution'] == "Ubuntu" or ansible_facts['distribution'] == "Pop!_OS"
+
+    - include_tasks: packages-macos.yaml
+      when: ansible_facts['os_family'] == "Darwin"

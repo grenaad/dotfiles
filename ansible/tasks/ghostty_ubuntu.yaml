@@ -1,0 +1,29 @@
+- name: Install Ghostty
+  shell: |
+    curl -fsSL https://download.opensuse.org/repositories/home:clayrisser:sid/Debian_Unstable/Release.key | gpg --dearmor | sudo tee /etc/apt/keyrings/home_clayrisser_sid.gpg > /dev/null
+    ARCH="$(dpkg --print-architecture)"
+    sudo tee /etc/apt/sources.list.d/home:clayrisser:sid.sources > /dev/null <<EOF
+    Types: deb
+    URIs: http://download.opensuse.org/repositories/home:/clayrisser:/sid/Debian_Unstable/
+    Suites: /
+    Architectures: $ARCH
+    Signed-By: /etc/apt/keyrings/home_clayrisser_sid.gpg
+    EOF
+    sudo apt update
+    sudo apt install ghostty
+
+  tags:
+    - install
+    - dotfiles
+    - ghostty
+
+- name: Set Ghostty as default terminal
+  alternatives:
+    name: x-terminal-emulator
+    path: /usr/bin/ghostty
+    priority: 50
+  become: true
+  tags:
+    - install
+    - dotfiles
+    - ghostty
