@@ -25,13 +25,7 @@
     - install
     - core
 
-# - name: Install Neovim with Homebrew
-#   include_role:
-#     name: geerlingguy.homebrew
-#   vars:
-#     homebrew_installed_packages:
-#       - neovim
-#
+- import_tasks: tasks/neovim.yaml
 - import_tasks: tasks/yazi.yaml
 - import_tasks: tasks/ghostty_ubuntu.yaml
 # - import_tasks: tasks/flatpak.yaml
