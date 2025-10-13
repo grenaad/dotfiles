@@ -17,6 +17,6 @@ configs/lazygit/.config/lazygit/state.yml
 *uuid
 keymap.toml-*
 
-*Code*
+*Code*/
 !**/settings.json
 !**/keybindings.json

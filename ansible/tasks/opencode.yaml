@@ -1,0 +1,8 @@
+- name: Install OpenCode
+  shell: curl -fsSL https://opencode.ai/install | bash
+  args:
+    creates: ~/.local/bin/opencode
+  tags:
+    - install
+    - dotfiles
+    - opencode
