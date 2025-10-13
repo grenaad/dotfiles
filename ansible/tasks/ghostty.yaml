@@ -1,23 +1,21 @@
 - name: Install Ghostty
   shell: |
-    # Download the latest AppImage package from releases
-    VERSION=1.1.3
+    # Get the latest version from GitHub API
     ARCH=x86_64
-    wget https://github.com/pkgforge-dev/ghostty-appimage/releases/download/${VERSION}/Ghostty-${VERSION}-${ARCH}.AppImage
+    LATEST_URL=$(curl -s https://api.github.com/repos/pkgforge-dev/ghostty-appimage/releases/latest | grep "browser_download_url.*${ARCH}.AppImage\"" | cut -d '"' -f 4 | head -n 1)
+    FILENAME=$(basename "$LATEST_URL")
+
+    # Download the latest AppImage package
+    wget "$LATEST_URL"
 
     # Make the AppImage executable
-    chmod +x Ghostty-${VERSION}-${ARCH}.AppImage
+    chmod +x "$FILENAME"
 
-    # Optionally, add the AppImage to your PATH for easier access
-
-    # With sudo for system wide availability
-    sudo install ./Ghostty-${VERSION}-${ARCH}.AppImage /usr/local/bin/ghostty
-
-    # Without sudo, XDG base spec mandate
-    # install ./Ghostty-${VERSION}-${ARCH}.AppImage $HOME/.local/bin/ghostty
+    # Install for system wide availability
+    sudo install "./$FILENAME" /usr/local/bin/ghostty
 
     # Remove the original AppImage file
-    rm Ghostty-${VERSION}-${ARCH}.AppImage
+    rm "$FILENAME"
 
   tags:
     - install
