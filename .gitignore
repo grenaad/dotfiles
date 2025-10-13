@@ -16,3 +16,7 @@ configs/lazygit/.config/lazygit/state.yml
 *OpenCode.md
 *uuid
 keymap.toml-*
+
+*Code*
+!**/settings.json
+!**/keybindings.json
