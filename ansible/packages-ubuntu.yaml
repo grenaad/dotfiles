@@ -25,6 +25,7 @@
     - install
     - core
 
+- include_tasks: tasks/vscode.yaml
 # Install Docker Desktop
 - import_tasks: tasks/docker.yaml
 - import_tasks: tasks/homebrew.yaml
