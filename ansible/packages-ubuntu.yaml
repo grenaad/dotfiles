@@ -25,6 +25,8 @@
     - install
     - core
 
+# Install Docker Desktop
+- import_tasks: tasks/docker.yaml
 - import_tasks: tasks/homebrew.yaml
 - import_tasks: tasks/neovim.yaml
 - import_tasks: tasks/yazi.yaml
