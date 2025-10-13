@@ -1,0 +1,68 @@
+---
+- name: Install Docker Desktop on Ubuntu
+  block:
+    - name: Set up Docker's package repository
+      block:
+        - name: Update apt package index
+          ansible.builtin.apt:
+            update_cache: yes
+          become: true
+
+        - name: Install ca-certificates and curl
+          ansible.builtin.apt:
+            name:
+              - ca-certificates
+              - curl
+            state: present
+          become: true
+
+        - name: Create /etc/apt/keyrings directory
+          ansible.builtin.file:
+            path: /etc/apt/keyrings
+            state: directory
+            mode: "0755"
+          become: true
+
+        - name: Download Docker GPG key
+          ansible.builtin.get_url:
+            url: https://download.docker.com/linux/ubuntu/gpg
+            dest: /etc/apt/keyrings/docker.asc
+            mode: "0644"
+          become: true
+
+        - name: Add Docker repository
+          ansible.builtin.apt_repository:
+            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            state: present
+          become: true
+
+    - name: Install gnome-terminal
+      ansible.builtin.apt:
+        name: gnome-terminal
+        state: present
+      become: true
+      when: ansible_env.XDG_CURRENT_DESKTOP != "GNOME"
+
+    - name: Download Docker Desktop DEB package
+      ansible.builtin.get_url:
+        url: https://desktop.docker.com/linux/main/amd64/docker-desktop-amd64.deb
+        dest: /tmp/docker-desktop-amd64.deb
+        mode: "0644"
+
+    - name: Install Docker Desktop
+      ansible.builtin.apt:
+        deb: /tmp/docker-desktop-amd64.deb
+        state: present
+      become: true
+
+    - name: Clean up DEB package
+      ansible.builtin.file:
+        path: /tmp/docker-desktop-amd64.deb
+        state: absent
+
+    - name: Enable Docker Desktop to start on login
+      ansible.builtin.systemd:
+        name: docker-desktop
+        enabled: yes
+        scope: user
+  when: ansible_distribution == "Ubuntu"

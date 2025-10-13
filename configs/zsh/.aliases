@@ -2,7 +2,7 @@
 if [[ "$OSTYPE" == "darwin"* ]]; then
   alias vim="/opt/homebrew/bin/nvim"  # macOS
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-  alias vim="/opt/nvim/nvim"  # Linux
+  alias vim="nvim" 
 fi
 
 # Macos Automator:

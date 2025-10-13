@@ -1,0 +1,85 @@
+- name: Install VSCode dependencies
+  apt:
+    name:
+      - wget
+      - gpg
+      - apt-transport-https
+    state: present
+    update_cache: yes
+  become: true
+  tags:
+    - install
+    - vscode
+
+- name: Check if Microsoft GPG key exists
+  stat:
+    path: /usr/share/keyrings/microsoft.gpg
+  register: microsoft_gpg_check
+  tags:
+    - install
+    - vscode
+
+- name: Download Microsoft GPG key
+  shell: wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > /tmp/microsoft.gpg
+  when: not microsoft_gpg_check.stat.exists
+  tags:
+    - install
+    - vscode
+
+- name: Install Microsoft GPG key
+  copy:
+    src: /tmp/microsoft.gpg
+    dest: /usr/share/keyrings/microsoft.gpg
+    owner: root
+    group: root
+    mode: '0644'
+    remote_src: yes
+  become: true
+  when: not microsoft_gpg_check.stat.exists
+  tags:
+    - install
+    - vscode
+
+- name: Remove temporary GPG key file
+  file:
+    path: /tmp/microsoft.gpg
+    state: absent
+  when: not microsoft_gpg_check.stat.exists
+  tags:
+    - install
+    - vscode
+
+- name: Add VSCode repository
+  copy:
+    dest: /etc/apt/sources.list.d/vscode.sources
+    content: |
+      Types: deb
+      URIs: https://packages.microsoft.com/repos/code
+      Suites: stable
+      Components: main
+      Architectures: amd64,arm64,armhf
+      Signed-By: /usr/share/keyrings/microsoft.gpg
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  tags:
+    - install
+    - vscode
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  tags:
+    - install
+    - vscode
+
+- name: Install Visual Studio Code
+  apt:
+    name: code
+    state: present
+  become: true
+  tags:
+    - install
+    - vscode

@@ -48,7 +48,6 @@
     - install
     - ssh
 
-
 - name: Copy config file
   copy:
     src: ./ssh/config
@@ -58,11 +57,3 @@
     - dotfiles
     - install
     - ssh
-
-# - name: Copy the key add to authorized_keys using Ansible module
-#   authorized_key:
-#     user: "{{ lookup('env', 'USER') }}"
-#     state: present
-#     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
-#
-#

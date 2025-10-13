@@ -1,0 +1,20 @@
+- name: Install Homebrew
+  become: false
+  shell: |
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - homebrew
+
+- name: Add Homebrew to bashrc
+  become: false
+  lineinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    create: yes
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+    - homebrew
