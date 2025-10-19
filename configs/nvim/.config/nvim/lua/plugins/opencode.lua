@@ -19,36 +19,37 @@ return {
       opts = {
         mappings = {
           n = {
-            ["<Leader>c"] = { desc = "OpenCode" },
-            ["<Leader>ca"] = {
+            ["<Leader>O"] = { function() require("neo-tree.command").execute({ action = "focus" }) end, desc = "Neotree focus" },
+            ["<Leader>o"] = { desc = "OpenCode" },
+            ["<Leader>oa"] = {
               function() require("opencode").ask("@this: ", { submit = true }) end,
               desc = "Ask about this",
             },
-            ["<Leader>cs"] = {
+            ["<Leader>os"] = {
               function() require("opencode").select() end,
               desc = "Select prompt",
             },
-            ["<Leader>c+"] = {
+            ["<Leader>o+"] = {
               function() require("opencode").prompt("@this") end,
               desc = "Add this",
             },
-            ["<Leader>ct"] = {
+            ["<Leader>ot"] = {
               function() require("opencode").toggle() end,
               desc = "Toggle embedded",
             },
-            ["<Leader>cc"] = {
+            ["<Leader>oc"] = {
               function() require("opencode").command() end,
               desc = "Select command",
             },
-            ["<Leader>cn"] = {
+            ["<Leader>on"] = {
               function() require("opencode").command("session_new") end,
               desc = "New session",
             },
-            ["<Leader>ci"] = {
+            ["<Leader>oi"] = {
               function() require("opencode").command("session_interrupt") end,
               desc = "Interrupt session",
             },
-            ["<Leader>cA"] = {
+            ["<Leader>oA"] = {
               function() require("opencode").command("agent_cycle") end,
               desc = "Cycle selected agent",
             },
