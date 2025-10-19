@@ -12,37 +12,72 @@ return {
 
     -- Required for `vim.g.opencode_opts.auto_reload`
     vim.opt.autoread = true
-
-    -- Recommended/example keymaps
-    vim.keymap.set({ "n", "x" }, "<leader>oa", function()
-      require("opencode").ask("@this: ", { submit = true })
-    end, { desc = "Ask about this" })
-    vim.keymap.set({ "n", "x" }, "<leader>os", function()
-      require("opencode").select()
-    end, { desc = "Select prompt" })
-    vim.keymap.set({ "n", "x" }, "<leader>o+", function()
-      require("opencode").prompt("@this")
-    end, { desc = "Add this" })
-    vim.keymap.set("n", "<leader>ot", function()
-      require("opencode").toggle()
-    end, { desc = "Toggle embedded" })
-    vim.keymap.set("n", "<leader>oc", function()
-      require("opencode").command()
-    end, { desc = "Select command" })
-    vim.keymap.set("n", "<leader>on", function()
-      require("opencode").command("session_new")
-    end, { desc = "New session" })
-    vim.keymap.set("n", "<leader>oi", function()
-      require("opencode").command("session_interrupt")
-    end, { desc = "Interrupt session" })
-    vim.keymap.set("n", "<leader>oA", function()
-      require("opencode").command("agent_cycle")
-    end, { desc = "Cycle selected agent" })
-    vim.keymap.set("n", "<S-C-u>", function()
-      require("opencode").command("messages_half_page_up")
-    end, { desc = "Messages half page up" })
-    vim.keymap.set("n", "<S-C-d>", function()
-      require("opencode").command("messages_half_page_down")
-    end, { desc = "Messages half page down" })
   end,
+  specs = {
+    {
+      "AstroNvim/astrocore",
+      opts = {
+        mappings = {
+          n = {
+            ["<Leader>c"] = { desc = "OpenCode" },
+            ["<Leader>ca"] = {
+              function() require("opencode").ask("@this: ", { submit = true }) end,
+              desc = "Ask about this",
+            },
+            ["<Leader>cs"] = {
+              function() require("opencode").select() end,
+              desc = "Select prompt",
+            },
+            ["<Leader>c+"] = {
+              function() require("opencode").prompt("@this") end,
+              desc = "Add this",
+            },
+            ["<Leader>ct"] = {
+              function() require("opencode").toggle() end,
+              desc = "Toggle embedded",
+            },
+            ["<Leader>cc"] = {
+              function() require("opencode").command() end,
+              desc = "Select command",
+            },
+            ["<Leader>cn"] = {
+              function() require("opencode").command("session_new") end,
+              desc = "New session",
+            },
+            ["<Leader>ci"] = {
+              function() require("opencode").command("session_interrupt") end,
+              desc = "Interrupt session",
+            },
+            ["<Leader>cA"] = {
+              function() require("opencode").command("agent_cycle") end,
+              desc = "Cycle selected agent",
+            },
+            ["<S-C-u>"] = {
+              function() require("opencode").command("messages_half_page_up") end,
+              desc = "Messages half page up",
+            },
+            ["<S-C-d>"] = {
+              function() require("opencode").command("messages_half_page_down") end,
+              desc = "Messages half page down",
+            },
+          },
+          x = {
+            ["<Leader>o"] = { desc = "OpenCode" },
+            ["<Leader>oa"] = {
+              function() require("opencode").ask("@this: ", { submit = true }) end,
+              desc = "Ask about this",
+            },
+            ["<Leader>os"] = {
+              function() require("opencode").select() end,
+              desc = "Select prompt",
+            },
+            ["<Leader>o+"] = {
+              function() require("opencode").prompt("@this") end,
+              desc = "Add this",
+            },
+          },
+        },
+      },
+    },
+  },
 }
