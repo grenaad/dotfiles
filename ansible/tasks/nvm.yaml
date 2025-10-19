@@ -1,7 +1,54 @@
-- name: Install nvm(node version manager) and node lts
-  shell: |
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-    source "{{ lookup('env', 'HOME') }}/.nvm/nvm.sh" 
+- name: Install nvm via Homebrew
+  community.general.homebrew:
+    name: nvm
+    state: present
+  tags:
+    - install
+    - core
+    - nvm
+
+- name: Create .nvm directory
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.nvm"
+    state: directory
+    mode: '0755'
+  tags:
+    - install
+    - core
+    - nvm
+
+- name: Add nvm configuration to .zshrc
+  ansible.builtin.blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" # This loads nvm
+      [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm" # This loads nvm bash_completion
+    create: yes
+  tags:
+    - install
+    - core
+    - nvm
+
+- name: Add nvm configuration to .bashrc
+  ansible.builtin.blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" # This loads nvm
+      [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/etc/bash_completion.d/nvm" # This loads nvm bash_completion
+    create: yes
+  tags:
+    - install
+    - core
+    - nvm
+
+- name: Install Node.js LTS via nvm
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh"
     nvm install --lts
     nvm alias default node
   args:

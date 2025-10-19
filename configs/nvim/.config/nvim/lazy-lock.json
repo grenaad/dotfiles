@@ -52,6 +52,7 @@
   "nvim-ts-context-commentstring": { "branch": "main", "commit": "1b212c2eee76d787bbea6aa5e92a2b534e7b4f8f" },
   "nvim-ufo": { "branch": "main", "commit": "61463090a4f55f5d080236ea62f09d1cd8976ff3" },
   "nvim-window-picker": { "branch": "main", "commit": "6382540b2ae5de6c793d4aa2e3fe6dbb518505ec" },
+  "opencode.nvim": { "branch": "main", "commit": "f8a3a88ad5c0c01102fedaacb1c612a4b874ed54" },
   "plenary.nvim": { "branch": "master", "commit": "857c5ac632080dba10aae49dba902ce3abf91b35" },
   "resession.nvim": { "branch": "master", "commit": "cc819b0489938d03e4f3532a583354f0287c015b" },
   "schemastore.nvim": { "branch": "main", "commit": "8e17e50b519ba360bcfd5dfb5843ccac9be500ba" },
