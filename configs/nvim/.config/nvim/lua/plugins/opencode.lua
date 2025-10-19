@@ -5,7 +5,7 @@ return {
     -- Required for `toggle()`.
     { "folke/snacks.nvim", opts = { input = {}, picker = {} } },
   },
-  config = function()
+  init = function()
     vim.opt.autoread = true
   end,
   specs = {
@@ -14,61 +14,92 @@ return {
       opts = {
         mappings = {
           n = {
-            ["<Leader>O"] = { function() require("neo-tree.command").execute({ action = "focus" }) end, desc = "Neotree focus" },
+            ["<Leader>O"] = {
+              function()
+                require("neo-tree.command").execute({ action = "focus" })
+              end,
+              desc = "Neotree focus",
+            },
             ["<Leader>o"] = { desc = "OpenCode" },
             ["<Leader>oa"] = {
-              function() require("opencode").ask("@this: ", { submit = true }) end,
+              function()
+                require("opencode").ask("@this: ", { submit = true })
+              end,
               desc = "Ask about this",
             },
             ["<Leader>os"] = {
-              function() require("opencode").select() end,
+              function()
+                require("opencode").select()
+              end,
               desc = "Select prompt",
             },
             ["<Leader>o+"] = {
-              function() require("opencode").prompt("@this") end,
+              function()
+                require("opencode").prompt("@this")
+              end,
               desc = "Add this",
             },
             ["<Leader>ot"] = {
-              function() require("opencode").toggle() end,
+              function()
+                require("opencode").toggle()
+              end,
               desc = "Toggle embedded",
             },
             ["<Leader>oc"] = {
-              function() require("opencode").command() end,
+              function()
+                require("opencode").command()
+              end,
               desc = "Select command",
             },
             ["<Leader>on"] = {
-              function() require("opencode").command("session_new") end,
+              function()
+                require("opencode").command("session_new")
+              end,
               desc = "New session",
             },
             ["<Leader>oi"] = {
-              function() require("opencode").command("session_interrupt") end,
+              function()
+                require("opencode").command("session_interrupt")
+              end,
               desc = "Interrupt session",
             },
             ["<Leader>oA"] = {
-              function() require("opencode").command("agent_cycle") end,
+              function()
+                require("opencode").command("agent_cycle")
+              end,
               desc = "Cycle selected agent",
             },
             ["<S-C-u>"] = {
-              function() require("opencode").command("messages_half_page_up") end,
+              function()
+                require("opencode").command("messages_half_page_up")
+              end,
               desc = "Messages half page up",
             },
             ["<S-C-d>"] = {
-              function() require("opencode").command("messages_half_page_down") end,
+              function()
+                require("opencode").command("messages_half_page_down")
+              end,
               desc = "Messages half page down",
             },
           },
           x = {
             ["<Leader>o"] = { desc = "OpenCode" },
             ["<Leader>oa"] = {
-              function() require("opencode").ask("@this: ", { submit = true }) end,
+              function()
+                require("opencode").ask("@this: ", { submit = true })
+              end,
               desc = "Ask about this",
             },
             ["<Leader>os"] = {
-              function() require("opencode").select() end,
+              function()
+                require("opencode").select()
+              end,
               desc = "Select prompt",
             },
             ["<Leader>o+"] = {
-              function() require("opencode").prompt("@this") end,
+              function()
+                require("opencode").prompt("@this")
+              end,
               desc = "Add this",
             },
           },
