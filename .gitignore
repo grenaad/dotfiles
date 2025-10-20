@@ -20,3 +20,4 @@ keymap.toml-*
 *Code*/
 !**/settings.json
 !**/keybindings.json
+!**/opencode.json
