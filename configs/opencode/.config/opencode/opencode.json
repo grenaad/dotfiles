@@ -1,5 +1,11 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "lsp": {
+    "scala-lsp": {
+      "command": ["metals"],
+      "extensions": [".scala", ".sc", ".sbt"]
+    }
+  },
   "agent": {
     "plan": {
       "permission": {
@@ -43,6 +49,11 @@
         "python",
         "src/server.py"
       ]
+    },
+    "playwright": {
+      "type": "local",
+      "command": ["npx", "@playwright/mcp@latest", "--extension"],
+      "enabled": true
     }
   }
 }
