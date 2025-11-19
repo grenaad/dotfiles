@@ -54,6 +54,22 @@
       "type": "local",
       "command": ["npx", "@playwright/mcp@latest", "--extension"],
       "enabled": true
+    },
+    "mcp-atlassian": {
+      "type": "local",
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "--env-file",
+        "/Users/ice/mcp-atlassian.env",
+        "ghcr.io/sooperset/mcp-atlassian:latest",
+        "--verbose",
+        "--no-jira-ssl-verify",
+        "--no-confluence-ssl-verify"
+      ],
+      "enabled": true
     }
   }
 }
