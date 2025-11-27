@@ -741,5 +741,6 @@
     "editor.formatOnSave": true,
 },
 "terminal.integrated.inheritEnv": false,
-"githubLocalActions.dockerDesktopPath": "/Applications/Docker.app"
+"githubLocalActions.dockerDesktopPath": "/Applications/Docker.app",
+"datadog.connection.oauth.setup.domain": "app.datadoghq.eu"
 }

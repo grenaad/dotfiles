@@ -1,7 +1,3 @@
--- if true then
---   return {}
--- end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
 return {
   "olimorris/codecompanion.nvim",
   dependencies = {
@@ -9,35 +5,28 @@ return {
     "nvim-treesitter/nvim-treesitter",
   },
   opts = {
+    log_level = "DEBUG", -- Enable debug logging
     strategies = {
       -- Change the default chat adapter
       chat = {
-        adapter = "anthropic",
+        adapter = "opencode",
       },
       inline = {
-        adapter = "anthropic",
+        adapter = "opencode",
       },
       cmd = {
-        adapter = "anthropic",
+        adapter = "opencode",
       },
     },
     adapters = {
-      openapi = function()
-        return require("codecompanion.adapters").extend("anthropic", {
-          env = {
-            api_key = os.getenv("ANTHROPIC_API_KEY"),
-          },
-          schema = {
-            model = {
-              -- default = "gpt-4.1",
-              -- default = "gpt-4.1-mini",
-              --
-              -- claude-sonnet-4-20250514, claude-opus-4-20250514
-              default = "claude-sonnet-4-20250514",
-            },
-          },
-        })
-      end,
+      -- ACP adapters (Agent Client Protocol)
+      -- acp = {
+      --   opencode = function()
+      --     return require("codecompanion.adapters").extend("opencode", {
+      --       -- OpenCode ACP adapter configuration
+      --     })
+      --   end,
+      -- },
     },
   },
   specs = {
