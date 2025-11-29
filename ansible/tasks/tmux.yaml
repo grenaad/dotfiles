@@ -1,0 +1,13 @@
+---
+- name: Check if TPM is already installed
+  stat:
+    path: "{{ lookup('env', 'HOME') }}/.tmux/plugins/tpm"
+  register: tpm_dir
+
+- name: Install TPM (Tmux Plugin Manager)
+  shell: git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+  when: not tpm_dir.stat.exists
+  tags:
+    - install
+    - dotfiles
+    - tmux

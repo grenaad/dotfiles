@@ -127,7 +127,7 @@ function convert_audio() {
 }
 
 function fz() {
-  rg --files --follow -g '!{node_modules,.git,.bare}' $1 | fzf
+  rg --files --hidden --follow -g '!{node_modules,.git,.bare}' $1 | fzf
  }
 
 function list_dir_with_fzf() {

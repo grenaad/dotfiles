@@ -4,31 +4,37 @@ return {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
   },
-  opts = {
-    log_level = "DEBUG", -- Enable debug logging
-    strategies = {
-      -- Change the default chat adapter
-      chat = {
-        adapter = "opencode",
+  config = function()
+    -- Use config function instead of opts for better control
+    require("codecompanion").setup({
+      log_level = "DEBUG",
+      strategies = {
+        chat = {
+          adapter = "opencode",
+        },
+        inline = {
+          adapter = "opencode",
+        },
+        cmd = {
+          adapter = "opencode",
+        },
       },
-      inline = {
-        adapter = "opencode",
+      adapters = {
+        acp = {
+          opencode = function()
+            return require("codecompanion.adapters").extend("opencode", {
+              commands = {
+                default = {
+                  "/opt/homebrew/bin/opencode",
+                  "acp",
+                },
+              },
+            })
+          end,
+        },
       },
-      cmd = {
-        adapter = "opencode",
-      },
-    },
-    adapters = {
-      -- ACP adapters (Agent Client Protocol)
-      -- acp = {
-      --   opencode = function()
-      --     return require("codecompanion.adapters").extend("opencode", {
-      --       -- OpenCode ACP adapter configuration
-      --     })
-      --   end,
-      -- },
-    },
-  },
+    })
+  end,
   specs = {
     {
       "AstroNvim/astrocore",
@@ -37,7 +43,7 @@ return {
           n = {
             ["<Leader>a"] = { desc = "Codecompanion" },
             ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
-            ["<Leader>ac"] = { "<cmd>CodeCompanionChat Toggle<CR>", desc = "Chat" },
+            ["<Leader>ac"] = { "<cmd>CodeCompanionChat<CR>", desc = "Chat" },
           },
           v = {
             ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },

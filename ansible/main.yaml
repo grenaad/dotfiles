@@ -8,6 +8,7 @@
     - include_tasks: tasks/git.yaml
     - include_tasks: tasks/nvm.yaml
     - include_tasks: tasks/rust.yaml
+    - include_tasks: tasks/tmux.yaml
 
     - name: Stow all config files
       shell: |
