@@ -18,6 +18,7 @@
       - bat
       - rustup
       - duti
+      - bash
       - kustomize
       - lazygit
       - k9s
