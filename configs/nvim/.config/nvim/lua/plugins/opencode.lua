@@ -1,3 +1,9 @@
+if true then
+  return {}
+end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
+
+--- When you quit any Neovim session, it will close an open OpenCode session as well.
+
 return {
   "NickvanDyke/opencode.nvim",
   dependencies = {
