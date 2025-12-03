@@ -1,36 +1,8 @@
-# List hidden files as well
-function v () {
-  selected=$(fd --max-depth 6 --type file --hidden | fzf)
-  if [[ -z $selected ]]; then
-    exit 0
-  fi
-  vim $selected
-}
-
-function cdl(){
-  VAR=$(ls -td -- */ | head -n 1 | cut -d'/' -f1); cd ${VAR}
-}
-
 
 function vimz() {
   vim "$(fz $1)"
  }
 
-function remove_carriage_returns () {
-	sed -i 's/\r//g' $1
-}
-
-function myip() {
-  ifconfig | awk '/inet /&&!/127.0.0.1/{print $2;exit}'
-}
-
-function remove_all_carriage_returns (){
-    find . -name $1 | xargs sed -i 's/\r//g'
-}
-
-function f () {
-	find $1 -name $2 2>/dev/null
-}
 
 kill_docker_port() {
   local port="$1"
@@ -108,35 +80,11 @@ function kill_port() {
     fi
 }
 
-function cd() {
-    builtin cd "$@" && ls -F
-}
-
-# convert_vid inputfile outputfile
-function convert_vid() {
-	ffmpeg -i $1 -vcodec libx264 -acodec aac $2.mp4
-}
-
-function convert_scale_to_phone() {
-  ffmpeg -i $1 -vf scale=480:-1 $2
-}
-
-# convert_vid inputfile outputfile
-function convert_audio() {
-	ffmpeg -i $1 -acodec aac $2.aac
-}
 
 function fz() {
   rg --files --hidden --follow -g '!{node_modules,.git,.bare}' $1 | fzf
  }
 
-function list_dir_with_fzf() {
-  # giving a path, pipe all the directories in the path to fzf
-  # cd $(ls -d $1*/ | fzf)
-  # ls -d $1*/ | fzf
-  find $1 -maxdepth 1 -type d -not -path '*/\.*' |
-  fzf
-}
 
 function git_fetch()  {
     # for some reason git fetch does not work without removing/adding remote repo
@@ -155,19 +103,10 @@ function clone_worktree()  {
     cd $REPO_NAME
 }
 
-function dkill() {
-  docker rm -vf $(docker ps -aq)
-}
-
 function cdf() {
   cd $(find ~/work/focaldata ~/work/old/checkout ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
 }
 
-function ip() {
-  MYIP=`dig +short myip.opendns.com @resolver1.opendns.com`
-  DATE=`date +%F`
-  echo "$MYIP" 
-}
 
 function activate_venv() {
 	if [ ! -d "./.venv" ]; then \
@@ -214,31 +153,3 @@ ghost() {
 EOF
 }
 
-create_fd_docs_link() {
-    local target_dir="$HOME/work/focaldata/fd-docs"
-    local link_name="fd-docs"
-    
-    # Check if target directory exists
-    if [[ ! -d "$target_dir" ]]; then
-        echo "Error: Target directory $target_dir does not exist"
-        return 1
-    fi
-    
-    # Remove existing link if it exists
-    if [[ -L "$link_name" ]]; then
-        rm "$link_name"
-        echo "Removed existing symlink"
-    elif [[ -e "$link_name" ]]; then
-        echo "Error: $link_name exists but is not a symlink"
-        return 1
-    fi
-    
-    # Create the symbolic link
-    ln -s "$target_dir" "$link_name"
-    echo "Created symlink: $(pwd)/$link_name -> $target_dir"
-}
-
-def ff() {
-    aerospace list-windows --all \
-      | fzf --bind 'enter:execute(bash -c "aerospace focus --window-id {1}")+abort'
-}
