@@ -79,15 +79,6 @@ function kill_port() {
     fi
 }
 
-
-function git_fetch()  {
-    # for some reason git fetch does not work without removing/adding remote repo
-    remote=$(git remote -v | sed -e 's/([^()]*)//g' | head -n 1)
-    git remote rm origin
-    bash -c "git remote add $remote"
-    git fetch --prune --all
-}
-
 function clone_worktree()  {
 # clone the git repo into a bare repo and setup the directory structure
 		REPO_NAME=$(echo "$1" | awk -F "[./]" '{print $(NF-1)}')
@@ -100,7 +91,6 @@ function clone_worktree()  {
 function cdf() {
   cd $(find ~/work/focaldata ~/work/old/checkout ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
 }
-
 
 function activate_venv() {
 	if [ ! -d "./.venv" ]; then \
@@ -116,7 +106,7 @@ oc() {
         echo "Usage: oc <input>"
         return 1
     fi
-    opencode run -m anthropic/claude-sonnet-4-20250514 "$*"
+    opencode run "$*"
 }
 
 # Change the current working directory when exiting Yazi.
