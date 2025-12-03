@@ -11,29 +11,15 @@ fi
 alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 alias metaeditor="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/metaeditor64.exe"
 
-alias ccode="ANTHROPIC_BETAS="context-1m-2025-08-07" claude"
-
 alias eoc="vim ~/.config/opencode/opencode.json"  
 alias ec="vim ~/Library/Application\ Support/Claude/claude_desktop_config.json"  
-alias shop="ssh terminal.shop"
-alias iterm="open -a iTerm"
 alias lg="lazygit"
 alias clear_vim="rm -rf ~/.local/share/nvim  ~/.local/state/nvim  ~/.cache/nvim"
-alias youtube-dl="yt-dlp -S ext" # "-S ext" will sort the mp4 formats to be ahead and should be default
-alias youtube-dl_list="youtube-dl -i --yes-playlist https://www.youtube.com/playlist?list="
-alias d="cd ~/projects/dotfiles"
-alias ed="vim ~/projects/dotfiles/configs/zsh/.aliases"
-alias ev="vim ~/projects/dotfiles/configs/nvim/.config/nvim/init.lua"
+alias ed="vim ~/projects/dotfiles"
+alias ev="vim ~/projects/dotfiles/configs/nvim/.config/nvim/"
 alias ..="cd .."
-alias ....="cd ../../"
+alias ...="cd ../../"
 alias mkdir="mkdir -pv"
-alias portainer="docker run -d -p 9000:9000 --restart always -v /var/run/docker.sock:/var/run/docker.sock -v /opt/portainer:/data portainer/portainer"
-# kubernetes
-alias kc="kubectx"
-alias kns="kubens"
-alias s="stern"
-alias obsvirt="sudo modprobe -r v4l2loopback;obs"
-alias update_go="go install golang.org/x/tools/gopls@latest"
 
 ###### OS Specific ######
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -44,27 +30,16 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     alias bat="batcat" # command is batcat if you are on Debian or Ubuntu
 fi
 
-alias yabai_windows="yabai -m query --windows"
-alias yabai_start="yabai &; disown"
-
-alias tiling="yabai --start-service;skhd --start-service"
-alias tiling_stop="yabai --stop-service;skhd  --stop-service"
-
-###### Environment Variables ######
-# dotnet core, opt out of dotnet telemetry data
-export DOTNET_CLI_TELEMETRY_OPTOUT='true' 
-# History Size
-export HISTSIZE=10000
-
-     ### RibGrep and FZF ###
-# See refence: https://dev.to/matrixersp/how-to-use-fzf-with-ripgrep-to-selectively-ignore-vcs-files-4e27
-# using 'bat' with color as a preview for 'fzf'
-export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
-export FZF_DEFAULT_COMMAND='rg --files --hidden --follow'
-export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+#      ### RibGrep and FZF ###
+# # See refence: https://dev.to/matrixersp/how-to-use-fzf-with-ripgrep-to-selectively-ignore-vcs-files-4e27
+# # using 'bat' with color as a preview for 'fzf'
+# export FZF_DEFAULT_OPTS="--ansi --preview-window 'right:60%' --preview 'bat --color=always --style=header,grid --line-range :300 {}'"
+# export FZF_DEFAULT_COMMAND='rg --files --hidden --follow'
+# export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # alias fz="rg --files --hidden --follow -g '!{node_modules,.git}' | fzf"
 # scripts or symlinked to this location and it is not in path in macos
-export PATH="$PATH:$HOME/.local/bin"
+
+# export PATH="$PATH:$HOME/.local/bin"
 
 ###### General Settings ######
 
@@ -72,17 +47,6 @@ export PATH="$PATH:$HOME/.local/bin"
 export EDITOR=nvim
 export VISUAL=nvim
 
-# Activate vi mode with <Escape>
-set -o vi
-
-###### Work ######
-alias goprojects="create_tmux_window ~/projects"
-alias gowork="create_tmux_window ~/work"
-alias gowork="create_tmux_session ~/work" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}
-alias gofocal="create_tmux_session ~/work/focaldata" # ; if [[ -z "$TMUX" ]]; then tmux a; else tmux switch-client; fi" #  | xargs -I{} tmux a -t {}
-
-# Go binaries install with 'go install'
-export PATH="$PATH:$HOME/go/bin"
 # Open IntelliJ with command: idea
 export PATH="/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
 
@@ -92,8 +56,6 @@ export PATH="/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
 export XDG_CONFIG_HOME="$HOME/.config"
 export LG_CONFIG_FILE="$HOME/.config/lazygit/config.yml"
 
-# For dart installed plugins
-export PATH="$PATH":"$HOME/.pub-cache/bin"
 # Anroid emulator
 export PATH="$PATH":"$HOME/Library/Android/sdk/emulator"
 
