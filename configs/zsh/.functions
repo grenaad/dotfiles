@@ -1,8 +1,7 @@
 
 function vimz() {
-  vim "$(fz $1)"
+  vim "$(rg --files --hidden --follow -g '!{node_modules,.git,.bare}' $1 | fzf)"
  }
-
 
 kill_docker_port() {
   local port="$1"
@@ -79,11 +78,6 @@ function kill_port() {
         echo "No process found on port $port."
     fi
 }
-
-
-function fz() {
-  rg --files --hidden --follow -g '!{node_modules,.git,.bare}' $1 | fzf
- }
 
 
 function git_fetch()  {
