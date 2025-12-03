@@ -31,8 +31,8 @@
     - name: Add zsh configs to main .zshrc
       lineinfile:
         path: "{{ lookup('env', 'HOME') }}/.zshrc"
-        regexp: "^source ~/.zshrc_"
-        line: "source ~/.zshrc_"
+        regexp: "^source ~/.zshrc_init"
+        line: "source ~/.zshrc_init"
         state: present
         create: yes
 
