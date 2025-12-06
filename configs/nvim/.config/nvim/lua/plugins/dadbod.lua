@@ -19,34 +19,32 @@ return {
     vim.g.db_ui_win_position = "left"
 
     -- Database connection templates with <password> placeholders
-    -- Grouped by service (not environment) for better organization
-    -- Ports: Sequential assignment starting from 6000 (each connection has unique port)
     local connection_templates = {
       -- Dashboard Service
       dashboard_dev = "postgresql://dbuser:<password>@localhost:6000/postgres",
       dashboard_prod = "postgresql://dbuser:<password>@localhost:6001/postgres",
-      
-      -- Respondent Service  
+
+      -- Respondent Service
       respondent_dev = "postgresql://dbuser:<password>@localhost:6002/postgres",
       respondent_prod = "postgresql://dbuser:<password>@localhost:6003/postgres",
       respondent_clone = "postgresql://dbuser:<password>@localhost:6004/postgres",
-      
+
       -- Autobots Service
-      autobots_dev = "postgresql://dbuser:<password>@localhost:6005/postgres", 
+      autobots_dev = "postgresql://dbuser:<password>@localhost:6005/postgres",
       autobots_prod = "postgresql://dbuser:<password>@localhost:6006/postgres",
-      
+
       -- Chat Analytics Service
       chat_analytics_dev = "postgresql://dbuser:<password>@localhost:6007/postgres",
       chat_analytics_prod = "postgresql://dbuser:<password>@localhost:6008/postgres",
-      
+
       -- Questionnaire Service
       questionnaire_dev = "postgresql://dbuser:<password>@localhost:6009/postgres",
       questionnaire_prod = "postgresql://dbuser:<password>@localhost:6010/postgres",
-      
+
       -- Core Responses Service
-      core_responses_dev = "postgresql://dbuser:<password>@localhost:6011/postgres", 
+      core_responses_dev = "postgresql://dbuser:<password>@localhost:6011/postgres",
       core_responses_prod = "postgresql://dbuser:<password>@localhost:6012/postgres",
-      
+
       -- Panel Supplier Service
       panel_supplier_dev = "postgresql://dbuser:<password>@localhost:6013/postgres",
       panel_supplier_direct_dev = "postgresql://dbuser:<password>@localhost:6014/postgres",
@@ -75,7 +73,7 @@ return {
                 local db_connections = require("utils.db_connections")
                 db_connections.add_encrypted_password_interactive()
               end,
-              desc = "󰆼 Add Encrypted Password"
+              desc = "󰆼 Add Encrypted Password",
             },
           },
         },
