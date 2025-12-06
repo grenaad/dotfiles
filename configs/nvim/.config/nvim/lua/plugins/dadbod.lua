@@ -1,9 +1,41 @@
 return {
   "kristijanhusak/vim-dadbod-ui",
   dependencies = {
-    "tpope/vim-dadbod",
-    "kristijanhusak/vim-dadbod-completion",
+    { "tpope/vim-dotenv",                     lazy = true },
+    { "tpope/vim-dadbod",                     lazy = true },
+    { "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
   },
+  cmd = {
+    "DBUI",
+    "DBUIToggle",
+    "DBUIAddConnection",
+    "DBUIFindBuffer",
+  },
+  init = function()
+    vim.g.db_ui_use_nerd_fonts = 1
+    vim.g.db_ui_winwidth = 50
+    vim.g.db_ui_show_help = 1
+    vim.g.db_ui_use_nvim_notify = 0
+    vim.g.db_ui_win_position = "left"
+    
+    -- Test database connection (remove/modify as needed)
+    vim.g.dbs = {
+      test_sqlite = "sqlite:///tmp/test.db",
+    }
+    
+    -- Example: Add your encrypted connections using crypto_simple
+    -- local crypto = require("utils.crypto_simple")
+    -- local encrypted_connections = {
+    --   dev_db = "your_encrypted_connection_string_here",
+    --   prod_db = "your_encrypted_connection_string_here",
+    -- }
+    -- for name, encrypted in pairs(encrypted_connections) do
+    --   local decrypted = crypto.decrypt_string(encrypted)
+    --   if decrypted ~= "" then
+    --     vim.g.dbs[name] = decrypted
+    --   end
+    -- end
+  end,
   specs = {
     {
       "AstroNvim/astrocore",
@@ -11,10 +43,10 @@ return {
         mappings = {
           n = {
             ["<leader>D"] = { desc = "󰆼 Db Tools" },
-            ["<leader>DD"] = { "<cmd>DBUIToggle<cr>", desc = " DB UI Toggle" },
-            ["<leader>Df"] = { "<cmd>DBUIFindBuffer<cr>", desc = " DB UI Find buffer" },
-            ["<leader>Dr"] = { "<cmd>DBUIRenameBuffer<cr>", desc = " DB UI Rename buffer" },
-            ["<leader>Dl"] = { "<cmd>DBUILastQueryInfo<cr>", desc = " DB UI Last query infos" },
+            ["<leader>DD"] = { "<cmd>DBUIToggle<cr>", desc = "DB UI Toggle" },
+            ["<leader>Df"] = { "<cmd>DBUIFindBuffer<cr>", desc = "DB UI Find buffer" },
+            ["<leader>Dr"] = { "<cmd>DBUIRenameBuffer<cr>", desc = "DB UI Rename buffer" },
+            ["<leader>Dl"] = { "<cmd>DBUILastQueryInfo<cr>", desc = "DB UI Last query infos" },
             ["<leader>Dd"] = { desc = "󱘖 Connect" },
           },
         },
@@ -22,3 +54,4 @@ return {
     },
   },
 }
+
