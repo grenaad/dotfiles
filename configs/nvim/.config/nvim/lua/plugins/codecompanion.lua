@@ -43,7 +43,14 @@ return {
           n = {
             ["<Leader>a"] = { desc = "Codecompanion" },
             ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
-            ["<Leader>ac"] = { "<cmd>CodeCompanionChat<CR>", desc = "Chat" },
+            ["<Leader>ac"] = { "<cmd>CodeCompanionChat Toggle<CR>", desc = "Toggle Chat" },
+            ["<Leader>ai"] = { "<cmd>CodeCompanion<CR>", desc = "Inline Assistant" },
+            ["<Leader>ap"] = {
+              function()
+                require("codecompanion").prompt()
+              end,
+              desc = "Prompts",
+            },
           },
           v = {
             ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
