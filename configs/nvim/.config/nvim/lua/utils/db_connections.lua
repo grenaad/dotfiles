@@ -210,4 +210,31 @@ function M.add_database_connection(name, connection_url)
   end
 end
 
+-- Interactive function to add encrypted connection with user prompts
+-- Returns: boolean - true on success, false on failure
+function M.add_encrypted_connection_interactive()
+  local name = vim.fn.input("Connection name: ")
+  if name == "" then
+    print("Connection name cannot be empty")
+    return false
+  end
+  
+  local url = vim.fn.input("Connection URL: ")
+  if url == "" then
+    print("Connection URL cannot be empty")
+    return false
+  end
+  
+  local success = M.add_database_connection(name, url)
+  
+  if success then
+    -- Refresh vim.g.dbs to show new connection in DBUI
+    vim.g.dbs = M.get_decrypted_database_connections()
+    print("Connection added! Restart DBUI to see changes.")
+    return true
+  end
+  
+  return false
+end
+
 return M

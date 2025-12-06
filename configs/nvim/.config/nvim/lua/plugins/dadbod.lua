@@ -41,6 +41,13 @@ return {
             ["<leader>Dl"] = { "<cmd>DBUILastQueryInfo<cr>", desc = "DB UI Last query infos" },
             ["<leader>Dd"] = { desc = "󱘖 Connect" },
             ["<leader>Da"] = { "<cmd>DBUIAddConnection<cr>", desc = " Add Connection" },
+            ["<leader>De"] = {
+              function()
+                local db_connections = require("utils.db_connections")
+                db_connections.add_encrypted_connection_interactive()
+              end,
+              desc = "󰆼 Add Encrypted Connection"
+            },
           },
         },
       },
