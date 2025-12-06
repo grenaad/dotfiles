@@ -18,15 +18,43 @@ return {
     vim.g.db_ui_use_nvim_notify = 0
     vim.g.db_ui_win_position = "left"
 
-    -- Database connections will be added manually via :DBUIAddConnection
-    -- or you can uncomment and modify the example below:
-    -- vim.g.dbs = {
-    --   example_sqlite = "sqlite:///path/to/your/database.db",
-    --   example_postgres = "postgresql://username:password@localhost:5432/database_name",
-    -- }
+    -- Database connection templates with <password> placeholders
+    -- Grouped by service (not environment) for better organization
+    local connection_templates = {
+      -- Dashboard Service
+      dashboard_dev = "postgresql://dbuser:<password>@localhost:5408/postgres",
+      dashboard_prod = "postgresql://dbuser:<password>@localhost:5406/postgres",
+      
+      -- Respondent Service  
+      respondent_dev = "postgresql://dbuser:<password>@localhost:5410/postgres",
+      respondent_prod = "postgresql://dbuser:<password>@localhost:5408/postgres",
+      respondent_clone = "postgresql://dbuser:<password>@localhost:5432/postgres",
+      
+      -- Autobots Service
+      autobots_dev = "postgresql://dbuser:<password>@localhost:5408/postgres", 
+      autobots_prod = "postgresql://dbuser:<password>@localhost:5405/postgres",
+      
+      -- Chat Analytics Service
+      chat_analytics_dev = "postgresql://dbuser:<password>@localhost:5409/postgres",
+      chat_analytics_prod = "postgresql://dbuser:<password>@localhost:5407/postgres",
+      
+      -- Questionnaire Service
+      questionnaire_dev = "postgresql://dbuser:<password>@localhost:5408/postgres",
+      questionnaire_prod = "postgresql://dbuser:<password>@localhost:5404/postgres",
+      
+      -- Core Responses Service
+      core_responses_dev = "postgresql://dbuser:<password>@localhost:5412/postgres", 
+      core_responses_prod = "postgresql://dbuser:<password>@localhost:5412/postgres",
+      
+      -- Panel Supplier Service
+      panel_supplier_dev = "postgresql://dbuser:<password>@localhost:5411/postgres",
+      panel_supplier_direct_dev = "postgresql://dbuser:<password>@localhost:5432/postgres",
+      panel_supplier_prod = "postgresql://dbuser:<password>@localhost:5411/postgres",
+    }
 
+    -- Replace <password> placeholders with decrypted passwords
     local db_connections = require("utils.db_connections")
-    vim.g.dbs = db_connections.get_decrypted_database_connections()
+    vim.g.dbs = db_connections.replace_password_placeholders(connection_templates)
   end,
   specs = {
     {
@@ -44,10 +72,9 @@ return {
             ["<leader>De"] = {
               function()
                 local db_connections = require("utils.db_connections")
-                -- Get connections and update vim.g.dbs to show new connection in DBUI
-                vim.g.dbs = db_connections.add_encrypted_connection_interactive()
+                db_connections.add_encrypted_password_interactive()
               end,
-              desc = "󰆼 Add Encrypted Connection"
+              desc = "󰆼 Add Encrypted Password"
             },
           },
         },
