@@ -185,4 +185,29 @@ function M.get_decrypted_database_connections()
   return vim_dbs_format
 end
 
+-- Add a new encrypted database connection
+-- Args: name (string), connection_url (string)
+-- Returns: boolean - true on success, false on failure
+function M.add_database_connection(name, connection_url)
+  if not name or name == "" then
+    print("Error: Connection name cannot be empty")
+    return false
+  end
+  
+  if not connection_url or connection_url == "" then
+    print("Error: Connection URL cannot be empty")
+    return false
+  end
+  
+  local success = M.store_connection(name, connection_url)
+  
+  if success then
+    print("Connection '" .. name .. "' added successfully!")
+    return true
+  else
+    print("Failed to add connection '" .. name .. "'")
+    return false
+  end
+end
+
 return M

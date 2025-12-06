@@ -27,19 +27,6 @@ return {
 
     local db_connections = require("utils.db_connections")
     vim.g.dbs = db_connections.get_decrypted_database_connections()
-
-    -- Example: Add your encrypted connections using crypto_simple
-    local crypto = require("utils.crypto_simple")
-    local encrypted_connections = {
-      dev_db = "your_encrypted_connection_string_here",
-      prod_db = "your_encrypted_connection_string_here",
-    }
-    for name, encrypted in pairs(encrypted_connections) do
-      local decrypted = crypto.decrypt_string(encrypted)
-      if decrypted ~= "" then
-        vim.g.dbs[name] = decrypted
-      end
-    end
   end,
   specs = {
     {
