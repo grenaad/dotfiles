@@ -17,29 +17,26 @@ return {
     vim.g.db_ui_show_help = 1
     vim.g.db_ui_use_nvim_notify = 0
     vim.g.db_ui_win_position = "left"
-    
-    -- Clear any existing invalid database configurations
-    vim.g.dbs = {}
-    
+
     -- Database connections will be added manually via :DBUIAddConnection
     -- or you can uncomment and modify the example below:
-    -- vim.g.dbs = {
-    --   example_sqlite = "sqlite:///path/to/your/database.db",
-    --   example_postgres = "postgresql://username:password@localhost:5432/database_name",
-    -- }
-    
+    vim.g.dbs = {
+      example_sqlite = "sqlite:///path/to/your/database.db",
+      example_postgres = "postgresql://username:password@localhost:5432/database_name",
+    }
+
     -- Example: Add your encrypted connections using crypto_simple
-    -- local crypto = require("utils.crypto_simple")
-    -- local encrypted_connections = {
-    --   dev_db = "your_encrypted_connection_string_here",
-    --   prod_db = "your_encrypted_connection_string_here",
-    -- }
-    -- for name, encrypted in pairs(encrypted_connections) do
-    --   local decrypted = crypto.decrypt_string(encrypted)
-    --   if decrypted ~= "" then
-    --     vim.g.dbs[name] = decrypted
-    --   end
-    -- end
+    local crypto = require("utils.crypto_simple")
+    local encrypted_connections = {
+      dev_db = "your_encrypted_connection_string_here",
+      prod_db = "your_encrypted_connection_string_here",
+    }
+    for name, encrypted in pairs(encrypted_connections) do
+      local decrypted = crypto.decrypt_string(encrypted)
+      if decrypted ~= "" then
+        vim.g.dbs[name] = decrypted
+      end
+    end
   end,
   specs = {
     {
@@ -60,4 +57,3 @@ return {
     },
   },
 }
-
