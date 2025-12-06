@@ -20,10 +20,13 @@ return {
 
     -- Database connections will be added manually via :DBUIAddConnection
     -- or you can uncomment and modify the example below:
-    vim.g.dbs = {
-      example_sqlite = "sqlite:///path/to/your/database.db",
-      example_postgres = "postgresql://username:password@localhost:5432/database_name",
-    }
+    -- vim.g.dbs = {
+    --   example_sqlite = "sqlite:///path/to/your/database.db",
+    --   example_postgres = "postgresql://username:password@localhost:5432/database_name",
+    -- }
+
+    local db_connections = require("utils.db_connections")
+    vim.g.dbs = db_connections.get_decrypted_database_connections()
 
     -- Example: Add your encrypted connections using crypto_simple
     local crypto = require("utils.crypto_simple")

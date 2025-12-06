@@ -165,4 +165,24 @@ function M.list_connections()
   return names
 end
 
+-- Get decrypted database connections in vim.g.dbs format
+-- Returns: table formatted for vim.g.dbs assignment, empty table if no connections or on error
+-- Always reads fresh from JSON file
+function M.get_decrypted_database_connections()
+  local success, encrypted_connections = pcall(M.load_connections)
+  
+  if not success then
+    print("Error: Failed to load encrypted database connections: " .. tostring(encrypted_connections))
+    return {}
+  end
+  
+  local vim_dbs_format = {}
+  
+  for name, url in pairs(encrypted_connections) do
+    vim_dbs_format[name] = url
+  end
+  
+  return vim_dbs_format
+end
+
 return M
