@@ -29,56 +29,6 @@ vim.filetype.add({
   },
 })
 
--- vim.api.nvim_create_autocmd("LspAttach", {
---   group = vim.api.nvim_create_augroup('lsp_attach_disable_ruff_hover', { clear = true }),
---   callback = function(args)
---     local client = vim.lsp.get_client_by_id(args.data.client_id)
---     if client == nil then
---       return
---     end
---     if client.name == 'ruff' then
---       -- Disable hover in favor of Pyright
---       client.server_capabilities.hoverProvider = false
---     end
---   end,
---   desc = 'LSP: Disable hover capability from Ruff',
--- })
-
--- Setup up vim-dadbod
-vim.g.dbs = {
-  { name = "local default", url = "postgres://postgres:postgres@localhost:5432" },
-  {
-    name = "dev_autobots",
-    url = function()
-      local result = os.getenv("DEV_AUTOBOTS")
-      -- local result = vim.fn.system('~/work/focaldata/database.sh dev_autobots')
-      return result
-    end,
-  },
-  {
-    name = "dev respondent",
-    url = function()
-      local result = os.getenv("DEV_RESPONDENT")
-      return result
-    end,
-  },
-  {
-    name = "prod respondent",
-    url = function()
-      local result = os.getenv("PROD_RESPONDENT")
-
-      return result
-    end,
-  },
-  {
-    name = "prod questionnaire",
-    url = function()
-      local result = os.getenv("PROD_QUESTIONNAIRE")
-
-      return result
-    end,
-  },
-}
 require("cmp").setup.filetype({ "sql" }, {
   sources = {
     { name = "vim-dadbod-completion" },

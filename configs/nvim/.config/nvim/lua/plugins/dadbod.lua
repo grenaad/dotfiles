@@ -18,10 +18,15 @@ return {
     vim.g.db_ui_use_nvim_notify = 0
     vim.g.db_ui_win_position = "left"
     
-    -- Test database connection (remove/modify as needed)
-    vim.g.dbs = {
-      test_sqlite = "sqlite:///tmp/test.db",
-    }
+    -- Clear any existing invalid database configurations
+    vim.g.dbs = {}
+    
+    -- Database connections will be added manually via :DBUIAddConnection
+    -- or you can uncomment and modify the example below:
+    -- vim.g.dbs = {
+    --   example_sqlite = "sqlite:///path/to/your/database.db",
+    --   example_postgres = "postgresql://username:password@localhost:5432/database_name",
+    -- }
     
     -- Example: Add your encrypted connections using crypto_simple
     -- local crypto = require("utils.crypto_simple")
@@ -48,6 +53,7 @@ return {
             ["<leader>Dr"] = { "<cmd>DBUIRenameBuffer<cr>", desc = "DB UI Rename buffer" },
             ["<leader>Dl"] = { "<cmd>DBUILastQueryInfo<cr>", desc = "DB UI Last query infos" },
             ["<leader>Dd"] = { desc = "󱘖 Connect" },
+            ["<leader>Da"] = { "<cmd>DBUIAddConnection<cr>", desc = " Add Connection" },
           },
         },
       },
