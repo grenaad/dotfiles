@@ -44,7 +44,8 @@ return {
             ["<leader>De"] = {
               function()
                 local db_connections = require("utils.db_connections")
-                db_connections.add_encrypted_connection_interactive()
+                -- Get connections and update vim.g.dbs to show new connection in DBUI
+                vim.g.dbs = db_connections.add_encrypted_connection_interactive()
               end,
               desc = "󰆼 Add Encrypted Connection"
             },
