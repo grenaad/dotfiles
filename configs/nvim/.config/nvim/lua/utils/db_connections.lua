@@ -9,28 +9,28 @@ local CONNECTIONS_FILE = vim.fn.stdpath("config") .. "/lua/utils/encrypted_db_co
 -- Returns: table of { connection_name = encrypted_password, ... }
 function M.load_encrypted_passwords()
   local encrypted_passwords = {}
-  
+
   -- Check if file exists
   local file = io.open(CONNECTIONS_FILE, "r")
   if not file then
     -- File doesn't exist, return empty table
     return encrypted_passwords
   end
-  
+
   -- Read and parse JSON
   local content = file:read("*all")
   file:close()
-  
+
   if content == "" then
     return encrypted_passwords
   end
-  
+
   local ok, data = pcall(vim.json.decode, content)
   if not ok then
     print("Error: Failed to parse encrypted passwords JSON: " .. tostring(data))
     return encrypted_passwords
   end
-  
+
   return data
 end
 
@@ -40,47 +40,18 @@ end
 function M.get_decrypted_password(connection_name)
   local encrypted_passwords = M.load_encrypted_passwords()
   local encrypted_password = encrypted_passwords[connection_name]
-  
+
   if not encrypted_password then
     return nil
   end
-  
+
   local decrypted_password = crypto.decrypt_string(encrypted_password)
   if decrypted_password == "" then
     print("Warning: Failed to decrypt password for connection '" .. connection_name .. "'")
     return nil
   end
-  
-  return decrypted_password
-end
 
--- Replace <password> placeholders in connection templates with decrypted passwords
--- Args: connection_templates (table) - table of { connection_name = connection_url_with_placeholder, ... }
--- Returns: table of { connection_name = connection_url_with_real_password, ... }
-function M.replace_password_placeholders(connection_templates)
-  local result = {}
-  
-  for name, template_url in pairs(connection_templates) do
-    if template_url:find("<password>") then
-      -- This connection template has a password placeholder
-      local decrypted_password = M.get_decrypted_password(name)
-      
-      if decrypted_password then
-        -- Replace <password> with the actual decrypted password
-        local final_url = template_url:gsub("<password>", decrypted_password)
-        result[name] = final_url
-      else
-        -- Password not found or decryption failed
-        print("Warning: No encrypted password found for '" .. name .. "', leaving <password> placeholder")
-        result[name] = template_url
-      end
-    else
-      -- No password placeholder, use template as-is
-      result[name] = template_url
-    end
-  end
-  
-  return result
+  return decrypted_password
 end
 
 -- Replace <password> placeholder in a single connection string with decrypted password
@@ -92,16 +63,16 @@ function M.replace_single_password_placeholder(connection_name, connection_strin
   if not connection_name or not connection_string then
     return connection_string or ""
   end
-  
+
   -- Check for <password> placeholder (case-insensitive)
   if not connection_string:lower():find("<password>") then
     -- No placeholder found, return as-is
     return connection_string
   end
-  
+
   -- Get decrypted password
   local decrypted_password = M.get_decrypted_password(connection_name)
-  
+
   if decrypted_password then
     -- Replace placeholder with actual password (case-insensitive)
     -- Use pattern matching for case insensitive replacement
@@ -121,28 +92,28 @@ end
 function M.store_encrypted_password(connection_name, password)
   -- Load existing passwords
   local encrypted_passwords = M.load_encrypted_passwords()
-  
+
   -- Encrypt the password
   local encrypted_password = crypto.encrypt_string(password)
   if encrypted_password == "" then
     print("Error: Failed to encrypt password for '" .. connection_name .. "'")
     return false
   end
-  
+
   -- Add to data
   encrypted_passwords[connection_name] = encrypted_password
-  
+
   -- Write back to file
   local output_file = io.open(CONNECTIONS_FILE, "w")
   if not output_file then
     print("Error: Cannot write to " .. CONNECTIONS_FILE)
     return false
   end
-  
+
   local json_string = vim.json.encode(encrypted_passwords)
   output_file:write(json_string)
   output_file:close()
-  
+
   print("Successfully stored encrypted password for '" .. connection_name .. "'")
   return true
 end
@@ -152,26 +123,26 @@ end
 -- Returns: boolean - true on success, false on failure
 function M.remove_encrypted_password(connection_name)
   local encrypted_passwords = M.load_encrypted_passwords()
-  
+
   if encrypted_passwords[connection_name] == nil then
     print("No encrypted password found for '" .. connection_name .. "'")
     return false
   end
-  
+
   -- Remove the password
   encrypted_passwords[connection_name] = nil
-  
+
   -- Write back to file
   local output_file = io.open(CONNECTIONS_FILE, "w")
   if not output_file then
     print("Error: Cannot write to " .. CONNECTIONS_FILE)
     return false
   end
-  
+
   local json_string = vim.json.encode(encrypted_passwords)
   output_file:write(json_string)
   output_file:close()
-  
+
   print("Successfully removed encrypted password for '" .. connection_name .. "'")
   return true
 end
@@ -180,11 +151,11 @@ end
 function M.list_encrypted_passwords()
   local encrypted_passwords = M.load_encrypted_passwords()
   local names = {}
-  
+
   for name, _ in pairs(encrypted_passwords) do
     table.insert(names, name)
   end
-  
+
   return names
 end
 
@@ -193,7 +164,7 @@ end
 -- Returns: boolean - true on success, false on failure
 function M.add_encrypted_password_interactive(connection_name)
   local name = connection_name
-  
+
   if not name then
     name = vim.fn.input("Connection name: ")
     if name == "" then
@@ -201,19 +172,19 @@ function M.add_encrypted_password_interactive(connection_name)
       return false
     end
   end
-  
+
   local password = vim.fn.input("Password for '" .. name .. "': ")
   if password == "" then
     print("Password cannot be empty")
     return false
   end
-  
+
   local success = M.store_encrypted_password(name, password)
-  
+
   if success then
     print("Encrypted password added for '" .. name .. "'!")
   end
-  
+
   return success
 end
 

@@ -18,42 +18,137 @@ return {
     vim.g.db_ui_use_nvim_notify = 0
     vim.g.db_ui_win_position = "left"
 
-    -- Database connection templates with <password> placeholders
-    local connection_templates = {
+    -- Load db connections utility
+    local db_connections = require("utils.db_connections")
+
+    -- Database connections using array format with individual password replacement
+    vim.g.dbs = {
       -- Dashboard Service
-      dashboard_dev = "postgresql://dbuser:<password>@localhost:6000/postgres",
-      dashboard_prod = "postgresql://dbuser:<password>@localhost:6001/postgres",
+      {
+        name = 'dashboard_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'dashboard_dev',
+          'postgresql://dbuser:<password>@localhost:6000/postgres'
+        )
+      },
+      {
+        name = 'dashboard_prod',
+        url = db_connections.replace_single_password_placeholder(
+          'dashboard_prod',
+          'postgresql://dbuser:<password>@localhost:6001/postgres'
+        )
+      },
 
       -- Respondent Service
-      respondent_dev = "postgresql://dbuser:<password>@localhost:6002/postgres",
-      respondent_prod = "postgresql://dbuser:<password>@localhost:6003/postgres",
-      respondent_clone = "postgresql://dbuser:<password>@localhost:6004/postgres",
+      {
+        name = 'respondent_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'respondent_dev',
+          'postgresql://dbuser:<password>@localhost:6002/postgres'
+        )
+      },
+      {
+        name = 'respondent_prod',
+        url = db_connections.replace_single_password_placeholder(
+          'respondent_prod',
+          'postgresql://dbuser:<password>@localhost:6003/postgres'
+        )
+      },
+      {
+        name = 'respondent_clone',
+        url = db_connections.replace_single_password_placeholder(
+          'respondent_clone',
+          'postgresql://dbuser:<password>@localhost:6004/postgres'
+        )
+      },
 
       -- Autobots Service
-      autobots_dev = "postgresql://dbuser:<password>@localhost:6005/postgres",
-      autobots_prod = "postgresql://dbuser:<password>@localhost:6006/postgres",
+      {
+        name = 'autobots_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'autobots_dev',
+          'postgresql://dbuser:<password>@localhost:6005/postgres'
+        )
+      },
+      {
+        name = 'autobots_prod',
+        url = db_connections.replace_single_password_placeholder(
+          'autobots_prod',
+          'postgresql://dbuser:<password>@localhost:6006/postgres'
+        )
+      },
 
       -- Chat Analytics Service
-      chat_analytics_dev = "postgresql://dbuser:<password>@localhost:6007/postgres",
-      chat_analytics_prod = "postgresql://dbuser:<password>@localhost:6008/postgres",
+      {
+        name = 'chat_analytics_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'chat_analytics_dev',
+          'postgresql://dbuser:<password>@localhost:6007/postgres'
+        )
+      },
+      {
+        name = 'chat_analytics_prod',
+        url = db_connections.replace_single_password_placeholder(
+          'chat_analytics_prod',
+          'postgresql://dbuser:<password>@localhost:6008/postgres'
+        )
+      },
 
       -- Questionnaire Service
-      questionnaire_dev = "postgresql://dbuser:<password>@localhost:6009/postgres",
-      questionnaire_prod = "postgresql://dbuser:<password>@localhost:6010/postgres",
+      {
+        name = 'questionnaire_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'questionnaire_dev',
+          'postgresql://dbuser:<password>@localhost:6009/postgres'
+        )
+      },
+      {
+        name = 'questionnaire_prod',
+        url = db_connections.replace_single_password_placeholder(
+          'questionnaire_prod',
+          'postgresql://dbuser:<password>@localhost:6010/postgres'
+        )
+      },
 
       -- Core Responses Service
-      core_responses_dev = "postgresql://dbuser:<password>@localhost:6011/postgres",
-      core_responses_prod = "postgresql://dbuser:<password>@localhost:6012/postgres",
+      {
+        name = 'core_responses_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'core_responses_dev',
+          'postgresql://dbuser:<password>@localhost:6011/postgres'
+        )
+      },
+      {
+        name = 'core_responses_prod',
+        url = db_connections.replace_single_password_placeholder(
+          'core_responses_prod',
+          'postgresql://dbuser:<password>@localhost:6012/postgres'
+        )
+      },
 
       -- Panel Supplier Service
-      panel_supplier_dev = "postgresql://dbuser:<password>@localhost:6013/postgres",
-      panel_supplier_direct_dev = "postgresql://dbuser:<password>@localhost:6014/postgres",
-      panel_supplier_prod = "postgresql://dbuser:<password>@localhost:6015/postgres",
+      {
+        name = 'panel_supplier_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'panel_supplier_dev',
+          'postgresql://dbuser:<password>@localhost:6013/postgres'
+        )
+      },
+      {
+        name = 'panel_supplier_direct_dev',
+        url = db_connections.replace_single_password_placeholder(
+          'panel_supplier_direct_dev',
+          'postgresql://dbuser:<password>@localhost:6014/postgres'
+        )
+      },
+      {
+        name = 'panel_supplier_prod',
+        url = db_connections.replace_single_password_placeholder(
+          'panel_supplier_prod',
+          'postgresql://dbuser:<password>@localhost:6015/postgres'
+        )
+      },
     }
-
-    -- Replace <password> placeholders with decrypted passwords
-    local db_connections = require("utils.db_connections")
-    vim.g.dbs = db_connections.replace_password_placeholders(connection_templates)
   end,
   specs = {
     {
