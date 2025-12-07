@@ -1,8 +1,8 @@
 return {
   "kristijanhusak/vim-dadbod-ui",
   dependencies = {
-    { "tpope/vim-dotenv",                     lazy = true },
-    { "tpope/vim-dadbod",                     lazy = true },
+    { "tpope/vim-dotenv", lazy = true },
+    { "tpope/vim-dadbod", lazy = true },
     {
       "kristijanhusak/vim-dadbod-completion",
       ft = { "sql", "mysql", "plsql" },
@@ -14,14 +14,14 @@ return {
           opts = {
             sources = {
               per_filetype = {
-                sql = { 'snippets', 'dadbod', 'buffer' },
-                mysql = { 'snippets', 'dadbod', 'buffer' },
-                plsql = { 'snippets', 'dadbod', 'buffer' },
+                sql = { "snippets", "dadbod", "buffer" },
+                mysql = { "snippets", "dadbod", "buffer" },
+                plsql = { "snippets", "dadbod", "buffer" },
               },
               providers = {
-                dadbod = { 
-                  name = "Dadbod", 
-                  module = "vim_dadbod_completion.blink" 
+                dadbod = {
+                  name = "Dadbod",
+                  module = "vim_dadbod_completion.blink",
                 },
               },
             },
