@@ -30,7 +30,7 @@ return {
     local function populate_all_databases()
       local all_databases = db_registry.get_all_databases()
       local dbs = {}
-      
+
       for _, db_config in ipairs(all_databases) do
         table.insert(dbs, {
           name = db_config.name,
@@ -49,7 +49,7 @@ return {
           end,
         })
       end
-      
+
       return dbs
     end
 
@@ -85,16 +85,16 @@ return {
             ["<leader>Dv"] = {
               function()
                 local db_picker = require("utils.db_picker")
-                db_picker.pick_development_database()
+                db_picker.pick_database_with_word_under_cursor()
               end,
-              desc = "🧪 Dev Databases",
+              desc = "📋 Database Search (word under cursor)",
             },
-            ["<leader>Db"] = {
+            ["<leader>DL"] = {
               function()
                 local db_picker = require("utils.db_picker")
-                db_picker.pick_production_database()
+                db_picker.pick_database_with_line_content()
               end,
-              desc = "🏭 Prod Databases",
+              desc = "📋 Database Search (from line)",
             },
             ["<leader>Da"] = { "<cmd>DBUIAddConnection<cr>", desc = " Add Connection" },
             ["<leader>De"] = {

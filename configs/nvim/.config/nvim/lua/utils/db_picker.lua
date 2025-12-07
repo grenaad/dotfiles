@@ -356,19 +356,46 @@ function M.pick_database(opts)
   picker:find()
 end
 
--- Quick picker for only production databases
-function M.pick_production_database()
+-- Database picker using word under cursor as search term
+function M.pick_database_with_word_under_cursor()
+  local word_under_cursor = vim.fn.expand("<cword>")
   M.pick_database({
-    prompt_title = "🏭 Select Production Database",
-    default_text = "prod"
+    prompt_title = "📋 Database Search",
+    default_text = word_under_cursor
   })
 end
 
--- Quick picker for only development databases
-function M.pick_development_database()
+-- Database picker using database name extracted from current line
+function M.pick_database_with_line_content()
+  local current_line = vim.api.nvim_get_current_line()
+  
+  -- Try to extract database name patterns from the line
+  -- Look for common database naming patterns: service_environment (e.g., core_responses_dev)
+  local database_name = ""
+  
+  -- Pattern 1: Look for database names like "core_responses_dev", "panel_supplier_prod", etc.
+  database_name = current_line:match("([%w_]+_dev)") or 
+                 current_line:match("([%w_]+_prod)") or 
+                 current_line:match("([%w_]+_clone)")
+  
+  -- Pattern 2: If no _dev/_prod pattern, look for any database-like identifier
+  if not database_name then
+    database_name = current_line:match("([%w_]+_[%w_]+)")
+  end
+  
+  -- Pattern 3: Fallback to any word that looks like a database identifier
+  if not database_name then
+    database_name = current_line:match("([%w_]{8,})")
+  end
+  
+  -- If still no match, use the whole line cleaned up
+  if not database_name then
+    database_name = current_line:gsub("[^%w_]", " "):match("%S+") or ""
+  end
+  
   M.pick_database({
-    prompt_title = "🧪 Select Development Database",
-    default_text = "dev"
+    prompt_title = "📋 Database Search (from line)",
+    default_text = database_name
   })
 end
 
