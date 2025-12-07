@@ -83,6 +83,38 @@ function M.replace_password_placeholders(connection_templates)
   return result
 end
 
+-- Replace <password> placeholder in a single connection string with decrypted password
+-- Args: connection_name (string) - name to look up encrypted password
+--       connection_string (string) - URL template that may contain <password> placeholder
+-- Returns: string - connection URL with password replaced, or original string if no placeholder or decryption fails
+function M.replace_single_password_placeholder(connection_name, connection_string)
+  -- Input validation
+  if not connection_name or not connection_string then
+    return connection_string or ""
+  end
+  
+  -- Check for <password> placeholder (case-insensitive)
+  if not connection_string:lower():find("<password>") then
+    -- No placeholder found, return as-is
+    return connection_string
+  end
+  
+  -- Get decrypted password
+  local decrypted_password = M.get_decrypted_password(connection_name)
+  
+  if decrypted_password then
+    -- Replace placeholder with actual password (case-insensitive)
+    -- Use pattern matching for case insensitive replacement
+    local pattern = "<[pP][aA][sS][sS][wW][oO][rR][dD]>"
+    local result = connection_string:gsub(pattern, decrypted_password)
+    return result
+  else
+    -- Decryption failed, log warning and return original string
+    print("Warning: Failed to decrypt password for connection '" .. connection_name .. "', leaving placeholder intact")
+    return connection_string
+  end
+end
+
 -- Store encrypted password for a connection name
 -- Args: connection_name (string), password (string)
 -- Returns: boolean - true on success, false on failure
