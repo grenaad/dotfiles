@@ -29,13 +29,6 @@ vim.filetype.add({
   },
 })
 
-require("cmp").setup.filetype({ "sql" }, {
-  sources = {
-    { name = "vim-dadbod-completion" },
-    { name = "buffer" },
-  },
-})
-
 require("flutter-tools").setup_project({
   -- can have mulitple projects
   {
