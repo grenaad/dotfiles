@@ -228,4 +228,28 @@ function M.add_encrypted_connection_interactive()
   return M.add_encrypted_password_interactive()
 end
 
+-- Function to create Cloud SQL proxy connection with fallback
+-- Args: port (number) - Local port for proxy database connection
+--       instance_name (string) - GCP instance connection name (project:region:instance)
+--       database_name (string) - Database name to connect to
+--       password_key (string) - Key for encrypted password lookup
+-- Returns: string - PostgreSQL connection URL with decrypted password
+function M.connect_to_cloud_sql(port, instance_name, database_name, password_key)
+  local sql_proxy = require("utils.sql_proxy")
+  
+  -- Try to start the proxy
+  local success = sql_proxy.start_proxy(port, instance_name, { quiet = true, timeout = 30 })
+  
+  if success then
+    -- Proxy started successfully, return URL with decrypted password
+    local template_url = string.format("postgresql://dbuser:<password>@localhost:%d/%s", port, database_name)
+    return M.replace_single_password_placeholder(password_key, template_url)
+  else
+    -- Proxy failed to start, return error URL
+    local error_msg = string.format("Failed to connect to Cloud SQL instance: %s", instance_name)
+    print("Error: " .. error_msg)
+    return string.format("postgresql://error:proxy-failed@localhost:%d/error", port)
+  end
+end
+
 return M
