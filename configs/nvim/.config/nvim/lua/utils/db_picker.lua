@@ -70,7 +70,7 @@ local function format_db_entry(db_config)
   local status_text = is_running and "RUNNING" or "STOPPED"
   local uptime_text = ""
   
-  if is_running and proxy_info then
+  if is_running and proxy_info and proxy_info.uptime then
     local uptime_mins = math.floor(proxy_info.uptime / 60)
     uptime_text = string.format(" (up %dm)", uptime_mins)
   end
@@ -184,7 +184,7 @@ local function handle_database_selection(db_config, open_dbui)
   -- Open DBUI if requested
   if open_dbui then
     vim.schedule(function()
-      vim.cmd("DBUIToggle")
+      vim.cmd("DBUI")
     end)
   end
   
@@ -356,15 +356,6 @@ function M.pick_database(opts)
   picker:find()
 end
 
--- Database picker using word under cursor as search term
-function M.pick_database_with_word_under_cursor()
-  local word_under_cursor = vim.fn.expand("<cword>")
-  M.pick_database({
-    prompt_title = "📋 Database Search",
-    default_text = word_under_cursor
-  })
-end
-
 -- Database picker using database name extracted from current line
 function M.pick_database_with_line_content()
   local current_line = vim.api.nvim_get_current_line()
@@ -423,15 +414,15 @@ function M.manage_proxies()
   -- Create entries for running proxies
   local entries = {}
   for _, proxy in ipairs(running_proxies) do
-    local uptime_mins = math.floor(proxy.uptime / 60)
+    local uptime_mins = proxy.uptime and math.floor(proxy.uptime / 60) or 0
     table.insert(entries, {
       value = proxy.port,
       display = string.format(
         "Port %d - %s (up %dm) [job: %d]",
         proxy.port,
-        proxy.instance_name,
+        proxy.instance_name or "unknown",
         uptime_mins,
-        proxy.job_id
+        proxy.job_id or 0
       ),
       ordinal = string.format("port %d %s", proxy.port, proxy.instance_name),
       proxy_info = proxy

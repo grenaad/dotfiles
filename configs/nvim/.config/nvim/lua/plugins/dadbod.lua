@@ -1,8 +1,8 @@
 return {
   "kristijanhusak/vim-dadbod-ui",
   dependencies = {
-    { "tpope/vim-dotenv", lazy = true },
-    { "tpope/vim-dadbod", lazy = true },
+    { "tpope/vim-dotenv",                     lazy = true },
+    { "tpope/vim-dadbod",                     lazy = true },
     { "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
   },
   cmd = {
@@ -83,13 +83,6 @@ return {
               desc = "🔧 Manage Proxies",
             },
             ["<leader>Dv"] = {
-              function()
-                local db_picker = require("utils.db_picker")
-                db_picker.pick_database_with_word_under_cursor()
-              end,
-              desc = "📋 Database Search (word under cursor)",
-            },
-            ["<leader>DL"] = {
               function()
                 local db_picker = require("utils.db_picker")
                 db_picker.pick_database_with_line_content()
