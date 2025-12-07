@@ -232,55 +232,10 @@ function M.get_all_databases()
   return vim.deepcopy(database_configs)
 end
 
--- Get database configuration by name
--- Args: name (string) - database name identifier
--- Returns: table or nil - database config object or nil if not found
-function M.get_database(name)
-  for _, db in ipairs(database_configs) do
-    if db.name == name then
-      return vim.deepcopy(db)
-    end
-  end
-  return nil
-end
 
 
 
--- Validate database configuration
--- Args: db_config (table) - database configuration object
--- Returns: boolean, string - true if valid, or false with error message
-function M.validate_database_config(db_config)
-  if not db_config then
-    return false, "Database config cannot be nil"
-  end
-  
-  local required_fields = {
-    "name", "display_name", "description", "port", "instance_name", 
-    "database_name", "password_key", "connection_template"
-  }
-  
-  for _, field in ipairs(required_fields) do
-    if not db_config[field] or db_config[field] == "" then
-      return false, "Missing required field: " .. field
-    end
-  end
-  
-  -- Validate port is a number
-  if type(db_config.port) ~= "number" then
-    return false, "Port must be a number"
-  end
-  
-  -- Validate instance_name format (project:region:instance)
-  local parts = {}
-  for part in db_config.instance_name:gmatch("[^:]+") do
-    table.insert(parts, part)
-  end
-  
-  if #parts ~= 3 then
-    return false, "Instance name must be in format: project:region:instance"
-  end
-  
-  return true, nil
-end
+
+
 
 return M

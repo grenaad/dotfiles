@@ -118,46 +118,7 @@ function M.store_encrypted_password(connection_name, password)
   return true
 end
 
--- Remove encrypted password for a connection name
--- Args: connection_name (string)
--- Returns: boolean - true on success, false on failure
-function M.remove_encrypted_password(connection_name)
-  local encrypted_passwords = M.load_encrypted_passwords()
 
-  if encrypted_passwords[connection_name] == nil then
-    print("No encrypted password found for '" .. connection_name .. "'")
-    return false
-  end
-
-  -- Remove the password
-  encrypted_passwords[connection_name] = nil
-
-  -- Write back to file
-  local output_file = io.open(PASSWORDS_FILE, "w")
-  if not output_file then
-    print("Error: Cannot write to " .. PASSWORDS_FILE)
-    return false
-  end
-
-  local json_string = vim.json.encode(encrypted_passwords)
-  output_file:write(json_string)
-  output_file:close()
-
-  print("Successfully removed encrypted password for '" .. connection_name .. "'")
-  return true
-end
-
--- List all stored connection names that have encrypted passwords
-function M.list_encrypted_passwords()
-  local encrypted_passwords = M.load_encrypted_passwords()
-  local names = {}
-
-  for name, _ in pairs(encrypted_passwords) do
-    table.insert(names, name)
-  end
-
-  return names
-end
 
 -- Interactive function to add encrypted password for a connection
 -- Args: connection_name (string, optional) - if provided, skip name prompt
