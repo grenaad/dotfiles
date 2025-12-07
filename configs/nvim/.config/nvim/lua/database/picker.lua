@@ -61,8 +61,8 @@ end
 -- Args: db_config (table) - database configuration object
 -- Returns: string - formatted display text
 local function format_db_entry(db_config)
-  local sql_proxy = require("utils.sql_proxy")
-  local is_running, proxy_info = sql_proxy.is_proxy_running(db_config.port)
+  local proxy = require("database.proxy")
+  local is_running, proxy_info = proxy.is_proxy_running(db_config.port)
   
   local status_icon = is_running and "🟢" or "🔴"
   local env_icon = db_config.environment == "production" and "🏭" or "🧪"
@@ -97,10 +97,10 @@ end
 -- Args: db_config (table) - database configuration object
 -- Returns: boolean - true if proxy is running (was already running or started successfully)
 local function ensure_proxy_running(db_config)
-  local sql_proxy = require("utils.sql_proxy")
+  local proxy = require("database.proxy")
   
   -- Check if already running
-  local is_running, _ = sql_proxy.is_proxy_running(db_config.port)
+  local is_running, _ = proxy.is_proxy_running(db_config.port)
   if is_running then
     vim.notify(
       string.format("Proxy for %s already running on port %d", db_config.display_name, db_config.port),
@@ -115,7 +115,7 @@ local function ensure_proxy_running(db_config)
     vim.log.levels.INFO
   )
   
-  local success, job_id = sql_proxy.start_proxy(db_config.port, db_config.instance_name, {
+  local success, job_id = proxy.start_proxy(db_config.port, db_config.instance_name, {
     timeout = 30,
     quiet = false
   })
@@ -143,6 +143,25 @@ local function ensure_proxy_running(db_config)
   end
 end
 
+-- Generate connection URL for a database config
+-- Args: db_config (table) - database configuration object
+-- Returns: string - connection URL with password placeholder replaced, or nil on error
+local function generate_connection_url(db_config)
+  if not db_config then
+    return nil
+  end
+  
+  local passwords = require("database.passwords")
+  
+  -- Replace template variables
+  local url = db_config.connection_template
+  url = url:gsub("{port}", tostring(db_config.port))
+  url = url:gsub("{database_name}", db_config.database_name)
+  
+  -- Replace password placeholder with decrypted password
+  return passwords.replace_password_placeholder(db_config.password_key, url)
+end
+
 -- Handle database selection - connect and optionally open DBUI
 -- Args: db_config (table) - database configuration object
 --       open_dbui (boolean) - whether to open DBUI after connecting
@@ -156,8 +175,7 @@ local function handle_database_selection(db_config, open_dbui)
   end
   
   -- Generate connection URL
-  local db_registry = require("utils.db_registry")
-  local connection_url = db_registry.generate_connection_url(db_config)
+  local connection_url = generate_connection_url(db_config)
   
   if not connection_url then
     vim.notify(
@@ -209,8 +227,8 @@ function M.pick_database(opts)
   end
   
   opts = opts or {}
-  local db_registry = require("utils.db_registry")
-  local databases = db_registry.get_all_databases()
+  local registry = require("database.registry")
+  local databases = registry.get_all_databases()
   
   -- Create telescope entries
   local entries = {}
@@ -282,8 +300,8 @@ function M.pick_database(opts)
         local selection = action_state.get_selected_entry()
         if selection then
           local db = get_db_from_entry(selection)
-          local sql_proxy = require("utils.sql_proxy")
-          local is_running, proxy_info = sql_proxy.is_proxy_running(db.port)
+          local proxy = require("database.proxy")
+          local is_running, proxy_info = proxy.is_proxy_running(db.port)
           
           local details = {
             "Database Details:",
@@ -318,11 +336,11 @@ function M.pick_database(opts)
         local selection = action_state.get_selected_entry()
         if selection then
           local db = get_db_from_entry(selection)
-          local sql_proxy = require("utils.sql_proxy")
+          local proxy = require("database.proxy")
           
-          local is_running, _ = sql_proxy.is_proxy_running(db.port)
+          local is_running, _ = proxy.is_proxy_running(db.port)
           if is_running then
-            local success = sql_proxy.stop_proxy(db.port)
+            local success = proxy.stop_proxy(db.port)
             if success then
               vim.notify(
                 string.format("Stopped proxy for %s", db.display_name),
@@ -392,8 +410,8 @@ end
 
 -- Picker for proxy management
 function M.manage_proxies()
-  local sql_proxy = require("utils.sql_proxy")
-  local running_proxies = sql_proxy.list_running_proxies()
+  local proxy = require("database.proxy")
+  local running_proxies = proxy.list_running_proxies()
   
   if #running_proxies == 0 then
     vim.notify("No proxies are currently running", vim.log.levels.INFO)
@@ -413,19 +431,19 @@ function M.manage_proxies()
   
   -- Create entries for running proxies
   local entries = {}
-  for _, proxy in ipairs(running_proxies) do
-    local uptime_mins = proxy.uptime and math.floor(proxy.uptime / 60) or 0
+  for _, proxy_info in ipairs(running_proxies) do
+    local uptime_mins = proxy_info.uptime and math.floor(proxy_info.uptime / 60) or 0
     table.insert(entries, {
-      value = proxy.port,
+      value = proxy_info.port,
       display = string.format(
         "Port %d - %s (up %dm) [job: %d]",
-        proxy.port,
-        proxy.instance_name or "unknown",
+        proxy_info.port,
+        proxy_info.instance_name or "unknown",
         uptime_mins,
-        proxy.job_id or 0
+        proxy_info.job_id or 0
       ),
-      ordinal = string.format("port %d %s", proxy.port, proxy.instance_name),
-      proxy_info = proxy
+      ordinal = string.format("port %d %s", proxy_info.port, proxy_info.instance_name),
+      proxy_info = proxy_info
     })
   end
   
@@ -446,7 +464,7 @@ function M.manage_proxies()
         
         if selection then
           local port = selection.value
-          local success = sql_proxy.stop_proxy(port)
+          local success = proxy.stop_proxy(port)
           if success then
             vim.notify(string.format("Stopped proxy on port %d", port), vim.log.levels.INFO)
           else

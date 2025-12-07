@@ -1,9 +1,7 @@
-local crypto = require("utils.crypto_simple")
-
 local M = {}
 
 -- Path to the encrypted passwords JSON file
-local CONNECTIONS_FILE = vim.fn.stdpath("config") .. "/lua/utils/encrypted_db_connections.json"
+local PASSWORDS_FILE = vim.fn.stdpath("config") .. "/lua/database/encrypted_passwords.json"
 
 -- Load encrypted passwords from JSON file
 -- Returns: table of { connection_name = encrypted_password, ... }
@@ -11,7 +9,7 @@ function M.load_encrypted_passwords()
   local encrypted_passwords = {}
 
   -- Check if file exists
-  local file = io.open(CONNECTIONS_FILE, "r")
+  local file = io.open(PASSWORDS_FILE, "r")
   if not file then
     -- File doesn't exist, return empty table
     return encrypted_passwords
@@ -38,6 +36,7 @@ end
 -- Args: connection_name (string)
 -- Returns: decrypted password string, or nil if not found/failed
 function M.get_decrypted_password(connection_name)
+  local crypto = require("database.crypto")
   local encrypted_passwords = M.load_encrypted_passwords()
   local encrypted_password = encrypted_passwords[connection_name]
 
@@ -58,7 +57,7 @@ end
 -- Args: connection_name (string) - name to look up encrypted password
 --       connection_string (string) - URL template that may contain <password> placeholder
 -- Returns: string - connection URL with password replaced, or original string if no placeholder or decryption fails
-function M.replace_single_password_placeholder(connection_name, connection_string)
+function M.replace_password_placeholder(connection_name, connection_string)
   -- Input validation
   if not connection_name or not connection_string then
     return connection_string or ""
@@ -90,6 +89,7 @@ end
 -- Args: connection_name (string), password (string)
 -- Returns: boolean - true on success, false on failure
 function M.store_encrypted_password(connection_name, password)
+  local crypto = require("database.crypto")
   -- Load existing passwords
   local encrypted_passwords = M.load_encrypted_passwords()
 
@@ -104,9 +104,9 @@ function M.store_encrypted_password(connection_name, password)
   encrypted_passwords[connection_name] = encrypted_password
 
   -- Write back to file
-  local output_file = io.open(CONNECTIONS_FILE, "w")
+  local output_file = io.open(PASSWORDS_FILE, "w")
   if not output_file then
-    print("Error: Cannot write to " .. CONNECTIONS_FILE)
+    print("Error: Cannot write to " .. PASSWORDS_FILE)
     return false
   end
 
@@ -133,9 +133,9 @@ function M.remove_encrypted_password(connection_name)
   encrypted_passwords[connection_name] = nil
 
   -- Write back to file
-  local output_file = io.open(CONNECTIONS_FILE, "w")
+  local output_file = io.open(PASSWORDS_FILE, "w")
   if not output_file then
-    print("Error: Cannot write to " .. CONNECTIONS_FILE)
+    print("Error: Cannot write to " .. PASSWORDS_FILE)
     return false
   end
 
@@ -186,70 +186,6 @@ function M.add_encrypted_password_interactive(connection_name)
   end
 
   return success
-end
-
--- Legacy function for backward compatibility - now uses template replacement
--- Returns: table formatted for vim.g.dbs assignment with passwords replaced
-function M.get_decrypted_database_connections()
-  -- This is now a legacy function that returns empty table
-  -- The new system uses replace_password_placeholders() with templates from dadbod.lua
-  print("Warning: get_decrypted_database_connections() is deprecated. Use replace_password_placeholders() instead.")
-  return {}
-end
-
--- Legacy functions maintained for backward compatibility
-function M.load_connections()
-  print("Warning: load_connections() is deprecated. Use load_encrypted_passwords() instead.")
-  return {}
-end
-
-function M.store_connection(name, connection_url)
-  print("Warning: store_connection() is deprecated. Use store_encrypted_password() instead.")
-  return false
-end
-
-function M.remove_connection(name)
-  print("Warning: remove_connection() is deprecated. Use remove_encrypted_password() instead.")
-  return M.remove_encrypted_password(name)
-end
-
-function M.list_connections()
-  print("Warning: list_connections() is deprecated. Use list_encrypted_passwords() instead.")
-  return M.list_encrypted_passwords()
-end
-
-function M.add_database_connection(name, connection_url)
-  print("Warning: add_database_connection() is deprecated. Use add_encrypted_password_interactive() instead.")
-  return false
-end
-
-function M.add_encrypted_connection_interactive()
-  print("Warning: add_encrypted_connection_interactive() is deprecated. Use add_encrypted_password_interactive() instead.")
-  return M.add_encrypted_password_interactive()
-end
-
--- Function to create Cloud SQL proxy connection with fallback
--- Args: port (number) - Local port for proxy database connection
---       instance_name (string) - GCP instance connection name (project:region:instance)
---       database_name (string) - Database name to connect to
---       password_key (string) - Key for encrypted password lookup
--- Returns: string - PostgreSQL connection URL with decrypted password
-function M.connect_to_cloud_sql(port, instance_name, database_name, password_key)
-  local sql_proxy = require("utils.sql_proxy")
-  
-  -- Try to start the proxy
-  local success = sql_proxy.start_proxy(port, instance_name, { quiet = true, timeout = 30 })
-  
-  if success then
-    -- Proxy started successfully, return URL with decrypted password
-    local template_url = string.format("postgresql://dbuser:<password>@localhost:%d/%s", port, database_name)
-    return M.replace_single_password_placeholder(password_key, template_url)
-  else
-    -- Proxy failed to start, return error URL
-    local error_msg = string.format("Failed to connect to Cloud SQL instance: %s", instance_name)
-    print("Error: " .. error_msg)
-    return string.format("postgresql://error:proxy-failed@localhost:%d/error", port)
-  end
 end
 
 return M

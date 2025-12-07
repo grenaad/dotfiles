@@ -18,8 +18,8 @@ return {
     vim.g.db_ui_use_nvim_notify = 0
     vim.g.db_ui_win_position = "left"
 
-    -- Load utilities and registry
-    local db_registry = require("utils.db_registry")
+    -- Load database facade
+    local database = require("database")
 
     -- Initialize vim.g.dbs as empty - it will be populated dynamically by the database picker
     -- This allows for better error handling and proxy management
@@ -28,7 +28,7 @@ return {
     -- Helper function to populate vim.g.dbs with all database configs for DBUI autocomplete
     -- This provides fallback URLs with password placeholders for databases that don't have active proxies
     local function populate_all_databases()
-      local all_databases = db_registry.get_all_databases()
+      local all_databases = database.get_all_databases()
       local dbs = {}
 
       for _, db_config in ipairs(all_databases) do
@@ -36,7 +36,7 @@ return {
           name = db_config.name,
           url = function()
             -- Generate connection URL with password replacement
-            local connection_url = db_registry.generate_connection_url(db_config)
+            local connection_url = database.generate_connection_url(db_config)
             if connection_url then
               return connection_url
             else
@@ -70,30 +70,30 @@ return {
             ["<leader>Dd"] = { desc = "󱘖 Connect" },
             ["<leader>Ds"] = {
               function()
-                local db_picker = require("utils.db_picker")
-                db_picker.pick_database()
+                local database = require("database")
+                database.pick_database()
               end,
               desc = "📋 Database Selector",
             },
             ["<leader>Dp"] = {
               function()
-                local db_picker = require("utils.db_picker")
-                db_picker.manage_proxies()
+                local database = require("database")
+                database.manage_proxies()
               end,
               desc = "🔧 Manage Proxies",
             },
             ["<leader>Dv"] = {
               function()
-                local db_picker = require("utils.db_picker")
-                db_picker.pick_database_with_line_content()
+                local database = require("database")
+                database.pick_database_with_line_content()
               end,
               desc = "📋 Database Search (from line)",
             },
             ["<leader>Da"] = { "<cmd>DBUIAddConnection<cr>", desc = " Add Connection" },
             ["<leader>De"] = {
               function()
-                local db_connections = require("utils.db_connections")
-                db_connections.add_encrypted_password_interactive()
+                local database = require("database")
+                database.add_encrypted_password_interactive()
               end,
               desc = "󰆼 Add Encrypted Password",
             },

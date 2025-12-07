@@ -304,25 +304,6 @@ function M.filter_databases(filters)
   return results
 end
 
--- Generate connection URL for a database config
--- Args: db_config (table) - database configuration object
--- Returns: string - connection URL with password placeholder replaced, or nil on error
-function M.generate_connection_url(db_config)
-  if not db_config then
-    return nil
-  end
-  
-  local db_connections = require("utils.db_connections")
-  
-  -- Replace template variables
-  local url = db_config.connection_template
-  url = url:gsub("{port}", tostring(db_config.port))
-  url = url:gsub("{database_name}", db_config.database_name)
-  
-  -- Replace password placeholder with decrypted password
-  return db_connections.replace_single_password_placeholder(db_config.password_key, url)
-end
-
 -- Get all unique environments
 -- Returns: table - array of environment strings
 function M.get_environments()
