@@ -3,34 +3,67 @@ description: Create a pull request with smart title detection
 agent: build
 ---
 
-Create a pull request for this work. Follow these steps:
+# Smart Pull Request Creation
 
-1. Check git status and show what has changed since main/master
-2. Create a PR title and description based on the actual changes
-   - If branch name starts with "2 letters-numbers" (e.g., CH-123, AB-456), use format: <branch name>: <title>
-   - Otherwise, use a descriptive title based on the changes
-3. Push the branch if needed and create the PR
-   Updated Step-by-Step Process
-   Step 4: Create Pull Request (Enhanced)
+This command automatically creates pull requests with intelligent title formatting based on your branch naming conventions. It analyzes your branch name and recent commits to generate appropriate PR titles.
 
-# Check if branch follows ticket pattern (2 letters-numbers)
+## What This Command Does
 
-BRANCH=$(git branch --show-current)
-if [[ $BRANCH =~ ^[A-Za-z]{2}-[0-9]+ ]]; then
-    # Use ticket format: BRANCH-NAME: Description
-    gh pr create --title "$BRANCH: Your description here"
-else # Use regular descriptive format
-gh pr create --title "Your descriptive title"
-fi
-Enhanced Shortcuts
-Smart Auto-title Based on Branch Pattern
+1. **Analyzes your current branch name** to determine the appropriate title format
+2. **Checks recent commit messages** to generate meaningful titles
+3. **Pushes your branch** to the remote repository if needed
+4. **Creates the pull request** using GitHub CLI with the smart title
 
-# Auto-detect branch pattern and format title accordingly
+## Branch Name Logic
 
+### Ticket-Based Branches
+If your branch name follows the pattern: `XX-###` (2 letters, dash, numbers)
+
+**Examples:** `CH-123`, `AB-456`, `BG-789`
+
+**PR Title Format:** `BRANCH-NAME: Commit Message`
+
+### Descriptive Branches  
+For all other branch naming patterns
+
+**Examples:** `feature/auth`, `fix/database`, `update/config`
+
+**PR Title Format:** `Commit Message`
+
+## Step-by-Step Process
+
+1. **Check current branch and commit message**
+   ```bash
+   git branch --show-current
+   git log -1 --pretty=format:'%s'
+   ```
+
+2. **Push branch to origin** (if not already pushed)
+   ```bash
+   git push -u origin $(git branch --show-current)
+   ```
+
+3. **Determine title format** based on branch pattern
+   - Ticket pattern: Use `BRANCH: COMMIT_MESSAGE`
+   - Other patterns: Use `COMMIT_MESSAGE`
+
+4. **Create pull request** with generated title
+   ```bash
+   gh pr create --title "<generated_title>"
+   ```
+
+## Implementation
+
+### Smart PR Creation Function
+
+```bash
 create_smart_pr() {
-local branch=$(git branch --show-current)
+    local branch=$(git branch --show-current)
     local commit_msg=$(git log -1 --pretty=format:'%s')
-
+    
+    # Push the branch first
+    git push -u origin $branch
+    
     if [[ $branch =~ ^[A-Za-z]{2}-[0-9]+ ]]; then
         # Ticket-based branch: use "TICKET: description" format
         gh pr create --title "$branch: $commit_msg"
@@ -38,25 +71,59 @@ local branch=$(git branch --show-current)
         # Regular branch: use commit message as title
         gh pr create --title "$commit_msg"
     fi
-
 }
-Shell Alias for Smart PR Creation
+```
 
-# Add to your .bashrc or .zshrc
+### Shell Alias Setup
 
-alias gpr-smart='git push -u origin $(git branch --show-current) && create_smart_pr'
-Examples
-Ticket-based Branch Examples
+Add to your `.bashrc` or `.zshrc`:
 
-- Branch: CH-1396 → PR Title: CH-1396: Add user authentication system
-- Branch: AB-123 → PR Title: AB-123: Fix database connection pooling
-- Branch: BG-456 → PR Title: BG-456: Update deployment configuration
-  Regular Branch Examples
-- Branch: feature/user-auth → PR Title: Add user authentication system
-- Branch: fix/db-connection → PR Title: Fix database connection pooling
-- Branch: update/deployment → PR Title: Update deployment configuration
-  Complete One-liner with Pattern Detection
+```bash
+# Smart PR creation alias
+alias gpr-smart='create_smart_pr'
+```
 
-# Ultimate one-liner that handles both patterns
+### One-Liner Command
 
+For immediate use without creating a function:
+
+```bash
 BRANCH=$(git branch --show-current); COMMIT=$(git log -1 --pretty=format:'%s'); git push -u origin $BRANCH && if [[ $BRANCH =~ ^[A-Za-z]{2}-[0-9]+ ]]; then gh pr create --title "$BRANCH: $COMMIT"; else gh pr create --title "$COMMIT"; fi
+```
+
+## Usage Examples
+
+### Ticket-Based Branches
+
+| Branch Name | Commit Message | Generated PR Title |
+|-------------|----------------|-------------------|
+| `CH-1396` | "Add user authentication system" | `CH-1396: Add user authentication system` |
+| `AB-123` | "Fix database connection pooling" | `AB-123: Fix database connection pooling` |
+| `BG-456` | "Update deployment configuration" | `BG-456: Update deployment configuration` |
+
+### Descriptive Branches
+
+| Branch Name | Commit Message | Generated PR Title |
+|-------------|----------------|-------------------|
+| `feature/user-auth` | "Add user authentication system" | `Add user authentication system` |
+| `fix/db-connection` | "Fix database connection pooling" | `Fix database connection pooling` |
+| `update/deployment` | "Update deployment configuration" | `Update deployment configuration` |
+
+## Quick Reference
+
+```bash
+# Create smart PR
+create_smart_pr
+
+# Or use the alias (after setup)
+gpr-smart
+
+# Manual title override
+gh pr create --title "Custom title here"
+```
+
+## Prerequisites
+
+- GitHub CLI (`gh`) installed and authenticated
+- Current branch has at least one commit
+- Working in a Git repository with GitHub remote
