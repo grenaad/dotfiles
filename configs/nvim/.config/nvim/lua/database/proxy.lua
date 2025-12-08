@@ -145,6 +145,7 @@ function M.start_proxy(port, instance_name, options)
   if not quiet then
     print("Starting cloud-sql-proxy on port " .. port .. " for " .. instance_name)
     print("Health check on port " .. health_port)
+    print("Command: " .. table.concat(cmd, " "))
   end
   
   -- Start the proxy process
@@ -163,11 +164,14 @@ function M.start_proxy(port, instance_name, options)
       end
     end,
     on_stderr = function(job_id, data, event)
-      -- Log errors but don't spam
+      -- Enhanced error logging with context
       if data and #data > 0 then
         for _, line in ipairs(data) do
           if line ~= "" and not line:match("^%s*$") then
-            print("Cloud SQL Proxy Error: " .. line)
+            print(string.format(
+              "Cloud SQL Proxy Error [job:%d, port:%d, instance:%s]: %s", 
+              job_id, port, instance_name, line
+            ))
           end
         end
       end
@@ -175,7 +179,13 @@ function M.start_proxy(port, instance_name, options)
   })
   
   if job_id <= 0 then
-    local msg = "Error: Failed to start cloud-sql-proxy process"
+    local msg = string.format(
+      "Error: Failed to start cloud-sql-proxy process (job_id: %d)\n" ..
+      "Command: %s\n" ..
+      "Port: %d, Instance: %s\n" ..
+      "Check if cloud-sql-proxy is installed and instance name is correct",
+      job_id, table.concat(cmd, " "), port, instance_name
+    )
     print(msg)
     return false, nil
   end
@@ -204,7 +214,12 @@ function M.start_proxy(port, instance_name, options)
     -- Cleanup failed proxy
     vim.fn.jobstop(job_id)
     running_proxies[port] = nil
-    local msg = "Error: Proxy failed to become ready within " .. timeout .. " seconds"
+    local msg = string.format(
+      "Error: Proxy failed to become ready within %d seconds\n" ..
+      "Port: %d, Health port: %d, Instance: %s\n" ..
+      "Check if instance exists and you have proper GCP credentials",
+      timeout, port, health_port, instance_name
+    )
     print(msg)
     return false, nil
   end
