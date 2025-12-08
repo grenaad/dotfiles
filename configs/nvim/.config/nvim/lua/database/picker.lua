@@ -57,6 +57,21 @@ local function get_action_state()
   return action_state
 end
 
+-- Copy text to system clipboard (cross-platform)
+-- Args: text (string) - text to copy
+--       description (string) - description for notification
+local function copy_to_clipboard(text, description)
+  -- Copy to both clipboard registers for cross-platform compatibility
+  vim.fn.setreg('+', text)  -- System clipboard
+  vim.fn.setreg('*', text)  -- Selection register (Linux)
+  
+  -- Success notification (no sensitive data shown)
+  vim.notify(
+    string.format("📋 %s copied to clipboard", description),
+    vim.log.levels.INFO
+  )
+end
+
 -- Format database entry for telescope display
 -- Args: db_config (table) - database configuration object
 -- Returns: string - formatted display text
@@ -159,7 +174,7 @@ local function generate_connection_url(db_config)
   url = url:gsub("{database_name}", db_config.database_name)
   
   -- Replace password placeholder with decrypted password
-  return passwords.replace_password_placeholder(db_config.password_key, url)
+  return passwords.replace_password_placeholder(db_config, url)
 end
 
 -- Handle database selection - connect and optionally open DBUI
@@ -276,92 +291,24 @@ function M.pick_database(opts)
         end
       end)
       
-      -- Connect without opening DBUI (Ctrl+Enter)
-      map("i", "<C-CR>", function()
+      -- Copy connection string to clipboard (Ctrl+Y)
+      map("i", "<C-y>", function()
         local selection = action_state.get_selected_entry()
-        actions.close(prompt_bufnr)
-        
         if selection then
           local db_config = get_db_from_entry(selection)
-          local success = handle_database_selection(db_config, false)
           
-          -- If connection failed, reopen picker
-          if not success then
-            vim.schedule(function()
-              vim.notify("Connection failed. Reopening database picker...", vim.log.levels.WARN)
-              M.pick_database(opts)
-            end)
-          end
-        end
-      end)
-      
-      -- Show database details (Ctrl+D)
-      map("i", "<C-d>", function()
-        local selection = action_state.get_selected_entry()
-        if selection then
-          local db = get_db_from_entry(selection)
-          local proxy = require("database.proxy")
-          local is_running, proxy_info = proxy.is_proxy_running(db.port)
+          -- Generate full connection URL with decrypted password
+          local connection_url = generate_connection_url(db_config)
           
-          local details = {
-            "Database Details:",
-            "",
-            "Name: " .. db.name,
-            "Display Name: " .. db.display_name,
-            "Description: " .. db.description,
-            "Environment: " .. db.environment,
-            "Service: " .. db.service,
-            "Tags: " .. table.concat(db.tags, ", "),
-            "",
-            "Connection Info:",
-            "Port: " .. db.port,
-            "Instance: " .. db.instance_name,
-            "Database: " .. db.database_name,
-            "Password Key: " .. db.password_key,
-            "",
-            "Proxy Status: " .. (is_running and "RUNNING" or "STOPPED")
-          }
-          
-          if is_running and proxy_info then
-            table.insert(details, "Uptime: " .. proxy_info.uptime .. " seconds")
-            table.insert(details, "Job ID: " .. proxy_info.job_id)
-          end
-          
-          vim.notify(table.concat(details, "\n"), vim.log.levels.INFO)
-        end
-      end)
-      
-      -- Stop proxy for selected database (Ctrl+S)
-      map("i", "<C-s>", function()
-        local selection = action_state.get_selected_entry()
-        if selection then
-          local db = get_db_from_entry(selection)
-          local proxy = require("database.proxy")
-          
-          local is_running, _ = proxy.is_proxy_running(db.port)
-          if is_running then
-            local success = proxy.stop_proxy(db.port)
-            if success then
-              vim.notify(
-                string.format("Stopped proxy for %s", db.display_name),
-                vim.log.levels.INFO
-              )
-            else
-              vim.notify(
-                string.format("Failed to stop proxy for %s", db.display_name),
-                vim.log.levels.ERROR
-              )
-            end
-            
-            -- Refresh the picker to update status
-            actions.close(prompt_bufnr)
-            vim.schedule(function()
-              M.pick_database(opts)
-            end)
+          if connection_url then
+            copy_to_clipboard(
+              connection_url,
+              string.format("Connection string for %s", db_config.display_name)
+            )
           else
             vim.notify(
-              string.format("No proxy running for %s", db.display_name),
-              vim.log.levels.WARN
+              string.format("❌ Failed to generate connection string for %s", db_config.display_name),
+              vim.log.levels.ERROR
             )
           end
         end

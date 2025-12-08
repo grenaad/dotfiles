@@ -74,38 +74,36 @@ For each comment type, extract:
 
 ### Step 5: Evaluate Comments
 
-Analyze comments for:
+Analyze comments using this structured approach:
 
-**Technical Aspects:**
+### Step 6: Code Comparison Analysis
 
-- Code quality concerns
-- Security issues
-- Performance considerations
-- Architecture feedback
-- Bug reports or fixes
+When comments reference specific code changes:
 
-**Process Aspects:**
+1. **Extract file and line references** from comments
+2. **Fetch current code** using GitHub API:
+   ```bash
+   gh api repos/{owner}/{repo}/contents/{file_path}
+   ```
+3. **Compare suggestions with current implementation**
+4. **Assess feasibility and impact** of proposed changes
 
-- Approval status
-- Request for changes
-- Testing requirements
-- Documentation needs
+### Step 7: Synthesize Analysis
 
-**Communication Aspects:**
+Provide structured analysis in two main sections:
 
-- Tone and professionalism
-- Clarity of feedback
-- Constructiveness of criticism
-- Collaboration quality
+#### 1. Executive Summary
+- **PR Purpose and Scope**: What the PR aims to accomplish
+- **Reviewer Engagement Level**: Number of reviewers, comment frequency, response patterns
+- **Comment Themes and Patterns**: Main discussion points and recurring topics
+- **Overall Assessment**: Are reviewers generally supportive, requesting changes, or raising concerns?
 
-### Step 6: Synthesize Analysis
-
-Provide:
-
-1. **Summary**: Overall comment themes and sentiment
-2. **Key Issues**: Critical points raised by reviewers
-3. **Action Items**: What the author needs to address
-4. **Recommendations**: Suggestions for moving forward
+#### 2. Action Items for PR Author
+- **Code Changes Needed**: Specific implementation changes suggested by reviewers
+- **Code Comparison Results**: For each suggestion, analysis comparing current code with proposed changes
+- **Questions to Address**: Direct questions from reviewers that need responses  
+- **Follow-up Tasks**: Testing, documentation, or other work mentioned in comments
+- **Priority Assessment**: Which items are blocking merge vs. nice-to-have improvements
 
 ### Example Command Sequence:
 
@@ -134,11 +132,17 @@ gh api repos/focaldata/fd-panel-supplier/pulls/560/reviews
 
 Provide structured analysis covering:
 
-- **Comment Overview**: Number and types of comments
-- **Key Themes**: Main discussion points
-- **Critical Issues**: Problems that need resolution
-- **Sentiment Analysis**: Overall tone and collaboration quality
-- **Next Steps**: Recommended actions for PR author
+#### Executive Summary
+- **Comment Overview**: Number and types of comments received
+- **PR Purpose**: Brief description of what the PR accomplishes
+- **Reviewer Engagement**: Level of reviewer participation and response patterns
+- **Key Themes**: Main discussion points and patterns across comments
+
+#### Action Items for PR Author  
+- **Immediate Code Changes**: Specific changes requested by reviewers with code comparison analysis
+- **Response Required**: Questions and discussions that need author response
+- **Follow-up Work**: Additional tasks mentioned (testing, docs, etc.)
+- **Priority Levels**: Critical vs. optional items for merge readiness
 
 ```
 
