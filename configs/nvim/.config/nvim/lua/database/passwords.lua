@@ -1,121 +1,90 @@
 local M = {}
 
--- Path to the encrypted passwords JSON file
-local PASSWORDS_FILE = vim.fn.stdpath("config") .. "/lua/database/encrypted_passwords.json"
-
--- Load encrypted passwords from JSON file
--- Returns: table of { connection_name = encrypted_password, ... }
-function M.load_encrypted_passwords()
-  local encrypted_passwords = {}
-
-  -- Check if file exists
-  local file = io.open(PASSWORDS_FILE, "r")
-  if not file then
-    -- File doesn't exist, return empty table
-    return encrypted_passwords
+-- Get decrypted password for a database config object
+-- Args: db_config (table) - database configuration object
+-- Returns: decrypted password string, or empty string if not found/failed
+function M.get_decrypted_password(db_config)
+  if not db_config or not db_config.password_encrypted then
+    return ""  -- Return empty string for missing/empty passwords
   end
-
-  -- Read and parse JSON
-  local content = file:read("*all")
-  file:close()
-
-  if content == "" then
-    return encrypted_passwords
+  
+  if db_config.password_encrypted == "" then
+    return ""  -- Handle explicitly empty passwords
   end
-
-  local ok, data = pcall(vim.json.decode, content)
-  if not ok then
-    print("Error: Failed to parse encrypted passwords JSON: " .. tostring(data))
-    return encrypted_passwords
-  end
-
-  return data
-end
-
--- Get decrypted password for a specific connection name
--- Args: connection_name (string)
--- Returns: decrypted password string, or nil if not found/failed
-function M.get_decrypted_password(connection_name)
+  
   local crypto = require("database.crypto")
-  local encrypted_passwords = M.load_encrypted_passwords()
-  local encrypted_password = encrypted_passwords[connection_name]
-
-  if not encrypted_password then
-    return nil
+  local decrypted = crypto.decrypt_string(db_config.password_encrypted)
+  
+  if decrypted == "" then
+    print("Warning: Failed to decrypt password for '" .. (db_config.name or "unknown") .. "'")
   end
-
-  local decrypted_password = crypto.decrypt_string(encrypted_password)
-  if decrypted_password == "" then
-    print("Warning: Failed to decrypt password for connection '" .. connection_name .. "'")
-    return nil
-  end
-
-  return decrypted_password
+  
+  return decrypted
 end
 
 -- Replace <password> placeholder in a single connection string with decrypted password
--- Args: connection_name (string) - name to look up encrypted password
+-- Args: db_config (table) - database configuration object
 --       connection_string (string) - URL template that may contain <password> placeholder
--- Returns: string - connection URL with password replaced, or original string if no placeholder or decryption fails
-function M.replace_password_placeholder(connection_name, connection_string)
-  -- Input validation
-  if not connection_name or not connection_string then
+-- Returns: string - connection URL with password replaced, or original string if no placeholder
+function M.replace_password_placeholder(db_config, connection_string)
+  if not db_config or not connection_string then
     return connection_string or ""
   end
-
-  -- Check for <password> placeholder (case-insensitive)
+  
   if not connection_string:lower():find("<password>") then
-    -- No placeholder found, return as-is
-    return connection_string
+    return connection_string  -- No placeholder, return as-is
   end
-
-  -- Get decrypted password
-  local decrypted_password = M.get_decrypted_password(connection_name)
-
-  if decrypted_password then
-    -- Replace placeholder with actual password (case-insensitive)
-    -- Use pattern matching for case insensitive replacement
-    local pattern = "<[pP][aA][sS][sS][wW][oO][rR][dD]>"
-    local result = connection_string:gsub(pattern, decrypted_password)
-    return result
-  else
-    -- Decryption failed, log warning and return original string
-    print("Warning: Failed to decrypt password for connection '" .. connection_name .. "', leaving placeholder intact")
-    return connection_string
-  end
+  
+  local decrypted_password = M.get_decrypted_password(db_config)
+  
+  -- Replace even if password is empty (some connections don't need passwords)
+  local pattern = "<[pP][aA][sS][sS][wW][oO][rR][dD]>"
+  return connection_string:gsub(pattern, decrypted_password)
 end
 
 -- Store encrypted password for a connection name
 -- Args: connection_name (string), password (string)
 -- Returns: boolean - true on success, false on failure
 function M.store_encrypted_password(connection_name, password)
+  local registry = require("database.registry") 
   local crypto = require("database.crypto")
-  -- Load existing passwords
-  local encrypted_passwords = M.load_encrypted_passwords()
-
-  -- Encrypt the password
-  local encrypted_password = crypto.encrypt_string(password)
-  if encrypted_password == "" then
-    print("Error: Failed to encrypt password for '" .. connection_name .. "'")
+  
+  -- Load all databases
+  local databases = registry.get_all_databases()
+  
+  -- Find the database with matching name
+  local found = false
+  for i, db in ipairs(databases) do
+    if db.name == connection_name then
+      found = true
+      -- Encrypt password (allow empty strings)
+      local encrypted_password = ""
+      if password ~= "" then
+        encrypted_password = crypto.encrypt_string(password)
+        if encrypted_password == "" and password ~= "" then
+          print("Error: Failed to encrypt password for '" .. connection_name .. "'")
+          return false
+        end
+      end
+      
+      -- Update the database config
+      databases[i].password_encrypted = encrypted_password
+      break
+    end
+  end
+  
+  if not found then
+    print("Error: Database '" .. connection_name .. "' not found in configurations")
     return false
   end
-
-  -- Add to data
-  encrypted_passwords[connection_name] = encrypted_password
-
-  -- Write back to file
-  local output_file = io.open(PASSWORDS_FILE, "w")
-  if not output_file then
-    print("Error: Cannot write to " .. PASSWORDS_FILE)
-    return false
+  
+  -- Save back to file
+  local success = registry.save_all_databases(databases)
+  if success then
+    print("Successfully updated encrypted password for '" .. connection_name .. "'")
   end
-
-  local json_string = vim.json.encode(encrypted_passwords)
-  output_file:write(json_string)
-  output_file:close()
-
-  print("Successfully stored encrypted password for '" .. connection_name .. "'")
-  return true
+  
+  return success
 end
 
 
@@ -125,28 +94,45 @@ end
 -- Returns: boolean - true on success, false on failure
 function M.add_encrypted_password_interactive(connection_name)
   local name = connection_name
-
+  
   if not name then
-    name = vim.fn.input("Connection name: ")
+    -- Show available database names for reference
+    local registry = require("database.registry")
+    local databases = registry.get_all_databases()
+    
+    print("Available databases:")
+    for _, db in ipairs(databases) do
+      print("  - " .. db.name .. " (" .. db.display_name .. ")")
+    end
+    
+    name = vim.fn.input("Database name (must exist): ")
     if name == "" then
-      print("Connection name cannot be empty")
+      print("Database name cannot be empty")
       return false
     end
   end
-
-  local password = vim.fn.input("Password for '" .. name .. "': ")
-  if password == "" then
-    print("Password cannot be empty")
+  
+  -- Verify database exists
+  local registry = require("database.registry")
+  local databases = registry.get_all_databases()
+  local exists = false
+  for _, db in ipairs(databases) do
+    if db.name == name then
+      exists = true
+      break
+    end
+  end
+  
+  if not exists then
+    print("Error: Database '" .. name .. "' does not exist in configurations")
+    print("Use one of the available database names listed above")
     return false
   end
-
-  local success = M.store_encrypted_password(name, password)
-
-  if success then
-    print("Encrypted password added for '" .. name .. "'!")
-  end
-
-  return success
+  
+  local password = vim.fn.input("Password for '" .. name .. "' (empty allowed): ")
+  -- Note: Empty password is explicitly allowed
+  
+  return M.store_encrypted_password(name, password)
 end
 
 return M

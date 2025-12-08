@@ -28,8 +28,8 @@ function M.generate_connection_url(db_config)
   url = url:gsub("{port}", tostring(db_config.port))
   url = url:gsub("{database_name}", db_config.database_name)
   
-  -- Replace password placeholder with decrypted password
-  return passwords.replace_password_placeholder(db_config.password_key, url)
+  -- Pass full db_config instead of password_key
+  return passwords.replace_password_placeholder(db_config, url)
 end
 
 -- Create telescope picker for database selection
