@@ -79,6 +79,19 @@
       "service": "respondent"
     },
     {
+      "name": "respondent_prod_replica",
+      "display_name": "Respondent (Prod) replica",
+      "description": "Production environment for respondent service",
+      "port": 6016,
+      "instance_name": "cin-prod:europe-west2:cin-respondent-postgres15-5ce03841-replica-replica0",
+      "database_name": "cinrespondent",
+      "password_encrypted": "HgROK1MQ6BpDJoif9GlnGobfSUpz5xAHPdzorrUv4Pm21RT4XgjWF06rVv18gv02sFYi2+bDryj0rLAfwzj+KnS0s4q1bgvOdm92on8H87+0EogJVLJrzyWTN8sOIMQnbKdwZCaydGbhblbpoCa8Oq7DYx1vk+wUj5KfAYRLJAOAYzlbNEdnyXaMXngm5ODEAZIbOODfsYPV7qrshBm2wA6Tw7sruSwN37E58UHX0ICitzuxibGeEfeqzNHfW4YfH95cP2FXLJxpcZInZMAVAXZ9ccC+ibALFI1JjaWC+WJ42LAwVnJ7yTUtVpiwNf+GOh8/Gcd7wuqB6g2O8IlqPlG/Tv0c+UJ9xbJUnvMXLJ6Pa/1Uf1WiH0LtEDKjaGiJun0IPkaH6dp98kfOeDNi9l8qw6Y3zNan1+qY5MDmZ+NXwWzDC4Z8lEF3j/GbX6PqoijLbpGeYe2jc/GvW//B04iSwmMsfYQc8zZB8z8XDa/5UjZwGkr2YSKfK+UUOkeZ",
+      "connection_template": "postgresql://dbuser:<password>@localhost:{port}/{database_name}",
+      "tags": ["prod", "respondent"],
+      "environment": "production",
+      "service": "respondent"
+    },
+    {
       "name": "chat_analytics_dev",
       "display_name": "Chat Analytics (Dev)",
       "description": "Development environment for chat analytics service",
