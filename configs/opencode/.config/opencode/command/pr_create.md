@@ -1,249 +1,189 @@
 ---
-description: Create a pull request with smart title detection
-agent: plan
+description: Create GitHub PR with smart title and intelligent diff analysis
+agent: build
 ---
 
-# Smart Pull Request Creation
+You are an AI assistant helping to create a GitHub Pull Request with smart title detection and intelligent change analysis. Follow these steps precisely:
 
-This command automatically creates pull requests with intelligent title formatting based on your branch naming conventions. It analyzes your branch name and recent commits to generate appropriate PR titles using the GitHub MCP server.
+## Step 1: Repository Validation
 
-## What This Command Does
+Validate the repository setup:
 
-1. **Detects repository information** from Git remotes automatically
-2. **Analyzes your current branch name** to determine the appropriate title format
-3. **Checks recent commit messages** to generate meaningful titles
-4. **Pushes your branch** to the remote repository if needed
-5. **Creates the pull request** using GitHub MCP tools with the smart title
+1. Check if we're in a Git repository by looking for `.git` directory
+2. Verify GitHub remote exists: `git config --get remote.origin.url`
+3. Ensure we're not on the main/master branch
+4. Get current branch name: `git branch --show-current`
 
-## Branch Name Logic
+Use bash commands to perform these checks. If any validation fails, provide a clear error message and exit.
 
-### Ticket-Based Branches
-If your branch name follows the pattern: `XX-###` (2 letters, dash, numbers)
+## Step 2: Repository Information Detection
 
-**Examples:** `CH-123`, `AB-456`, `BG-789`
+Extract GitHub repository information from the Git remote URL:
 
-**PR Title Format:** `BRANCH-NAME: Commit Message`
+1. Get the remote URL: `git config --get remote.origin.url`
+2. Parse owner and repository name from these URL formats:
+   - SSH: `git@github.com:owner/repo.git`
+   - HTTPS: `https://github.com/owner/repo.git`
+   - HTTPS without .git: `https://github.com/owner/repo`
 
-### Descriptive Branches  
-For all other branch naming patterns
+If the URL doesn't match a GitHub repository format, exit with an error.
 
-**Examples:** `feature/auth`, `fix/database`, `update/config`
+## Step 3: Base Branch Detection and Fetch
 
-**PR Title Format:** `Commit Message`
+Detect the default branch and fetch the latest state:
 
-## Step-by-Step Process
+1. Try: `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'`
+2. If that fails, check if `origin/main` exists: `git show-ref --verify --quiet refs/remotes/origin/main`
+3. If that fails, check if `origin/master` exists: `git show-ref --verify --quiet refs/remotes/origin/master`
+4. Default to "main" if neither exists
+5. **Fetch the specific base branch**: `git fetch origin {base_branch}`
 
-### 1. Repository Detection and Validation
+## Step 4: Sync with Base Branch
 
-First, detect the GitHub repository information from Git remotes:
+Ensure the current branch is up-to-date with the fetched base branch:
 
-```bash
-# Get the remote URL
-REMOTE_URL=$(git config --get remote.origin.url)
+1. **Check recent commits context**:
+   - `git log --oneline -5` (See your recent commits)
+   - `git log --oneline FETCH_HEAD -5` (See recent commits on fetched base)
 
-# Extract owner and repo from different URL formats
-if [[ $REMOTE_URL =~ git@github\.com:([^/]+)/([^.]+)\.git ]]; then
-    OWNER="${BASH_REMATCH[1]}"
-    REPO="${BASH_REMATCH[2]}"
-elif [[ $REMOTE_URL =~ https://github\.com/([^/]+)/([^/]+)\.git ]]; then
-    OWNER="${BASH_REMATCH[1]}"
-    REPO="${BASH_REMATCH[2]}"
-elif [[ $REMOTE_URL =~ https://github\.com/([^/]+)/([^/]+) ]]; then
-    OWNER="${BASH_REMATCH[1]}"
-    REPO="${BASH_REMATCH[2]}"
-else
-    echo "Error: Unable to detect GitHub repository from remote URL: $REMOTE_URL"
-    exit 1
-fi
+2. **Attempt to merge latest base branch**:
+   - Run: `git merge FETCH_HEAD`
+
+3. **Handle merge conflicts**:
+   - If merge conflicts occur, **STOP EXECUTION** immediately
+   - Display the conflicted files: `git status --porcelain | grep "^UU\|^AA\|^DD"`
+   - Provide clear error message: 
+     ```
+     ❌ Merge conflicts detected with {base_branch}
+     
+     Conflicted files:
+     [list of conflicted files]
+     
+     Please resolve these conflicts manually:
+     1. Edit the conflicted files to resolve conflicts
+     2. Run: git add <resolved-files>  
+     3. Run: git commit
+     4. Then re-run this PR creation command
+     
+     Aborting PR creation.
+     ```
+   - Exit with error code
+
+4. **If merge succeeds**, continue to next step
+
+## Step 5: Enhanced Change Detection
+
+Use improved git diff workflow to analyze changes:
+
+1. **Check if any changes exist**: `git diff FETCH_HEAD...HEAD --name-only`
+2. If no files are returned, exit gracefully with message "No changes detected between current branch and {base_branch}"
+3. **Get change summary**: `git diff --stat FETCH_HEAD...HEAD`
+4. **Get commit context**: `git log --oneline FETCH_HEAD..HEAD` (What commits are being included)
+
+## Step 6: Diff Analysis and PR Description Generation
+
+Get the full diff and analyze the changes using the enhanced workflow:
+
+1. **Get complete diff**: `git diff FETCH_HEAD...HEAD` (Full diff for analysis)
+2. **Analyze the diff content** to understand what has changed functionally
+3. **Generate a high-level summary** of the changes
+4. **Categorize changes by functionality**, not by individual files
+
+**PR Description Format:**
+
+```
+## Summary
+[Overall high-level summary of what this PR accomplishes]
+
+## Changes
+- **[Category Name]**: [High-level description of related functionality changes]
+- **[Another Category]**: [Description of different functional area changes]
+- **[Additional Category]**: [Description of other grouped changes if applicable]
+
+## Impact
+[Brief note on what areas of the codebase are affected]
 ```
 
-### 2. Branch and Commit Analysis
+**Analysis Guidelines:**
 
-```bash
-# Get current branch name
-BRANCH=$(git branch --show-current)
+- Focus on functional changes, not just code syntax or individual files
+- Dynamically determine appropriate categories based on the nature of changes (e.g., Authentication, Database, Configuration, UI/UX, Performance, Bug Fixes, etc.)
+- Group related functionality changes together, even if they span multiple files
+- Explain the high-level purpose and business impact of changes
+- Keep explanations concise but informative about what functionality is being added, modified, or fixed
+- Examples of good categorized descriptions:
+  - **Authentication Enhancement**: "Implemented OAuth2 support replacing basic authentication system"
+  - **Database Reliability**: "Added connection retry logic and improved error handling for database operations"
+  - **Performance Optimization**: "Increased timeout values and implemented caching to improve response times"
+  - **Configuration Management**: "Updated deployment settings and environment variable handling"
+  - **Bug Fixes**: "Resolved user session timeout issues and fixed validation edge cases"
 
-# Get the latest commit message
-COMMIT_MSG=$(git log -1 --pretty=format:'%s')
+## Step 7: Smart Title Generation
 
-# Determine base branch with improved detection
-get_base_branch() {
-    # Try to get default branch from symbolic ref
-    local base=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@')
-    
-    # If that fails, try common defaults
-    if [[ -z "$base" ]]; then
-        # Check if main exists
-        if git show-ref --verify --quiet refs/remotes/origin/main; then
-            base="main"
-        # Check if master exists
-        elif git show-ref --verify --quiet refs/remotes/origin/master; then
-            base="master"
-        # Default to main
-        else
-            base="main"
-        fi
-    fi
-    
-    echo "$base"
-}
+Generate the PR title using branch naming logic:
 
-BASE_BRANCH=$(get_base_branch)
-```
+1. Get the latest commit message: `git log -1 --pretty=format:'%s'`
+2. Get the current branch name
+3. Apply title logic:
+   - If branch matches pattern `^[A-Za-z]{2}-[0-9]+$` (e.g., CH-123, AB-456):
+     **Title format:** `{BRANCH_NAME}: {commit_message}`
+   - Otherwise: **Title format:** `{commit_message}`
 
-### 3. Push Branch to Remote
+## Step 8: Push Branch
 
-```bash
-# Push the current branch to origin if not already pushed
-git push -u origin $BRANCH
-```
+Push the current branch to origin:
 
-### 4. Generate Smart PR Title
+- Run: `git push -u origin {current_branch}`
+- Handle any push errors appropriately
 
-```bash
-# Apply smart title logic based on branch naming pattern
-if [[ $BRANCH =~ ^[A-Za-z]{2}-[0-9]+ ]]; then
-    # Ticket-based branch: use "TICKET: description" format
-    PR_TITLE="$BRANCH: $COMMIT_MSG"
-else
-    # Regular branch: use commit message as title
-    PR_TITLE="$COMMIT_MSG"
-fi
-```
+## Step 9: Create Pull Request
 
-### 5. Create Pull Request Using GitHub MCP Tools
+Use the GitHub MCP tool `github_create_pull_request` with these parameters:
 
-Use the `github_create_pull_request` tool with the detected repository information and generated title:
-
-**Parameters for MCP Tool:**
-- `owner`: Repository owner (detected from Git remote)
-- `repo`: Repository name (detected from Git remote)  
-- `title`: Generated smart title
+- `owner`: Repository owner (from step 2)
+- `repo`: Repository name (from step 2)
+- `title`: Generated title (from step 7)
 - `head`: Current branch name
-- `base`: Base branch (usually "main" or "master")
+- `base`: Base branch (from step 3)
+- `body`: Generated PR description (from step 6)
 
-The tool will create the pull request and return the PR details including URL and number.
+## Step 10: Success Response
 
-## Complete Implementation
+After successful PR creation, display:
 
-### Repository Detection Function
-
-```bash
-detect_github_repo() {
-    local remote_url=$(git config --get remote.origin.url 2>/dev/null)
-    
-    if [[ -z "$remote_url" ]]; then
-        echo "Error: No Git remote 'origin' found" >&2
-        return 1
-    fi
-    
-    local owner repo
-    
-    # Handle SSH format: git@github.com:owner/repo.git
-    if [[ $remote_url == git@github.com:*/*.git ]]; then
-        local temp=${remote_url#git@github.com:}  # Remove git@github.com: prefix
-        temp=${temp%.git}                         # Remove .git suffix  
-        owner=${temp%/*}                          # Everything before last /
-        repo=${temp#*/}                           # Everything after first /
-    # Handle HTTPS format: https://github.com/owner/repo.git
-    elif [[ $remote_url == https://github.com/*/*.git ]]; then
-        local temp=${remote_url#https://github.com/}  # Remove https://github.com/ prefix
-        temp=${temp%.git}                             # Remove .git suffix
-        owner=${temp%/*}                              # Everything before last /
-        repo=${temp#*/}                               # Everything after first /
-    # Handle HTTPS without .git: https://github.com/owner/repo  
-    elif [[ $remote_url == https://github.com/*/* ]]; then
-        local temp=${remote_url#https://github.com/}  # Remove https://github.com/ prefix
-        owner=${temp%/*}                              # Everything before last /
-        repo=${temp#*/}                               # Everything after first /
-    else
-        echo "Error: Unable to parse GitHub repository from remote URL: $remote_url" >&2
-        return 1
-    fi
-    
-    printf "%s %s" "$owner" "$repo"
-}
-```
-
-### Smart PR Creation Workflow
-
-```bash
-# Step 1: Detect repository information
-REPO_INFO=$(detect_github_repo)
-if [[ $? -ne 0 ]]; then
-    echo "$REPO_INFO"
-    exit 1
-fi
-
-read OWNER REPO <<< "$REPO_INFO"
-
-# Step 2: Get branch and commit information
-BRANCH=$(git branch --show-current)
-COMMIT_MSG=$(git log -1 --pretty=format:'%s')
-
-# Step 3: Determine base branch
-BASE_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "main")
-
-# Step 4: Push branch to remote
-echo "Pushing branch '$BRANCH' to origin..."
-git push -u origin "$BRANCH"
-
-# Step 5: Generate smart title
-if [[ $BRANCH =~ ^[A-Za-z]{2}-[0-9]+ ]]; then
-    PR_TITLE="$BRANCH: $COMMIT_MSG"
-else
-    PR_TITLE="$COMMIT_MSG"
-fi
-
-# Step 6: Create PR using GitHub MCP tool
-echo "Creating pull request with title: '$PR_TITLE'"
-echo "Repository: $OWNER/$REPO"
-echo "Branch: $BRANCH -> $BASE_BRANCH"
-```
-
-**Note:** The final step uses the GitHub MCP `github_create_pull_request` tool instead of GitHub CLI.
-
-## Usage Examples
-
-### Ticket-Based Branches
-
-| Branch Name | Commit Message | Generated PR Title |
-|-------------|----------------|-------------------|
-| `CH-1396` | "Add user authentication system" | `CH-1396: Add user authentication system` |
-| `AB-123` | "Fix database connection pooling" | `AB-123: Fix database connection pooling` |
-| `BG-456` | "Update deployment configuration" | `BG-456: Update deployment configuration` |
-
-### Descriptive Branches
-
-| Branch Name | Commit Message | Generated PR Title |
-|-------------|----------------|-------------------|
-| `feature/user-auth` | "Add user authentication system" | `Add user authentication system` |
-| `fix/db-connection` | "Fix database connection pooling" | `Fix database connection pooling` |
-| `update/deployment` | "Update deployment configuration" | `Update deployment configuration` |
+- PR title
+- PR URL
+- Branch information (current -> base)
+- Brief summary of changes included
 
 ## Error Handling
 
-The command includes comprehensive error handling for:
+Provide clear, actionable error messages for:
 
-- **Missing Git remote**: Clear error message when no origin remote is configured
-- **Invalid remote URL**: Error when remote URL is not a GitHub repository
-- **Branch push failures**: Git push errors are displayed to user
-- **MCP tool failures**: GitHub MCP tool errors are handled gracefully
+- Not in a Git repository
+- No GitHub remote configured
+- Invalid GitHub remote URL
+- Already on main/master branch
+- **Merge conflicts with base branch** (stop execution, require manual resolution)
+- No changes detected after merge
+- Git push failures
+- GitHub API/MCP tool failures
 
-## Advanced Features
+## Execution Notes
 
-### Custom Base Branch
-You can specify a different base branch by setting the `BASE_BRANCH` variable before running the command.
-
-### Draft PR Creation
-The implementation can be extended to support draft PRs by adding a `draft: true` parameter to the MCP tool call.
-
-### PR Description
-Future enhancements can include automatic PR description generation based on commit history.
-
-## Prerequisites
-
-- Git repository with GitHub remote configured
-- GitHub MCP server enabled in OpenCode configuration
-- Current branch has at least one commit
-- Valid GitHub authentication token in environment
+- **Always fetch specific base branch** to ensure latest remote state: `git fetch origin {base_branch}`
+- **Use FETCH_HEAD for precise comparisons** - refers to exactly what was just fetched
+- **Triple-dot notation**: `FETCH_HEAD...HEAD` shows diff from merge base
+- **Merge FETCH_HEAD** and handle conflicts properly (git worktree compatible)
+- Use bash tools for all Git operations
+- Use GitHub MCP tools only for PR creation
+- Provide informative progress updates during execution
+- **Stop execution if merge conflicts occur** - require manual resolution
+- Exit gracefully if no changes are detected after merge
+- Handle both SSH and HTTPS GitHub remote formats
+- Support repositories with either "main" or "master" as default branch
+- Analyze the actual code changes in the diff to provide meaningful descriptions
+- Focus on high-level functional changes rather than line-by-line details
+- **Enhanced diff workflow**: 
+  - File names only: `git diff FETCH_HEAD...HEAD --name-only`
+  - Full diff: `git diff FETCH_HEAD...HEAD`
