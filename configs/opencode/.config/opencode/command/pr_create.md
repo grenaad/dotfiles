@@ -139,16 +139,51 @@ Push the current branch to origin:
 - Run: `git push -u origin {current_branch}`
 - Handle any push errors appropriately
 
-## Step 9: Create Pull Request
+## Step 9: Check for Existing Pull Request and Create/Update
 
-Use the GitHub MCP tool `github_create_pull_request` with these parameters:
+First check if a pull request already exists for the current branch, then either update it or create a new one.
+
+### 9.1: Search for Existing Pull Request
+
+Use the GitHub MCP tool `github_search_pull_requests` to check for existing PRs:
+
+- `query`: `head:{current_branch} repo:{owner}/{repo}`
+  - `head:{current_branch}` - searches for PRs where the source branch matches current branch
+  - `repo:{owner}/{repo}` - limits search to the current repository
+
+### 9.2: Analyze Search Results
+
+Check the search results to determine next action:
+
+1. **If no PRs found** (empty results or no matching PRs):
+   - Proceed to create new PR (Step 9.3)
+
+2. **If PR found** (one or more results):
+   - Extract the PR number from the first result
+   - Proceed to update existing PR (Step 9.4)
+
+### 9.3: Create New Pull Request
+
+If no existing PR found, use the GitHub MCP tool `github_create_pull_request`:
 
 - `owner`: Repository owner (from step 2)
-- `repo`: Repository name (from step 2)
+- `repo`: Repository name (from step 2)  
 - `title`: Generated title (from step 7)
 - `head`: Current branch name
 - `base`: Base branch (from step 3)
 - `body`: Generated PR description (from step 6)
+
+### 9.4: Update Existing Pull Request  
+
+If existing PR found, use the GitHub MCP tool `github_update_pull_request`:
+
+- `owner`: Repository owner (from step 2)
+- `repo`: Repository name (from step 2)
+- `pullNumber`: PR number from search results (Step 9.2)
+- `title`: Generated title (from step 7) 
+- `body`: Generated PR description (from step 6)
+
+Note: The `head` and `base` branches don't need to be updated as they remain the same.
 
 ## Step 10: Success Response
 
