@@ -95,6 +95,9 @@ Get the full diff and analyze the changes using the enhanced workflow:
 **PR Description Format:**
 
 ```
+## Summary
+[Overall high-level summary of what this PR accomplishes]
+
 ## Changes Made
 
 ### **[Category Name]**
