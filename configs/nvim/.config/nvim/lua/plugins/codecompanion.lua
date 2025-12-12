@@ -30,26 +30,6 @@ return {
             },
           },
         },
-        inline = {
-          adapter = "opencode",
-        },
-        cmd = {
-          adapter = "opencode",
-        },
-      },
-      adapters = {
-        acp = {
-          opencode = function()
-            return require("codecompanion.adapters").extend("opencode", {
-              commands = {
-                default = {
-                  "/opt/homebrew/bin/opencode",
-                  "acp",
-                },
-              },
-            })
-          end,
-        },
       },
     })
 
@@ -65,7 +45,8 @@ return {
             ["<Leader>a"] = { desc = "Codecompanion" },
             ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
             ["<Leader>ac"] = { "<cmd>CodeCompanionChat Toggle<CR>", desc = "Toggle Chat" },
-            ["<Leader>ai"] = { "<cmd>CodeCompanion<CR>", desc = "Inline Assistant" },
+            -- Inline and Cmd strategies are only for http adapters like Antrhopic or OpenAI
+            -- ["<Leader>ai"] = { "<cmd>CodeCompanion<CR>", desc = "Inline Assistant" },
 
             -- Prompt library shortcuts
             ["<Leader>af"] = { "<cmd>CodeCompanion /fix<CR>", desc = "Fix Code" },
