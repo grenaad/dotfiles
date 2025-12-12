@@ -7,7 +7,7 @@ You are an AI assistant helping to create a GitHub Pull Request with smart title
 
 ## Step 1: Repository Validation
 
-Validate the repository setup, do this in parrallel:
+Validate the repository setup, do this in parrallel where possible:
 
 1. Check if we're in a Git repository by looking for `.git` directory
 2. Verify GitHub remote exists: `git config --get remote.origin.url`
@@ -18,7 +18,7 @@ Use bash commands to perform these checks. If any validation fails, provide a cl
 
 ## Step 2: Repository Information Detection
 
-Extract GitHub repository information from the Git remote URL, do this in parrallel:
+Extract GitHub repository information from the Git remote URL, do this in parrallel where possible:
 
 1. Get the remote URL: `git config --get remote.origin.url`
 2. Get ssh alias with `cat ~/.ssh/config`
@@ -31,7 +31,7 @@ If the URL doesn't match a GitHub repository format, exit with an error.
 
 ## Step 3: Base Branch Detection and Fetch
 
-Detect the default branch and fetch the latest state, do this in parrallel:
+Detect the default branch and fetch the latest state, do this in parrallel where possible:
 
 1. Try: `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'`
 2. If that fails, check if `origin/main` exists: `git show-ref --verify --quiet refs/remotes/origin/main`
@@ -41,7 +41,7 @@ Detect the default branch and fetch the latest state, do this in parrallel:
 
 ## Step 4: Sync with Base Branch
 
-Ensure the current branch is up-to-date with the fetched base branch:
+Ensure the current branch is up-to-date with the fetched base branch, to do this in parrallel where possible:
 
 1. **Check recent commits context**:
    - `git log --oneline -5` (See your recent commits)
