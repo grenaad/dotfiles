@@ -7,7 +7,7 @@ You are an AI assistant helping to create a GitHub Pull Request with smart title
 
 ## Step 1: Repository Validation
 
-Validate the repository setup:
+Validate the repository setup, do this in parrallel:
 
 1. Check if we're in a Git repository by looking for `.git` directory
 2. Verify GitHub remote exists: `git config --get remote.origin.url`
@@ -18,10 +18,11 @@ Use bash commands to perform these checks. If any validation fails, provide a cl
 
 ## Step 2: Repository Information Detection
 
-Extract GitHub repository information from the Git remote URL:
+Extract GitHub repository information from the Git remote URL, do this in parrallel:
 
 1. Get the remote URL: `git config --get remote.origin.url`
-2. Parse owner and repository name from these URL formats:
+2. Get ssh alias with `cat ~/.ssh/config`
+3. Parse owner and repository name from these URL formats:
    - SSH: `git@github.com:owner/repo.git`
    - HTTPS: `https://github.com/owner/repo.git`
    - HTTPS without .git: `https://github.com/owner/repo`
@@ -30,7 +31,7 @@ If the URL doesn't match a GitHub repository format, exit with an error.
 
 ## Step 3: Base Branch Detection and Fetch
 
-Detect the default branch and fetch the latest state:
+Detect the default branch and fetch the latest state, do this in parrallel:
 
 1. Try: `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'`
 2. If that fails, check if `origin/main` exists: `git show-ref --verify --quiet refs/remotes/origin/main`
@@ -52,21 +53,23 @@ Ensure the current branch is up-to-date with the fetched base branch:
 3. **Handle merge conflicts**:
    - If merge conflicts occur, **STOP EXECUTION** immediately
    - Display the conflicted files: `git status --porcelain | grep "^UU\|^AA\|^DD"`
-   - Provide clear error message: 
+   - Provide clear error message:
+
      ```
      ❌ Merge conflicts detected with {base_branch}
-     
+
      Conflicted files:
      [list of conflicted files]
-     
+
      Please resolve these conflicts manually:
      1. Edit the conflicted files to resolve conflicts
-     2. Run: git add <resolved-files>  
+     2. Run: git add <resolved-files>
      3. Run: git commit
      4. Then re-run this PR creation command
-     
+
      Aborting PR creation.
      ```
+
    - Exit with error code
 
 4. **If merge succeeds**, continue to next step
@@ -122,12 +125,12 @@ Get the full diff and analyze the changes using the enhanced workflow:
 
 Generate the PR title using branch naming logic:
 
-1. Get the latest commit message: `git log -1 --pretty=format:'%s'`
+1. Generate a title from all the changes
 2. Get the current branch name
 3. Apply title logic:
    - If branch matches pattern `^[A-Za-z]{2}-[0-9]+$` (e.g., CH-123, AB-456):
-     **Title format:** `{BRANCH_NAME}: {commit_message}`
-   - Otherwise: **Title format:** `{commit_message}`
+     **Title format:** `{BRANCH_NAME}: {title}`
+   - Otherwise: **Title format:** `{title}`
 
 ## Step 8: Push Branch
 
@@ -184,6 +187,6 @@ Provide clear, actionable error messages for:
 - Support repositories with either "main" or "master" as default branch
 - Analyze the actual code changes in the diff to provide meaningful descriptions
 - Focus on high-level functional changes rather than line-by-line details
-- **Enhanced diff workflow**: 
+- **Enhanced diff workflow**:
   - File names only: `git diff FETCH_HEAD...HEAD --name-only`
   - Full diff: `git diff FETCH_HEAD...HEAD`
