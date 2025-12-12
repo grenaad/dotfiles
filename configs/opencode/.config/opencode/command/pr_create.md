@@ -95,31 +95,62 @@ Get the full diff and analyze the changes using the enhanced workflow:
 **PR Description Format:**
 
 ```
-## Summary
-[Overall high-level summary of what this PR accomplishes]
+## Changes Made
 
-## Changes
-- **[Category Name]**: [High-level description of related functionality changes]
-- **[Another Category]**: [Description of different functional area changes]
-- **[Additional Category]**: [Description of other grouped changes if applicable]
+### **[Category Name]**
+- [High-level description of related functionality changes]
+- [Specific implementation detail]
+  - [Sub-configuration or related detail]
+  - [Another sub-configuration]
 
-## Impact
-[Brief note on what areas of the codebase are affected]
+### **[Another Category]**
+- [Description of different functional area changes]
+- [Specific implementation detail]
+  - [Sub-configuration or related detail]
+
+### **[Additional Category]**
+- [Description of other grouped changes if applicable]
+- [Specific implementation detail]
+
+## Technical Details
+
+**Architecture Flow:**
+```
+
+[Component A] → [Component B] → [Component C]
+
+```
+
+**Code Changes:**
+- `file/path.ext:line_number` - [Description of what changed]
+- `another/file.ext:line_number` - [Description of what changed]
 ```
 
 **Analysis Guidelines:**
 
+**Changes Made Section:**
+
+- Create subsections using `### **[Category Name]**` format for each functional area
 - Focus on functional changes, not just code syntax or individual files
 - Dynamically determine appropriate categories based on the nature of changes (e.g., Authentication, Database, Configuration, UI/UX, Performance, Bug Fixes, etc.)
 - Group related functionality changes together, even if they span multiple files
-- Explain the high-level purpose and business impact of changes
+- Use main bullet points for high-level changes and indented sub-bullets for specific implementation details:
+  - Main bullets: Primary functional changes or features
+  - Sub-bullets (2 spaces): Configuration details, specific files affected, or related sub-components
 - Keep explanations concise but informative about what functionality is being added, modified, or fixed
-- Examples of good categorized descriptions:
-  - **Authentication Enhancement**: "Implemented OAuth2 support replacing basic authentication system"
-  - **Database Reliability**: "Added connection retry logic and improved error handling for database operations"
-  - **Performance Optimization**: "Increased timeout values and implemented caching to improve response times"
-  - **Configuration Management**: "Updated deployment settings and environment variable handling"
-  - **Bug Fixes**: "Resolved user session timeout issues and fixed validation edge cases"
+
+**Technical Details Section:**
+
+- **Architecture Flow**: Create a visual flow showing how components interact (use arrows →)
+- **Code Changes**: Include specific file paths with line numbers and brief descriptions using format: `file/path.ext:line_number - Description`
+
+**Examples of good categorized descriptions:**
+
+- **Authentication Enhancement**:
+  - Implemented OAuth2 support replacing basic authentication system
+  - Added JWT token validation middleware
+    - Development environment: `dev-auth-service.com` endpoint
+    - Production environment: `auth-service.com` endpoint
 
 ## Step 7: Smart Title Generation
 
