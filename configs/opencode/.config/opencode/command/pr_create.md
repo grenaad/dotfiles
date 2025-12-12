@@ -9,7 +9,7 @@ You are an AI assistant helping to create a GitHub Pull Request with smart title
 
 Validate the repository setup, do this in parrallel where possible:
 
-1. Check if we're in a Git repository by looking for `.git` directory
+1. Check if we're in a Git repository by running `git rev-parse --is-inside-work-tree` first, and if false look for an `.git` directory.
 2. Verify GitHub remote exists: `git config --get remote.origin.url`
 3. Ensure we're not on the main/master branch
 4. Get current branch name: `git branch --show-current`
@@ -167,20 +167,20 @@ Check the search results to determine next action:
 If no existing PR found, use the GitHub MCP tool `github_create_pull_request`:
 
 - `owner`: Repository owner (from step 2)
-- `repo`: Repository name (from step 2)  
+- `repo`: Repository name (from step 2)
 - `title`: Generated title (from step 7)
 - `head`: Current branch name
 - `base`: Base branch (from step 3)
 - `body`: Generated PR description (from step 6)
 
-### 9.4: Update Existing Pull Request  
+### 9.4: Update Existing Pull Request
 
 If existing PR found, use the GitHub MCP tool `github_update_pull_request`:
 
 - `owner`: Repository owner (from step 2)
 - `repo`: Repository name (from step 2)
 - `pullNumber`: PR number from search results (Step 9.2)
-- `title`: Generated title (from step 7) 
+- `title`: Generated title (from step 7)
 - `body`: Generated PR description (from step 6)
 
 Note: The `head` and `base` branches don't need to be updated as they remain the same.
