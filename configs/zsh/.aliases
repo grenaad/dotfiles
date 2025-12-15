@@ -20,6 +20,7 @@ alias ev="vim ~/projects/dotfiles/configs/nvim/.config/nvim/"
 alias ..="cd .."
 alias ...="cd ../../"
 alias mkdir="mkdir -pv"
+alias opencode-work='XDG_DATA_HOME=~/.local/share/opencode-work opencode'
 
 ###### OS Specific ######
 if [[ "$OSTYPE" == "darwin"* ]]; then
