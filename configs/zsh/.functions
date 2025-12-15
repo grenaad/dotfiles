@@ -89,7 +89,7 @@ function clone_worktree()  {
 }
 
 function cdf() {
-  cd $(find ~/work/focaldata ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+  cd $(find ~/work/focaldata ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | fzf)
 }
 
 function activate_venv() {
