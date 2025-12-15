@@ -742,5 +742,6 @@
 },
 "terminal.integrated.inheritEnv": false,
 "githubLocalActions.dockerDesktopPath": "/Applications/Docker.app",
-"datadog.connection.oauth.setup.domain": "app.datadoghq.eu"
+"datadog.connection.oauth.setup.domain": "app.datadoghq.eu",
+"docker.extension.enableComposeLanguageServer": false
 }
