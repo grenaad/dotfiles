@@ -2,9 +2,7 @@ gui:
   theme:
     selectedLineBgColor:
       - underline
-
 git:
-  paging:
-    colorArg: never
-    pager: delta --dark --paging=never --side-by-side
-
+  pagers:
+    - colorArg: never
+      pager: delta --dark --paging=never --side-by-side

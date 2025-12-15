@@ -37,7 +37,7 @@ check:
 
 # Full installation
 install: 
-	cd ansible && ansible-playbook main.yaml
+	cd ansible && ansible-playbook main.yaml --ask-become-pass --ask-vault-pass
 
 # Core packages and tools
 core: 
