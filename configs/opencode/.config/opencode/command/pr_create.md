@@ -5,92 +5,114 @@ agent: build
 
 You are an AI assistant helping to create a GitHub Pull Request with smart title detection and intelligent change analysis. Follow these steps precisely:
 
+## Current Repository Context
+
+Repository information:
+!`git config --get remote.origin.url`
+
+Current working state:
+!`git branch --show-current`
+!`git status --porcelain`
+
+Git repository validation:
+!`git rev-parse --is-inside-work-tree 2>/dev/null || echo "false"`
+
 ## Step 1: Repository Validation
 
-Validate the repository setup, do this in parrallel where possible:
+Validate the repository setup using the context above:
 
-1. Check if we're in a Git repository by running `git rev-parse --is-inside-work-tree` first, and if false look for an `.git` directory.
-2. Verify GitHub remote exists: `git config --get remote.origin.url`
-3. Ensure we're not on the main/master branch
-4. Get current branch name: `git branch --show-current`
+1. Check if we're in a Git repository (already gathered above)
+2. Verify GitHub remote exists (already gathered above)  
+3. Ensure we're not on the main/master branch (check current branch above)
+4. Current branch name (already gathered above)
 
-Use bash commands to perform these checks. If any validation fails, provide a clear error message and exit.
+Use the injected command results to perform validation. If any validation fails, provide a clear error message and exit.
 
-## Step 2: Repository Information Detection
+## Step 2: Enhanced Repository Information Detection
 
-Extract GitHub repository information from the Git remote URL, do this in parrallel where possible:
+Extract GitHub repository information from the Git remote URL using the context already gathered:
 
-1. Get the remote URL: `git config --get remote.origin.url`
-2. Get ssh alias with `cat ~/.ssh/config`
-3. Parse owner and repository name from these URL formats:
-   - SSH: `git@github.com:owner/repo.git`
-   - HTTPS: `https://github.com/owner/repo.git`
-   - HTTPS without .git: `https://github.com/owner/repo`
+SSH configuration context:
+!`cat ~/.ssh/config 2>/dev/null | grep -A 5 -B 5 "github.com" || echo "No GitHub SSH config found"`
+
+Parse owner and repository name from the remote URL format:
+- SSH: `git@github.com:owner/repo.git`
+- HTTPS: `https://github.com/owner/repo.git`
+- HTTPS without .git: `https://github.com/owner/repo`
 
 If the URL doesn't match a GitHub repository format, exit with an error.
 
 ## Step 3: Base Branch Detection and Fetch
 
-Detect the default branch and fetch the latest state, do this in parrallel where possible:
+Detect the default branch and fetch the latest state:
 
-1. Try: `git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'`
-2. If that fails, check if `origin/main` exists: `git show-ref --verify --quiet refs/remotes/origin/main`
-3. If that fails, check if `origin/master` exists: `git show-ref --verify --quiet refs/remotes/origin/master`
-4. Default to "main" if neither exists
-5. **Fetch the specific base branch**: `git fetch origin {base_branch}`
+Default branch detection:
+!`git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "not-found"`
 
-## Step 4: Sync with Base Branch
+Branch verification:
+!`git show-ref --verify --quiet refs/remotes/origin/main && echo "main-exists" || echo "main-missing"`
+!`git show-ref --verify --quiet refs/remotes/origin/master && echo "master-exists" || echo "master-missing"`
 
-Ensure the current branch is up-to-date with the fetched base branch, to do this in parrallel where possible:
+Based on the results:
+1. Use the symbolic-ref result if available
+2. Otherwise check main/master existence results
+3. Default to "main" if neither exists
 
-1. **Check recent commits context**:
-   - `git log --oneline -5` (See your recent commits)
-   - `git log --oneline FETCH_HEAD -5` (See recent commits on fetched base)
+## Step 4: Enhanced Change Detection
 
-2. **Attempt to merge latest base branch**:
-   - Run: `git merge FETCH_HEAD`
+Use improved git diff workflow to analyze changes with immediate context:
 
-3. **Handle merge conflicts**:
-   - If merge conflicts occur, **STOP EXECUTION** immediately
-   - Display the conflicted files: `git status --porcelain | grep "^UU\|^AA\|^DD"`
-   - Provide clear error message:
+Verify FETCH_HEAD exists (user must have run git pull):
+!`git rev-parse --verify FETCH_HEAD >/dev/null 2>&1 && echo "FETCH_HEAD-exists" || echo "FETCH_HEAD-missing"`
 
-     ```
-     ❌ Merge conflicts detected with {base_branch}
+**Error Handling**: If FETCH_HEAD is missing, exit with error:
+```
+❌ FETCH_HEAD not found
 
-     Conflicted files:
-     [list of conflicted files]
+Please run the following command before creating a PR:
+git pull origin {base_branch}
 
-     Please resolve these conflicts manually:
-     1. Edit the conflicted files to resolve conflicts
-     2. Run: git add <resolved-files>
-     3. Run: git commit
-     4. Then re-run this PR creation command
+This ensures we can compare your changes against the latest base branch.
+Aborting PR creation.
+```
 
-     Aborting PR creation.
-     ```
+Files changed:
+!`git diff FETCH_HEAD...HEAD --name-only`
 
-   - Exit with error code
+Change summary:
+!`git diff --stat FETCH_HEAD...HEAD`
 
-4. **If merge succeeds**, continue to next step
+Commits being included:
+!`git log --oneline FETCH_HEAD..HEAD`
 
-## Step 5: Enhanced Change Detection
+Recent commit details:
+!`git log --oneline -3 --stat`
 
-Use improved git diff workflow to analyze changes:
-
-1. **Check if any changes exist**: `git diff FETCH_HEAD...HEAD --name-only`
+Analysis:
+1. **Check if any changes exist** from the files changed output above
 2. If no files are returned, exit gracefully with message "No changes detected between current branch and {base_branch}"
-3. **Get change summary**: `git diff --stat FETCH_HEAD...HEAD`
-4. **Get commit context**: `git log --oneline FETCH_HEAD..HEAD` (What commits are being included)
+3. Use the change summary for PR description context
+4. Use commit context for understanding change history
 
-## Step 6: Diff Analysis and PR Description Generation
+## Step 5: Comprehensive Diff Analysis and PR Description Generation
 
 Get the full diff and analyze the changes using the enhanced workflow:
 
-1. **Get complete diff**: `git diff FETCH_HEAD...HEAD` (Full diff for analysis)
-2. **Analyze the diff content** to understand what has changed functionally
-3. **Generate a high-level summary** of the changes
-4. **Categorize changes by functionality**, not by individual files
+Complete diff for analysis:
+!`git diff FETCH_HEAD...HEAD`
+
+File type breakdown:
+!`git diff FETCH_HEAD...HEAD --name-only | sed 's/.*\.//' | sort | uniq -c | sort -nr`
+
+Code complexity indicators:
+!`git diff FETCH_HEAD...HEAD --stat | tail -1`
+
+**Analyze the diff content** using the above context to understand:
+1. What has changed functionally
+2. File type distribution (from file type breakdown)
+3. Scale of changes (from complexity indicators)
+4. Generate a high-level summary of the changes
+5. Categorize changes by functionality, not by individual files
 
 **PR Description Format:**
 
@@ -147,33 +169,35 @@ Get the full diff and analyze the changes using the enhanced workflow:
 - **Architecture Flow**: Create a visual flow showing how components interact (use arrows →)
 - **Code Changes**: Include specific file paths with line numbers and brief descriptions using format: `file/path.ext:line_number - Description`
 
-**Examples of good categorized descriptions:**
-
-- **Authentication Enhancement**:
-  - Implemented OAuth2 support replacing basic authentication system
-  - Added JWT token validation middleware
-    - Development environment: `dev-auth-service.com` endpoint
-    - Production environment: `auth-service.com` endpoint
-
-## Step 7: Smart Title Generation
+## Step 6: Smart Title Generation with Context
 
 Generate the PR title using branch naming logic:
 
-1. Generate a title from all the changes
-2. Get the current branch name
+Branch analysis:
+!`echo "Current branch: $(git branch --show-current)"`
+!`git branch --show-current | grep -E '^[A-Za-z]{2}-[0-9]+$' && echo "ticket-format" || echo "regular-branch"`
+
+1. Generate a title from all the changes (using diff analysis above)
+2. Get the current branch name (from branch analysis)
 3. Apply title logic:
    - If branch matches pattern `^[A-Za-z]{2}-[0-9]+$` (e.g., CH-123, AB-456):
      **Title format:** `{BRANCH_NAME}: {title}`
    - Otherwise: **Title format:** `{title}`
 
-## Step 8: Push Branch
+## Step 7: Push Branch with Status
 
 Push the current branch to origin:
+
+Pre-push status:
+!`git status --porcelain`
 
 - Run: `git push -u origin {current_branch}`
 - Handle any push errors appropriately
 
-## Step 9: Check for Existing Pull Request and Create/Update
+Post-push verification:
+`git ls-remote origin $(git branch --show-current) && echo "Push successful" || echo "Push verification failed"`
+
+## Step 8: Check for Existing Pull Request and Create/Update
 
 First check if a pull request already exists for the current branch, then either update it or create a new one.
 
@@ -219,9 +243,13 @@ If existing PR found, use the GitHub MCP tool `github_update_pull_request`:
 
 Note: The `head` and `base` branches don't need to be updated as they remain the same.
 
-## Step 10: Success Response
+## Step 9: Success Response
 
 After successful PR creation, display:
+
+Final repository state:
+!`git branch -vv | grep "$(git branch --show-current)"`
+!`git log --oneline -1`
 
 - PR title
 - PR URL
@@ -232,30 +260,28 @@ After successful PR creation, display:
 
 Provide clear, actionable error messages for:
 
-- Not in a Git repository
-- No GitHub remote configured
+- Not in a Git repository (check repository context section)
+- No GitHub remote configured (check repository context section)
 - Invalid GitHub remote URL
-- Already on main/master branch
-- **Merge conflicts with base branch** (stop execution, require manual resolution)
-- No changes detected after merge
+- Already on main/master branch (check current branch in context)
+- **FETCH_HEAD not found** (user must run git pull first)
+- No changes detected (check files changed section)
 - Git push failures
 - GitHub API/MCP tool failures
 
 ## Execution Notes
 
-- **Always fetch specific base branch** to ensure latest remote state: `git fetch origin {base_branch}`
-- **Use FETCH_HEAD for precise comparisons** - refers to exactly what was just fetched
+- **User must manually pull before execution**: `git pull origin {base_branch}` 
+- **Use FETCH_HEAD for precise comparisons** - refers to what was pulled
 - **Triple-dot notation**: `FETCH_HEAD...HEAD` shows diff from merge base
-- **Merge FETCH_HEAD** and handle conflicts properly (git worktree compatible)
+- **Parallel execution**: All commands use `!` prefix for maximum performance
+- **Real-time context**: Use bash injection results for immediate validation and analysis
 - Use bash tools for all Git operations
 - Use GitHub MCP tools only for PR creation
 - Provide informative progress updates during execution
-- **Stop execution if merge conflicts occur** - require manual resolution
-- Exit gracefully if no changes are detected after merge
+- **Stop execution if FETCH_HEAD missing** - require manual pull first
+- Exit gracefully if no changes are detected
 - Handle both SSH and HTTPS GitHub remote formats
 - Support repositories with either "main" or "master" as default branch
 - Analyze the actual code changes in the diff to provide meaningful descriptions
 - Focus on high-level functional changes rather than line-by-line details
-- **Enhanced diff workflow**:
-  - File names only: `git diff FETCH_HEAD...HEAD --name-only`
-  - Full diff: `git diff FETCH_HEAD...HEAD`
