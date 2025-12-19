@@ -21,8 +21,8 @@ alias ..="cd .."
 alias ...="cd ../../"
 alias mkdir="mkdir -pv"
 
-alias opencode_personal='XDG_DATA_HOME=~/.local/share/opencode-personal opencode'
-alias opencode_work='XDG_DATA_HOME=~/.local/share/opencode-work opencode'
+alias opencode_p='XDG_DATA_HOME=~/.local/share/opencode-personal opencode'
+alias opencode_w='XDG_DATA_HOME=~/.local/share/opencode-work opencode'
 
 ###### OS Specific ######
 if [[ "$OSTYPE" == "darwin"* ]]; then
