@@ -1,7 +1,3 @@
-if true then
-  return {}
-end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
-
 --- When you quit any Neovim session, it will close an open OpenCode session as well.
 
 return {
@@ -9,9 +5,13 @@ return {
   dependencies = {
     -- Recommended for `ask()` and `select()`.
     -- Required for `toggle()`.
-    { "folke/snacks.nvim", opts = { input = {}, picker = {} } },
+    { "folke/snacks.nvim", opts = { input = {}, picker = {}, terminal = {} } },
   },
   init = function()
+    ---@type opencode.Opts
+    vim.g.opencode_opts = {
+      -- Your configuration, if any — see `lua/opencode/config.lua`
+    }
     vim.opt.autoread = true
   end,
   specs = {
@@ -59,33 +59,48 @@ return {
             },
             ["<Leader>on"] = {
               function()
-                require("opencode").command("session_new")
+                require("opencode").command("session.new")
               end,
               desc = "New session",
             },
             ["<Leader>oi"] = {
               function()
-                require("opencode").command("session_interrupt")
+                require("opencode").command("session.interrupt")
               end,
               desc = "Interrupt session",
             },
             ["<Leader>oA"] = {
               function()
-                require("opencode").command("agent_cycle")
+                require("opencode").command("agent.cycle")
               end,
               desc = "Cycle selected agent",
             },
             ["<S-C-u>"] = {
               function()
-                require("opencode").command("messages_half_page_up")
+                require("opencode").command("session.half.page.up")
               end,
               desc = "Messages half page up",
             },
             ["<S-C-d>"] = {
               function()
-                require("opencode").command("messages_half_page_down")
+                require("opencode").command("session.half.page.down")
               end,
               desc = "Messages half page down",
+            },
+
+            ["<Leader>ol"] = {
+              function()
+                return require("opencode").operator("@this ") .. "_"
+              end,
+              expr = true,
+              desc = "OpenCode operator (line)",
+            },
+            ["<Leader>or"] = {
+              function()
+                return require("opencode").operator("@this ")
+              end,
+              expr = true,
+              desc = "OpenCode operator (range)",
             },
           },
           x = {
@@ -107,6 +122,13 @@ return {
                 require("opencode").prompt("@this")
               end,
               desc = "Add this",
+            },
+            ["<Leader>or"] = {
+              function()
+                return require("opencode").operator("@this ")
+              end,
+              expr = true,
+              desc = "OpenCode operator (range)",
             },
           },
         },

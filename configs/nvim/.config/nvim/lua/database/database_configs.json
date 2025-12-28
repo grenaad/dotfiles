@@ -162,7 +162,7 @@
       "description": "Production environment for dashboard service",
       "port": 6001,
       "instance_name": "cin-prod:europe-west2:cin-db1-postgres12-43b0f512",
-      "database_name": "postgres",
+      "database_name": "cindashboard",
       "password_encrypted": "AT3Q6GIVRtR8eXOJ4U0kMVjB17BNgB9K39tsfr1nu9trAO7aC2J1zHRp//TblMTv7E3SMnht830CdVUlAAsGTTCUyIyQGHjHIkk4t494LnaOGZatAxDHPvD3GnX1yVnZFTCtkfp6wsLBCAqtnYy2LV06gWIIxSTbIy6RC7PlhBimDqTelrYZD+2BmWyi9x7nTcYlVFjFnxq3kKO9+negpgrtWuCaYt0WBnnc+CM+BPcrGTGaiVxAmgDnFXQ4ntjq8uGpWNLSagjsR+XpKK7BLbD5LRGe7bp/wni7pxnLpXvbESK5PTplY32499Zq0eeyC1qGN1+fSKAy9/RxxsXMr8FYOZ1aRzk4+25MpituEBshatw6t1meWMBrjvBem2WDOjCwk/MaTuBSbAXwYG9zUa5Go6S6Knwxb7fp/nyV8G7yTNX+5iKVhSUia9NNDsLM4ufnRnpWfYJJwC9kcoYsOvxUeZv1GlofdwRsKSxre5zGzjXq/02DfCz6Na7lGULP",
       "connection_template": "postgresql://dbuser:<password>@localhost:{port}/{database_name}",
       "tags": ["prod", "dashboard"],
