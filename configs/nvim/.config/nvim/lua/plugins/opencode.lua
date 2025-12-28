@@ -53,7 +53,7 @@ return {
             },
             ["<Leader>oc"] = {
               function()
-                require("opencode").command()
+                require("opencode").select()
               end,
               desc = "Select command",
             },
