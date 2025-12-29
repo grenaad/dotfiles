@@ -1,116 +1,75 @@
 ---
-description: Create GitHub PR with smart title and intelligent diff analysis
+description: Create GitHub PR with intelligent diff analysis and gh CLI integration
 agent: build
 ---
 
-You are an AI assistant helping to create a GitHub Pull Request with smart title detection and intelligent change analysis. Follow these steps precisely:
+## Step 1: Repository Validation & Preprocessing
 
-## Current Repository Context
+Check if we're in a git repository:
+!`git rev-parse --is-inside-work-tree`
 
-Repository information:
+Get the remote URL to identify the repository:
 !`git config --get remote.origin.url`
 
-Current working state:
+Get current branch name:
 !`git branch --show-current`
-!`git status --porcelain`
 
-Git repository validation:
-!`git rev-parse --is-inside-work-tree 2>/dev/null || echo "false"`
+Detect the default branch (main/master):
+!`git symbolic-ref refs/remotes/origin/HEAD`
 
-## Step 1: Repository Validation
+Check if FETCH_HEAD exists (confirms recent pull):
+!`git rev-parse --verify FETCH_HEAD`
 
-Validate the repository setup using the context above:
-
-1. Check if we're in a Git repository (already gathered above)
-2. Verify GitHub remote exists (already gathered above)  
-3. Ensure we're not on the main/master branch (check current branch above)
-4. Current branch name (already gathered above)
-
-Use the injected command results to perform validation. If any validation fails, provide a clear error message and exit.
-
-## Step 2: Enhanced Repository Information Detection
-
-Extract GitHub repository information from the Git remote URL using the context already gathered:
-
-SSH configuration context:
-!`cat ~/.ssh/config 2>/dev/null | grep -A 5 -B 5 "github.com" || echo "No GitHub SSH config found"`
-
-Parse owner and repository name from the remote URL format:
-- SSH: `git@github.com:owner/repo.git`
-- HTTPS: `https://github.com/owner/repo.git`
-- HTTPS without .git: `https://github.com/owner/repo`
-
-If the URL doesn't match a GitHub repository format, exit with an error.
-
-## Step 3: Base Branch Detection and Fetch
-
-Detect the default branch and fetch the latest state:
-
-Default branch detection:
-!`git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo "not-found"`
-
-Branch verification:
-!`git show-ref --verify --quiet refs/remotes/origin/main && echo "main-exists" || echo "main-missing"`
-!`git show-ref --verify --quiet refs/remotes/origin/master && echo "master-exists" || echo "master-missing"`
-
-Based on the results:
-1. Use the symbolic-ref result if available
-2. Otherwise check main/master existence results
-3. Default to "main" if neither exists
-
-## Step 4: Enhanced Change Detection
-
-Use improved git diff workflow to analyze changes with immediate context:
-
-Verify FETCH_HEAD exists (user must have run git pull):
-!`git rev-parse --verify FETCH_HEAD >/dev/null 2>&1 && echo "FETCH_HEAD-exists" || echo "FETCH_HEAD-missing"`
-
-**Error Handling**: If FETCH_HEAD is missing, exit with error:
-```
-❌ FETCH_HEAD not found
-
-Please run the following command before creating a PR:
-git pull origin {base_branch}
-
-This ensures we can compare your changes against the latest base branch.
-Aborting PR creation.
-```
-
-Files changed:
+Get list of changed files:
 !`git diff FETCH_HEAD...HEAD --name-only`
 
-Change summary:
-!`git diff --stat FETCH_HEAD...HEAD`
+Check working directory status:
+!`git status --porcelain`
 
-Commits being included:
-!`git log --oneline FETCH_HEAD..HEAD`
+Purpose: These commands validate the repository setup, ensure we're on a feature branch (not main/master), and confirm that a recent git pull was performed to enable accurate change comparison.
 
-Recent commit details:
-!`git log --oneline -3 --stat`
+## Step 2: SSH Configuration Analysis
 
-Analysis:
-1. **Check if any changes exist** from the files changed output above
-2. If no files are returned, exit gracefully with message "No changes detected between current branch and {base_branch}"
-3. Use the change summary for PR description context
-4. Use commit context for understanding change history
+Check SSH configuration for custom Git hosts:
+!`cat ~/.ssh/config | grep -A5 -B5 "work"`
 
-## Step 5: Comprehensive Diff Analysis and PR Description Generation
+Verify SSH host resolution:
+!`ssh -G "work" | grep "^hostname "`
 
-Get the full diff and analyze the changes using the enhanced workflow:
+Purpose: Since repositories may use custom SSH aliases, these commands verify that aliases point to GitHub, enabling the script to work with custom Git configurations.
 
-Complete diff for analysis:
+## Step 3: Basic Change Analysis
+
+List files changed between base branch and current branch:
+!`git diff FETCH_HEAD...HEAD --name-only`
+
+Get change statistics (lines added/removed per file):
+!`git diff FETCH_HEAD...HEAD --stat`
+
+Get commit history for context:
+!`git log FETCH_HEAD...HEAD --oneline`
+
+Get complete diff for detailed analysis:
 !`git diff FETCH_HEAD...HEAD`
 
-File type breakdown:
-!`git diff FETCH_HEAD...HEAD --name-only | sed 's/.*\.//' | sort | uniq -c | sort -nr`
+Purpose: These commands analyze what changed, providing the raw content needed for intelligent PR title and description generation. The triple-dot notation (FETCH_HEAD...HEAD) shows changes from the merge base, which is crucial for accurate comparison.
 
-Code complexity indicators:
-!`git diff FETCH_HEAD...HEAD --stat | tail -1`
+## Step 4: Authentication & Environment Check
+
+Verify GitHub CLI authentication:
+!`gh auth status`
+
+Check repository context:
+!`gh repo view --json owner,name,defaultBranch`
+
+Purpose: Ensure gh CLI is properly authenticated and can access the current repository before attempting PR operations.
+
+## Step 5: Intelligent Diff Analysis & PR Content Generation
 
 **Analyze the diff content** using the above context to understand:
 1. What has changed functionally
 2. File type distribution (from file type breakdown)
-3. Scale of changes (from complexity indicators)
+3. Scale of changes (from complexity indicators)  
 4. Generate a high-level summary of the changes
 5. Categorize changes by functionality, not by individual files
 
@@ -118,35 +77,39 @@ Code complexity indicators:
 
 ```
 ## Summary
+
 [Overall high-level summary of what this PR accomplishes]
 
 ## Changes Made
 
 ### **[Category Name]**
+
 - [High-level description of related functionality changes]
 - [Specific implementation detail]
   - [Sub-configuration or related detail]
   - [Another sub-configuration]
 
 ### **[Another Category]**
+
 - [Description of different functional area changes]
 - [Specific implementation detail]
   - [Sub-configuration or related detail]
 
 ### **[Additional Category]**
+
 - [Description of other grouped changes if applicable]
 - [Specific implementation detail]
 
 ## Technical Details
 
 **Architecture Flow:**
+
 ```
-
 [Component A] → [Component B] → [Component C]
-
 ```
 
 **Code Changes:**
+
 - `file/path.ext:line_number` - [Description of what changed]
 - `another/file.ext:line_number` - [Description of what changed]
 ```
@@ -171,18 +134,19 @@ Code complexity indicators:
 
 ## Step 6: Smart Title Generation with Context
 
-Generate the PR title using branch naming logic:
+Generate the PR title using branch naming logic and preprocessed data:
 
-Branch analysis:
-!`echo "Current branch: $(git branch --show-current)"`
-!`git branch --show-current | grep -E '^[A-Za-z]{2}-[0-9]+$' && echo "ticket-format" || echo "regular-branch"`
+Branch information (from preprocessing):
+- Current branch: `{CURRENT_BRANCH}`
+- Branch format: `{BRANCH_FORMAT}`
 
 1. Generate a title from all the changes (using diff analysis above)
-2. Get the current branch name (from branch analysis)
-3. Apply title logic:
-   - If branch matches pattern `^[A-Za-z]{2}-[0-9]+$` (e.g., CH-123, AB-456):
-     **Title format:** `{BRANCH_NAME}: {title}`
-   - Otherwise: **Title format:** `{title}`
+2. Use the preprocessed branch information
+3. Apply title logic based on `{BRANCH_FORMAT}`:
+   - If `{BRANCH_FORMAT}` equals "ticket-format" (e.g., CH-123, AB-456):
+     **Title format:** `{CURRENT_BRANCH}: {title}`
+   - If `{BRANCH_FORMAT}` equals "regular-branch":
+     **Title format:** `{title}`
 
 ## Step 7: Push Branch with Status
 
@@ -191,97 +155,180 @@ Push the current branch to origin:
 Pre-push status:
 !`git status --porcelain`
 
-- Run: `git push -u origin {current_branch}`
+- Run: `git push -u origin {CURRENT_BRANCH}`
 - Handle any push errors appropriately
 
 Post-push verification:
 `git ls-remote origin $(git branch --show-current) && echo "Push successful" || echo "Push verification failed"`
 
-## Step 8: Check for Existing Pull Request and Create/Update
+## Step 8: GitHub CLI Integration - Check for Existing PR and Create/Update
 
 First check if a pull request already exists for the current branch, then either update it or create a new one.
 
-### 9.1: Search for Existing Pull Request
+### 8.1: Search for Existing Pull Request
 
-Use the GitHub MCP tool `github_search_pull_requests` to check for existing PRs:
+Use gh CLI to check for existing PRs:
 
-- `query`: `head:{current_branch} repo:{owner}/{repo}`
-  - `head:{current_branch}` - searches for PRs where the source branch matches current branch
-  - `repo:{owner}/{repo}` - limits search to the current repository
+```bash
+EXISTING_PR=$(gh pr list --head {CURRENT_BRANCH} --json number --jq '.[0].number')
+```
 
-### 9.2: Analyze Search Results
+Purpose: Check if a PR already exists for this branch. The command:
+- `--head {CURRENT_BRANCH}` - finds PRs where the source branch matches current branch
+- `--json number --jq '.[0].number'` - extracts just the PR number from the first result
+
+### 8.2: Analyze Search Results
 
 Check the search results to determine next action:
 
-1. **If no PRs found** (empty results or no matching PRs):
-   - Proceed to create new PR (Step 9.3)
+```bash
+if [ "$EXISTING_PR" != "null" ] && [ -n "$EXISTING_PR" ]; then
+    echo "Found existing PR #$EXISTING_PR - will update"
+    # Proceed to update existing PR (Step 8.4)
+else
+    echo "No existing PR found - will create new one"  
+    # Proceed to create new PR (Step 8.3)
+fi
+```
 
-2. **If PR found** (one or more results):
-   - Extract the PR number from the first result
-   - Proceed to update existing PR (Step 9.4)
+### 8.3: Create New Pull Request
 
-### 9.3: Create New Pull Request
+If no existing PR found, use gh CLI to create new PR:
 
-If no existing PR found, use the GitHub MCP tool `github_create_pull_request`:
+```bash
+gh pr create \
+  --title "{GENERATED_TITLE}" \
+  --head {CURRENT_BRANCH} \
+  --base {DEFAULT_BRANCH} \
+  --body "{GENERATED_DESCRIPTION}"
+```
 
-- `owner`: Repository owner (from step 2)
-- `repo`: Repository name (from step 2)
-- `title`: Generated title (from step 7)
-- `head`: Current branch name
-- `base`: Base branch (from step 3)
-- `body`: Generated PR description (from step 6)
+Purpose: Create new PR with:
+- `--title` - Generated title from Step 6
+- `--head` - Current branch from preprocessing
+- `--base` - Default branch from preprocessing  
+- `--body` - Generated PR description from Step 5
 
-### 9.4: Update Existing Pull Request
+### 8.4: Update Existing Pull Request
 
-If existing PR found, use the GitHub MCP tool `github_update_pull_request`:
+If existing PR found, use gh CLI to update it:
 
-- `owner`: Repository owner (from step 2)
-- `repo`: Repository name (from step 2)
-- `pullNumber`: PR number from search results (Step 9.2)
-- `title`: Generated title (from step 7)
-- `body`: Generated PR description (from step 6)
+```bash
+gh pr edit {EXISTING_PR} \
+  --title "{GENERATED_TITLE}" \
+  --body "{GENERATED_DESCRIPTION}"
+```
 
-Note: The `head` and `base` branches don't need to be updated as they remain the same.
+Purpose: Update existing PR with:
+- `{EXISTING_PR}` - PR number from search results (Step 8.2)
+- `--title` - Generated title from Step 6
+- `--body` - Generated PR description from Step 5
+
+Note: The head and base branches don't need to be updated as they remain the same.
+
+### 8.5: Complete GitHub CLI Workflow Script
+
+```bash
+#!/bin/bash
+
+# Variables from preprocessing
+CURRENT_BRANCH="{CURRENT_BRANCH}"
+DEFAULT_BRANCH="{DEFAULT_BRANCH}"
+GENERATED_TITLE="{GENERATED_TITLE}"
+GENERATED_DESCRIPTION="{GENERATED_DESCRIPTION}"
+
+# Search for existing PR
+echo "Searching for existing PR for branch: $CURRENT_BRANCH"
+EXISTING_PR=$(gh pr list --head "$CURRENT_BRANCH" --json number --jq '.[0].number')
+
+# Determine action and execute
+if [ "$EXISTING_PR" != "null" ] && [ -n "$EXISTING_PR" ]; then
+    echo "Updating existing PR #$EXISTING_PR"
+    gh pr edit "$EXISTING_PR" \
+      --title "$GENERATED_TITLE" \
+      --body "$GENERATED_DESCRIPTION"
+    echo "PR #$EXISTING_PR updated successfully"
+    gh pr view "$EXISTING_PR" --web
+else
+    echo "Creating new PR"
+    gh pr create \
+      --title "$GENERATED_TITLE" \
+      --head "$CURRENT_BRANCH" \
+      --base "$DEFAULT_BRANCH" \
+      --body "$GENERATED_DESCRIPTION"
+    echo "New PR created successfully"
+    gh pr view --web
+fi
+```
 
 ## Step 9: Success Response
 
-After successful PR creation, display:
+After successful PR creation/update, display:
 
 Final repository state:
 !`git branch -vv | grep "$(git branch --show-current)"`
 !`git log --oneline -1`
 
-- PR title
-- PR URL
-- Branch information (current -> base)
+Display results:
+- PR title: `{GENERATED_TITLE}`
+- PR URL: `{PR_URL}`
+- Branch information: `{CURRENT_BRANCH}` → `{DEFAULT_BRANCH}`
 - Brief summary of changes included
+- Action taken: "Created new PR" or "Updated existing PR #{PR_NUMBER}"
 
 ## Error Handling
 
-Provide clear, actionable error messages for:
+Basic error handling for common issues:
 
-- Not in a Git repository (check repository context section)
-- No GitHub remote configured (check repository context section)
-- Invalid GitHub remote URL
-- Already on main/master branch (check current branch in context)
-- **FETCH_HEAD not found** (user must run git pull first)
-- No changes detected (check files changed section)
-- Git push failures
-- GitHub API/MCP tool failures
+**Git Repository Issues:**
+- Not in a git repository
+- No remote origin configured
+- Working directory has uncommitted changes
+- No changes detected between branches
 
-## Execution Notes
+**GitHub CLI Issues:**
+- Authentication failure (`gh auth login` required)
+- Network connectivity problems
+- Repository access permissions
+- Invalid branch names or missing remote branches
 
-- **User must manually pull before execution**: `git pull origin {base_branch}` 
-- **Use FETCH_HEAD for precise comparisons** - refers to what was pulled
-- **Triple-dot notation**: `FETCH_HEAD...HEAD` shows diff from merge base
-- **Parallel execution**: All commands use `!` prefix for maximum performance
-- **Real-time context**: Use bash injection results for immediate validation and analysis
-- Use bash tools for all Git operations
-- Use GitHub MCP tools only for PR creation
-- Provide informative progress updates during execution
-- **Stop execution if FETCH_HEAD missing** - require manual pull first
-- Exit gracefully if no changes are detected
-- Handle both SSH and HTTPS GitHub remote formats
-- Support repositories with either "main" or "master" as default branch
-- Analyze the actual code changes in the diff to provide meaningful descriptions
-- Focus on high-level functional changes rather than line-by-line details
+**Branch Validation:**
+- Attempting to create PR from main/master branch
+- Branch not pushed to remote
+- FETCH_HEAD not available (need to run `git pull` first)
+
+## Complete Workflow Summary
+
+Here's the complete order of operations:
+
+1. **Repository Validation** - Validate git repository and branch status
+2. **SSH Configuration** - Handle custom SSH aliases for Git remotes  
+3. **Basic Change Analysis** - Get git diff data and commit history
+4. **Authentication Check** - Verify gh CLI authentication and repo access
+5. **Intelligent Diff Analysis** - Comprehensive analysis with categorization
+6. **Smart Title Generation** - Branch-aware title creation with format detection
+7. **Branch Push** - Ensure branch is available on GitHub with status checks
+8. **GitHub CLI Integration** - Search for existing PR and create/update accordingly
+9. **Success Response** - Display final status and PR information
+
+## Key Technical Details
+
+**Branch Format Detection:**
+The script automatically detects branch naming patterns:
+- `ticket-format`: Matches pattern like XX-123 → Title format: `{BRANCH}: {description}`
+- `regular-branch`: Other patterns → Title format: `{description}`
+
+**Change Analysis Strategy:**
+- Uses `FETCH_HEAD...HEAD` for accurate comparison against last pulled state
+- Analyzes file changes, statistics, and commit history for context
+- Generates categorized descriptions based on functional changes, not just files modified
+- Creates architecture flows and technical details sections
+
+**GitHub CLI Advantages:**
+- Simpler syntax compared to API calls
+- Direct terminal integration and scriptability
+- Built-in authentication handling
+- Automatic repository context detection
+- Interactive prompts for missing information
+
+This approach ensures the PR creation process is robust, intelligent, and handles various Git configurations automatically while providing comprehensive content analysis and generation.
