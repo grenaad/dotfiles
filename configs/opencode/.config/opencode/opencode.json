@@ -85,6 +85,14 @@
       "headers": {
         "Authorization": "Bearer {env:GITHUB_TOKEN}"
       }
+    },
+    "digitalocean": {
+      "type": "local",
+      "enabled": true,
+      "command": ["npx", "-y", "@digitalocean/mcp"],
+      "environment": {
+        "DIGITALOCEAN_API_TOKEN": "{env:DIGITALOCEAN_ACCESS_TOKEN}"
+      }
     }
   }
 }
