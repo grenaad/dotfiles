@@ -7,7 +7,7 @@
         "wl-clipboard",
         "zsh",
         "ffmpeg",
-        "fzf",
+        # "fzf", install with brew
         "bat",
         "unzip",
         "zip",
@@ -27,17 +27,17 @@
 
 - include_tasks: tasks/vscode.yaml
 # Install Docker Desktop
-- import_tasks: tasks/docker.yaml
+# - import_tasks: tasks/docker.yaml
 - import_tasks: tasks/homebrew.yaml
 - import_tasks: tasks/neovim.yaml
 - import_tasks: tasks/yazi.yaml
-- import_tasks: tasks/ghostty_ubuntu.yaml
+  #- import_tasks: tasks/ghostty_ubuntu.yaml
 # - import_tasks: tasks/flatpak.yaml
 - import_tasks: tasks/opencode.yaml
 - import_tasks: tasks/lazygit.yaml
-- import_tasks: tasks/delta.yaml
+  #- import_tasks: tasks/delta.yaml
 # Commented tasks if you need them later
 - import_tasks: tasks/rust.yaml
-- include_tasks: tasks/nvm.yaml
+  # - include_tasks: tasks/nvm.yaml
 # - include_tasks: tasks/kubectx.yaml
 # - include_tasks: tasks/stern.yaml

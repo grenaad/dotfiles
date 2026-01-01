@@ -18,3 +18,14 @@
   tags:
     - install
     - homebrew
+
+- name: Install Homebrew packages
+  become: false
+  community.general.homebrew:
+    name:
+      - fzf
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin
+  tags:
+    - install
+    - homebrew
