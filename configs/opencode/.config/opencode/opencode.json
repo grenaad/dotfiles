@@ -1,6 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "anthropic/claude-sonnet-4-20250514",
   "lsp": {
     "scala-lsp": {
       "command": ["metals"],
@@ -76,19 +75,19 @@
         "--no-jira-ssl-verify",
         "--no-confluence-ssl-verify"
       ],
-      "enabled": true
+      "enabled": false
     },
     "github": {
       "type": "remote",
       "url": "https://api.githubcopilot.com/mcp/",
-      "enabled": true,
+      "enabled": false,
       "headers": {
         "Authorization": "Bearer {env:GITHUB_TOKEN}"
       }
     },
     "digitalocean": {
       "type": "local",
-      "enabled": true,
+      "enabled": false,
       "command": ["npx", "-y", "@digitalocean/mcp"],
       "environment": {
         "DIGITALOCEAN_API_TOKEN": "{env:DIGITALOCEAN_ACCESS_TOKEN}"

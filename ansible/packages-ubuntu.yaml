@@ -2,8 +2,7 @@
 # Install packages with sudo
 - name: Install System Packages
   apt:
-    name:
-      [
+    name: [
         "wl-clipboard",
         "zsh",
         "ffmpeg",
@@ -41,3 +40,4 @@
   # - include_tasks: tasks/nvm.yaml
 # - include_tasks: tasks/kubectx.yaml
 # - include_tasks: tasks/stern.yaml
+#
