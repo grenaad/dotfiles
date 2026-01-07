@@ -43,4 +43,5 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 # install the roles required
-ansible-galaxy install -r requirements.yml 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ansible-galaxy install -r "$SCRIPT_DIR/requirements.yml"
