@@ -1,6 +1,18 @@
 {
   "databases": [
     {
+      "name": "local_postgres_",
+      "display_name": "Local Postgres port 6432",
+      "description": "Local PostgreSQL for testing and dev work",
+      "port": 6432,
+      "local": true,
+      "database_name": "postgres",
+      "connection_template": "postgresql://postgres:postgres@localhost:6432/postgres",
+      "tags": ["local", "dev", "testing"],
+      "environment": "local",
+      "service": "local"
+    },
+    {
       "name": "core_responses_dev",
       "display_name": "Core Responses (Dev)",
       "description": "Development environment for core responses service",

@@ -112,6 +112,11 @@ end
 -- Args: db_config (table) - database configuration object
 -- Returns: boolean - true if proxy is running (was already running or started successfully)
 local function ensure_proxy_running(db_config)
+  -- Skip proxy for local databases
+  if db_config["local"] then
+    return true
+  end
+
   local proxy = require("database.proxy")
   
   -- Check if already running

@@ -16,8 +16,8 @@ fi
 # Fallback: Use AppleScript for reliable media detection
 MEDIA=""
 
-# Try Spotify first
-if osascript -e 'tell application "Spotify" to return player state' 2>/dev/null | grep -q "playing"; then
+# Try Spotify first (only if running - don't launch it)
+if pgrep -x "Spotify" > /dev/null && osascript -e 'tell application "Spotify" to return player state' 2>/dev/null | grep -q "playing"; then
   TITLE=$(osascript -e 'tell application "Spotify" to return name of current track' 2>/dev/null)
   ARTIST=$(osascript -e 'tell application "Spotify" to return artist of current track' 2>/dev/null)
   if [ -n "$TITLE" ] && [ -n "$ARTIST" ]; then
@@ -25,8 +25,8 @@ if osascript -e 'tell application "Spotify" to return player state' 2>/dev/null 
   fi
 fi
 
-# Try Apple Music if Spotify didn't work
-if [ -z "$MEDIA" ] && osascript -e 'tell application "Music" to return player state' 2>/dev/null | grep -q "playing"; then
+# Try Apple Music if Spotify didn't work (only if running - don't launch it)
+if [ -z "$MEDIA" ] && pgrep -x "Music" > /dev/null && osascript -e 'tell application "Music" to return player state' 2>/dev/null | grep -q "playing"; then
   TITLE=$(osascript -e 'tell application "Music" to return name of current track' 2>/dev/null)
   ARTIST=$(osascript -e 'tell application "Music" to return artist of current track' 2>/dev/null)
   if [ -n "$TITLE" ] && [ -n "$ARTIST" ]; then

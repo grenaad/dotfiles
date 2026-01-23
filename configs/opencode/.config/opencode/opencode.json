@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-anthropic-auth"],
+  "plugin": ["opencode-anthropic-auth", "opencode-pty"],
   "lsp": {
     "scala-lsp": {
       "command": ["metals"],
