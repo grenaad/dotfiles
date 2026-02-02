@@ -5,6 +5,8 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
   alias vim="nvim" 
 fi
 
+alias w="whisper --language English --output_format txt"
+
 # Macos Automator:
 # export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 # WINEPREFIX="/Users/ice/.wine" wine ~/.wine/drive_c/Program\ Files/GoMetaTrader7/terminal64.exe
