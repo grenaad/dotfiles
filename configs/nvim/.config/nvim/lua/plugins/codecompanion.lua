@@ -1,3 +1,7 @@
+if true then
+  return {}
+end -- WARN: REMOVE THIS LINE TO ACTIVATE THIS FILE
+
 return {
   "olimorris/codecompanion.nvim",
   dependencies = {
@@ -7,10 +11,16 @@ return {
   config = function()
     -- Use config function instead of opts for better control
     require("codecompanion").setup({
-      log_level = "DEBUG",
-      strategies = {
+      opts = {
+        log_level = "DEBUG",
+      },
+      interactions = {
         chat = {
           adapter = "opencode",
+        },
+      },
+      strategies = {
+        chat = {
           slash_commands = {
             ["git_files"] = {
               description = "List git files",
@@ -60,7 +70,22 @@ return {
           v = {
             ["<Leader>aa"] = { "<cmd>CodeCompanionActions<CR>", desc = "Actions" },
             ["<Leader>ac"] = { "<cmd>CodeCompanionChat Add<CR>", desc = "Chat" },
+            -- ["<Leader>ai"] = { ":CodeCompanion", desc = "CodeCompanion inline" },
+            ["<leader>ai"] = {
+              function()
+                -- Exit visual mode to set the '< and '> marks
+                local esc = vim.api.nvim_replace_termcodes("<Esc>", true, false, true)
+                vim.api.nvim_feedkeys(esc, "x", false)
 
+                vim.schedule(function()
+                  local prompt = vim.fn.input("Prompt: ")
+                  if prompt ~= "" then
+                    vim.cmd("'<,'>CodeCompanion " .. prompt)
+                  end
+                end)
+              end,
+              desc = "CodeCompanion inline",
+            },
             -- Prompt library shortcuts for selected text
             ["<Leader>af"] = { "<cmd>CodeCompanion /fix<CR>", desc = "Fix Code" },
             ["<Leader>ae"] = { "<cmd>CodeCompanion /explain<CR>", desc = "Explain Code" },

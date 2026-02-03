@@ -82,7 +82,7 @@ function activate_venv() {
 
 # OpenCode wrapper function
 # Usage: oc <input>
-oc() {
+function oc() {
     if [ $# -eq 0 ]; then
         echo "Usage: oc <input>"
         return 1
