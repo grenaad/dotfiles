@@ -15,19 +15,11 @@ return {
   },
   opts = {
     provider = "opencode",
-    -- Disable default keymaps - we set them via astrocore
-    mappings = {
-      ask = false,
-      new_ask = false,
-      zen_mode = false,
-      edit = false,
-      refresh = false,
-      focus = false,
-      stop = false,
-      toggle = { default = false, debug = false, suggestion = false, repomap = false },
-      files = { add_current = false, add_all_buffers = false },
-      select_model = false,
-      select_history = false,
+    behaviour = {
+      auto_set_keymaps = false, -- Disable avante's keymaps, we set them via astrocore
+    },
+    selection = {
+      enabled = false, -- Disable inline selection hints
     },
   },
   specs = {
