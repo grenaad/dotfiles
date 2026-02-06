@@ -67,9 +67,10 @@ Purpose: Ensure gh CLI is properly authenticated and can access the current repo
 ## Step 5: Intelligent Diff Analysis & PR Content Generation
 
 **Analyze the diff content** using the above context to understand:
+
 1. What has changed functionally
 2. File type distribution (from file type breakdown)
-3. Scale of changes (from complexity indicators)  
+3. Scale of changes (from complexity indicators)
 4. Generate a high-level summary of the changes
 5. Categorize changes by functionality, not by individual files
 
@@ -105,7 +106,9 @@ Purpose: Ensure gh CLI is properly authenticated and can access the current repo
 **Architecture Flow:**
 
 ```
+
 [Component A] → [Component B] → [Component C]
+
 ```
 
 **Code Changes:**
@@ -137,6 +140,7 @@ Purpose: Ensure gh CLI is properly authenticated and can access the current repo
 Generate the PR title using branch naming logic and preprocessed data:
 
 Branch information (from preprocessing):
+
 - Current branch: `{CURRENT_BRANCH}`
 - Branch format: `{BRANCH_FORMAT}`
 
@@ -174,6 +178,7 @@ EXISTING_PR=$(gh pr list --head {CURRENT_BRANCH} --json number --jq '.[0].number
 ```
 
 Purpose: Check if a PR already exists for this branch. The command:
+
 - `--head {CURRENT_BRANCH}` - finds PRs where the source branch matches current branch
 - `--json number --jq '.[0].number'` - extracts just the PR number from the first result
 
@@ -186,7 +191,7 @@ if [ "$EXISTING_PR" != "null" ] && [ -n "$EXISTING_PR" ]; then
     echo "Found existing PR #$EXISTING_PR - will update"
     # Proceed to update existing PR (Step 8.4)
 else
-    echo "No existing PR found - will create new one"  
+    echo "No existing PR found - will create new one"
     # Proceed to create new PR (Step 8.3)
 fi
 ```
@@ -204,9 +209,10 @@ gh pr create \
 ```
 
 Purpose: Create new PR with:
+
 - `--title` - Generated title from Step 6
 - `--head` - Current branch from preprocessing
-- `--base` - Default branch from preprocessing  
+- `--base` - Default branch from preprocessing
 - `--body` - Generated PR description from Step 5
 
 ### 8.4: Update Existing Pull Request
@@ -220,6 +226,7 @@ gh pr edit {EXISTING_PR} \
 ```
 
 Purpose: Update existing PR with:
+
 - `{EXISTING_PR}` - PR number from search results (Step 8.2)
 - `--title` - Generated title from Step 6
 - `--body` - Generated PR description from Step 5
@@ -270,6 +277,7 @@ Final repository state:
 !`git log --oneline -1`
 
 Display results:
+
 - PR title: `{GENERATED_TITLE}`
 - PR URL: `{PR_URL}`
 - Branch information: `{CURRENT_BRANCH}` → `{DEFAULT_BRANCH}`
@@ -281,18 +289,21 @@ Display results:
 Basic error handling for common issues:
 
 **Git Repository Issues:**
+
 - Not in a git repository
 - No remote origin configured
 - Working directory has uncommitted changes
 - No changes detected between branches
 
 **GitHub CLI Issues:**
+
 - Authentication failure (`gh auth login` required)
 - Network connectivity problems
 - Repository access permissions
 - Invalid branch names or missing remote branches
 
 **Branch Validation:**
+
 - Attempting to create PR from main/master branch
 - Branch not pushed to remote
 - FETCH_HEAD not available (need to run `git pull` first)
@@ -302,7 +313,7 @@ Basic error handling for common issues:
 Here's the complete order of operations:
 
 1. **Repository Validation** - Validate git repository and branch status
-2. **SSH Configuration** - Handle custom SSH aliases for Git remotes  
+2. **SSH Configuration** - Handle custom SSH aliases for Git remotes
 3. **Basic Change Analysis** - Get git diff data and commit history
 4. **Authentication Check** - Verify gh CLI authentication and repo access
 5. **Intelligent Diff Analysis** - Comprehensive analysis with categorization
@@ -315,20 +326,15 @@ Here's the complete order of operations:
 
 **Branch Format Detection:**
 The script automatically detects branch naming patterns:
+
 - `ticket-format`: Matches pattern like XX-123 → Title format: `{BRANCH}: {description}`
 - `regular-branch`: Other patterns → Title format: `{description}`
 
 **Change Analysis Strategy:**
+
 - Uses `FETCH_HEAD...HEAD` for accurate comparison against last pulled state
 - Analyzes file changes, statistics, and commit history for context
 - Generates categorized descriptions based on functional changes, not just files modified
 - Creates architecture flows and technical details sections
-
-**GitHub CLI Advantages:**
-- Simpler syntax compared to API calls
-- Direct terminal integration and scriptability
-- Built-in authentication handling
-- Automatic repository context detection
-- Interactive prompts for missing information
 
 This approach ensures the PR creation process is robust, intelligent, and handles various Git configurations automatically while providing comprehensive content analysis and generation.

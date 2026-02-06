@@ -180,6 +180,17 @@
       "tags": ["prod", "dashboard"],
       "environment": "production",
       "service": "dashboard"
+    },
+    {
+      "name": "bigquery_cin_prod",
+      "display_name": "BigQuery (Prod)",
+      "description": "Production BigQuery - dwh_stg_cin, raw_kafka, dwh_curated datasets",
+      "database_name": "cin-prod",
+      "connection_template": "bigquery:cin-prod",
+      "tags": ["prod", "bigquery", "dwh"],
+      "environment": "production",
+      "service": "bigquery",
+      "local": true
     }
   ]
 }

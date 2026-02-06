@@ -81,13 +81,22 @@ function activate_venv() {
 }
 
 # OpenCode wrapper function
-# Usage: oc <input>
+# Usage: oc [message] - if no message, prompts interactively
 function oc() {
+    local model="anthropic/claude-opus-4-5"  # default model
+    
     if [ $# -eq 0 ]; then
-        echo "Usage: oc <input>"
-        return 1
+        echo -n "Message: "
+        read -r message
+        opencode run -m "$model" "$message"
+    else
+        opencode run -m "$model" "$*"
     fi
-    opencode run "$*"
+}
+
+# Fuzzy find directories excluding .git
+function fzd() {
+    find . -type d -not -path "./.git/*" -not -path "./.git" | fzf
 }
 
 # Change the current working directory when exiting Yazi.
