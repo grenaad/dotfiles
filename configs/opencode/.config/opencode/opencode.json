@@ -97,6 +97,29 @@
       "environment": {
         "DIGITALOCEAN_API_TOKEN": "{env:DIGITALOCEAN_ACCESS_TOKEN}"
       }
+    },
+    "grafana": {
+      "type": "local",
+      "enabled": false,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "GRAFANA_URL",
+        "-e",
+        "GRAFANA_API_KEY",
+        "mcp/grafana",
+        "-t",
+        "stdio",
+        "--enabled-tools",
+        "search,datasource,loki,searchlogs"
+      ],
+      "environment": {
+        "GRAFANA_URL": "http://host.docker.internal:3000",
+        "GRAFANA_API_KEY": "{env:GRAFANA_API_KEY}"
+      }
     }
   },
   "provider": {

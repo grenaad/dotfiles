@@ -7,6 +7,7 @@ return {
     "nvim-treesitter/nvim-treesitter",
     "nvim-neotest/neotest-python",
     "nvim-neotest/neotest-go",
+    "rouge8/neotest-rust",
   },
   config = function()
       local neotest = require("neotest")
@@ -21,6 +22,9 @@ return {
               test_table = true,
             },
             args = { "-count=1", "-timeout=60s" }
+          }),
+          require("neotest-rust")({
+            args = { "--no-capture" },
           }),
         },
       })
