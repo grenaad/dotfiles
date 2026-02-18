@@ -83,7 +83,7 @@ function activate_venv() {
 # OpenCode wrapper function
 # Usage: oc [message] - if no message, prompts interactively
 function oc() {
-    local model="anthropic/claude-opus-4-5"  # default model
+    local model="anthropic/claude-opus-4-6"  # default model
     
     if [ $# -eq 0 ]; then
         echo -n "Message: "
@@ -106,6 +106,21 @@ function y() {
 	IFS= read -r -d '' cwd < "$tmp"
 	[ -n "$cwd" ] && [ "$cwd" != "$PWD" ] && builtin cd -- "$cwd"
 	rm -f -- "$tmp"
+}
+
+# Copy the current working directory to the clipboard
+function cpwd() {
+    if command -v pbcopy &>/dev/null; then
+        pwd | tr -d '\n' | pbcopy
+    elif command -v wl-copy &>/dev/null; then
+        pwd | tr -d '\n' | wl-copy
+    elif command -v xclip &>/dev/null; then
+        pwd | tr -d '\n' | xclip -selection clipboard
+    else
+        echo "No clipboard utility found (pbcopy, wl-copy, or xclip)"
+        return 1
+    fi
+    echo "Copied: $(pwd)"
 }
 
 # macOS only
