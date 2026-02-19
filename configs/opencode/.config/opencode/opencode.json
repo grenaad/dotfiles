@@ -114,7 +114,7 @@
         "-t",
         "stdio",
         "--enabled-tools",
-        "search,datasource,loki,searchlogs"
+        "search,datasource,loki,searchlogs,prometheus"
       ],
       "environment": {
         "GRAFANA_URL": "http://host.docker.internal:3000",
