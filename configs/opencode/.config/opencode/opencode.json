@@ -120,6 +120,43 @@
         "GRAFANA_URL": "http://host.docker.internal:3000",
         "GRAFANA_API_KEY": "{env:GRAFANA_API_KEY}"
       }
+    },
+    "grafana_dev": {
+      "type": "local",
+      "enabled": false,
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "GRAFANA_URL",
+        "-e",
+        "GRAFANA_API_KEY",
+        "mcp/grafana",
+        "-t",
+        "stdio",
+        "--enabled-tools",
+        "search,datasource,loki,searchlogs,prometheus"
+      ],
+      "environment": {
+        "GRAFANA_URL": "http://host.docker.internal:3000",
+        "GRAFANA_API_KEY": "{env:GRAFANA_API_KEY_DEV}"
+      }
+    },
+    "datadog": {
+      "type": "remote",
+      "enabled": false,
+      "url": "https://mcp.datadoghq.eu/api/unstable/mcp-server/mcp",
+      "headers": {
+        "DD_API_KEY": "{env:DD_API_KEY}",
+        "DD_APPLICATION_KEY": "{env:DD_APP_KEY}"
+      }
+    },
+    "tldr": {
+      "type": "local",
+      "enabled": true,
+      "command": ["tldr-mcp", "--project", "."]
     }
   },
   "provider": {

@@ -109,7 +109,7 @@ function y() {
 }
 
 # Copy the current working directory to the clipboard
-function cpwd() {
+function pwdc() {
     if command -v pbcopy &>/dev/null; then
         pwd | tr -d '\n' | pbcopy
     elif command -v wl-copy &>/dev/null; then
