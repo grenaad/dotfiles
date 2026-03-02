@@ -20,3 +20,4 @@ keymap.toml-*
 **/.config/Code/
 !**/settings.json
 !**/keybindings.json
+.mcp_data/
