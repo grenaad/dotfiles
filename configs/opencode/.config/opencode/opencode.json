@@ -160,7 +160,7 @@
     },
     "contextplus": {
       "type": "local",
-      "command": ["bunx", "contextplus"],
+      "command": ["/Users/ice/.config/opencode/start-contextplus.sh"],
       "environment": {
         "OLLAMA_API_BASE": "http://localhost:11434",
         "OLLAMA_EMBED_MODEL": "gemini/text-embedding-004",
