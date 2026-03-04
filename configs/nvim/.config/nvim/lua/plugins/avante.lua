@@ -9,8 +9,8 @@ return {
     "nvim-tree/nvim-web-devicons",
     {
       "MeanderingProgrammer/render-markdown.nvim",
-      opts = { file_types = { "markdown", "Avante" } },
-      ft = { "markdown", "Avante" },
+      opts = { file_types = { "Avante" } },
+      ft = { "Avante" },
     },
   },
   opts = {

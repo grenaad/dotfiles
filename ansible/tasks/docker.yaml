@@ -32,7 +32,7 @@
 
         - name: Add Docker repository
           ansible.builtin.apt_repository:
-            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+            repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
             state: present
           become: true
 
@@ -41,7 +41,7 @@
         name: gnome-terminal
         state: present
       become: true
-      when: ansible_env.XDG_CURRENT_DESKTOP != "GNOME"
+      when: ansible_facts['env']['XDG_CURRENT_DESKTOP'] != "GNOME"
 
     - name: Download Docker Desktop DEB package
       ansible.builtin.get_url:
@@ -65,4 +65,4 @@
         name: docker-desktop
         enabled: yes
         scope: user
-  when: ansible_distribution == "Ubuntu"
+  when: ansible_facts['distribution'] == "Ubuntu"

@@ -1,9 +1,33 @@
+- name: Check if Homebrew is already installed
+  stat:
+    path: /home/linuxbrew/.linuxbrew/bin/brew
+  register: brew_installed
+  tags:
+    - install
+    - homebrew
+
+- name: Create Homebrew directory
+  become: true
+  file:
+    path: /home/linuxbrew/.linuxbrew
+    state: directory
+    owner: "{{ ansible_facts['user_id'] }}"
+    group: "{{ ansible_facts['user_id'] }}"
+    mode: "0755"
+  when: not brew_installed.stat.exists
+  tags:
+    - install
+    - homebrew
+
 - name: Install Homebrew
   become: false
   shell: |
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   args:
     executable: /bin/bash
+  environment:
+    NONINTERACTIVE: "1"
+  when: not brew_installed.stat.exists
   tags:
     - install
     - homebrew
@@ -14,7 +38,7 @@
     path: "{{ lookup('env', 'HOME') }}/.bashrc"
     line: 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
     create: yes
-  when: ansible_os_family == "Debian"
+  when: ansible_facts['os_family'] == "Debian"
   tags:
     - install
     - homebrew
@@ -24,6 +48,10 @@
   community.general.homebrew:
     name:
       - fzf
+      - lazygit
+      - neovim
+      - opencode
+      - yazi
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
   tags:
