@@ -47,10 +47,15 @@
   become: false
   community.general.homebrew:
     name:
+      - bat
       - fzf
+      - git-delta
       - lazygit
       - neovim
       - opencode
+      - ripgrep
+      - tlrc
+      - tmux
       - yazi
     state: present
     path: /home/linuxbrew/.linuxbrew/bin

@@ -12,7 +12,7 @@
       - nvm
       - pyenv
       - stern
-      - tldr
+      - tlrc
       - tmux
       - gnu-sed
       - bat

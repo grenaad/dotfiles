@@ -6,18 +6,12 @@
         "wl-clipboard",
         "zsh",
         "ffmpeg",
-        # "fzf", install with brew
-        "bat",
         "unzip",
         "zip",
-        "tldr",
         "stow",
         "mpv",
-        "tmux",
         "make",
         "parallel",
-        "ripgrep",
-        "delta",
       ]
   become: true
   tags:
