@@ -16,6 +16,6 @@
     executable: /bin/bash
   tags:
     - install
-    - core
+    - dotfiles
     - delta
 

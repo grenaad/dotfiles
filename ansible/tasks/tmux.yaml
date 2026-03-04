@@ -3,6 +3,10 @@
   stat:
     path: "{{ lookup('env', 'HOME') }}/.tmux/plugins/tpm"
   register: tpm_dir
+  tags:
+    - install
+    - dotfiles
+    - tmux
 
 - name: Install TPM (Tmux Plugin Manager)
   shell: git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm

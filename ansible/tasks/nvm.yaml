@@ -4,7 +4,7 @@
     state: present
   tags:
     - install
-    - core
+    - dotfiles
     - nvm
 
 - name: Create .nvm directory
@@ -14,7 +14,7 @@
     mode: '0755'
   tags:
     - install
-    - core
+    - dotfiles
     - nvm
 
 - name: Add nvm configuration to .zshrc
@@ -28,7 +28,7 @@
     create: yes
   tags:
     - install
-    - core
+    - dotfiles
     - nvm
 
 - name: Add nvm configuration to .bashrc
@@ -42,7 +42,7 @@
     create: yes
   tags:
     - install
-    - core
+    - dotfiles
     - nvm
 
 - name: Install Node.js LTS via nvm
@@ -55,5 +55,5 @@
     executable: /bin/bash
   tags:
     - install
-    - core
+    - dotfiles
     - nvm

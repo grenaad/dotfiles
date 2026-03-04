@@ -5,6 +5,6 @@
     executable: /bin/bash
   tags:
     - install
-    - core
+    - dotfiles
     - rust
   become: true

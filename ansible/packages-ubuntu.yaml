@@ -12,11 +12,13 @@
         "mpv",
         "make",
         "parallel",
+        "tmux",
       ]
   become: true
   tags:
     - install
-    - core
+    - dotfiles
+    - packages
 
 - include_tasks: tasks/vscode.yaml
 # Install Docker Desktop

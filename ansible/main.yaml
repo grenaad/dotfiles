@@ -24,7 +24,15 @@
         executable: /bin/bash
       tags:
         - install
-        - core
+        - dotfiles
+        - stow
+
+    - name: Install tmux plugins via TPM
+      shell: ~/.tmux/plugins/tpm/bin/install_plugins
+      tags:
+        - install
+        - dotfiles
+        - tmux
 
     - name: Add zsh to .bashrc
       lineinfile:
@@ -33,6 +41,9 @@
         line: "zsh"
         state: present
         create: yes
+      tags:
+        - install
+        - dotfiles
 
     - name: Add zsh configs to main .zshrc
       lineinfile:
@@ -41,3 +52,6 @@
         line: "source ~/.zshrc_init"
         state: present
         create: yes
+      tags:
+        - install
+        - dotfiles

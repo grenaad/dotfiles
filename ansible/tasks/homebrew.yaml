@@ -55,10 +55,10 @@
       - opencode
       - ripgrep
       - tlrc
-      - tmux
       - yazi
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
   tags:
     - install
     - homebrew
+    - packages

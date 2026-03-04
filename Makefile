@@ -1,4 +1,4 @@
-.PHONY: help install core dotfiles env ssh git nvm rust packages stow check install_ansible
+.PHONY: help install dotfiles packages env ssh git stow unstow check install_ansible
 
 # Default target
 help:
@@ -8,7 +8,6 @@ help:
 	@echo ""
 	@echo "Main targets:"
 	@echo "  install    - Run full installation (all tasks)"
-	@echo "  core       - Install core packages and tools"
 	@echo "  dotfiles   - Install dotfiles configurations"
 	@echo "  packages   - Install OS-specific packages"
 	@echo "  stow       - Run stow for all configs"
@@ -17,11 +16,9 @@ help:
 	@echo "  env        - Copy .env file"
 	@echo "  ssh        - Setup SSH configurations"
 	@echo "  git        - Setup Git configurations"
-	@echo "  nvm        - Install Node Version Manager"
-	@echo "  rust       - Install Rust toolchain"
-	@echo "  neovim     - Install Neovim"
 	@echo "  ghostty    - Install Ghostty terminal"
-	@echo "  opencode   - Install OpenCode"
+	@echo "  homebrew   - Install Homebrew and packages"
+	@echo "  tmux       - Install tmux plugins"
 	@echo ""
 	@echo "Utility targets:"
 	@echo "  check      - Run ansible-playbook syntax check"
@@ -38,10 +35,6 @@ check:
 # Full installation
 install: 
 	cd ansible && ansible-playbook main.yaml --ask-become-pass --ask-vault-pass
-
-# Core packages and tools
-core: 
-	cd ansible && ansible-playbook main.yaml --tags core
 
 # Dotfiles configurations
 dotfiles: 
@@ -61,14 +54,14 @@ ssh:
 git: 
 	cd ansible && ansible-playbook main.yaml --tags git --ask-vault-pass
 
-neovim:
-	cd ansible && ansible-playbook main.yaml --tags neovim
-
 ghostty:
 	cd ansible && ansible-playbook main.yaml --tags ghostty
 
-opencode:
-	cd ansible && ansible-playbook main.yaml --tags opencode
+homebrew:
+	cd ansible && ansible-playbook main.yaml --tags homebrew
+
+tmux:
+	cd ansible && ansible-playbook main.yaml --tags tmux
 
 # Run stow manually
 stow:
@@ -82,12 +75,12 @@ unstow:
 install-verbose:
 	cd ansible && ansible-playbook main.yaml -v
 
-core-verbose:
-	cd ansible && ansible-playbook main.yaml --tags core -v
+dotfiles-verbose:
+	cd ansible && ansible-playbook main.yaml --tags dotfiles -v
 
 # Dry run targets
 install-dry:
 	cd ansible && ansible-playbook main.yaml --check
 
-core-dry:
-	cd ansible && ansible-playbook main.yaml --tags core --check
+dotfiles-dry:
+	cd ansible && ansible-playbook main.yaml --tags dotfiles --check
