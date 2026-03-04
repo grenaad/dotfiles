@@ -1,84 +1,44 @@
-# WSL2 setup
-Create `projects` in Win User dir, then `ln -s /mnt/c/Users/ice/projects ~/projects` from wsl2.
-Git clone this repo in `~/projects`
+# Windows / WSL2 Setup
 
-``` cmd
-mklink /h "C:\Users\ice\.ideavimrc" "C:\Users\ice\projects\dotfiles\.ideavimrc" 
-``` 
+## WSL2
 
-``` cmd
-mkdir "C:\Users\ice\AppData\Roaming\VSCodium\User"
-del "C:\Users\ice\AppData\Roaming\VSCodium\User\settings.json"
-del "C:\Users\ice\AppData\Roaming\VSCodium\User\keybindings.json"
-mklink /h "C:\Users\ice\AppData\Roaming\VSCodium\User\keybindings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\keybindings.json"
-mklink /h "C:\Users\ice\AppData\Roaming\VSCodium\User\settings.json" "C:\Users\ice\projects\dotfiles\configs\vscode\.config\Code\User\settings.json"
+Create `projects` in Windows user directory, then symlink from WSL2:
 
-codium  --list-extensions --show-versions 
-
-codium --install-extension asvetliakov.vscode-neovim
-codium --install-extension VSpaceCode.whichkey
-codium --install-extension jdinhlife.gruvbox
-codium  --install-extension eamodio.gitlens
+```bash
+ln -s /mnt/c/Users/ice/projects ~/projects
 ```
 
-[Meslo Nerd fonts](https://github.com/romkatv/dotfiles-public/tree/master/.local/share/fonts/NerdFonts)
+Git clone this repo in `~/projects`.
 
-``` bash
-cat ~/projects/dotfiles/vscode/extensions.txt | xargs -n 1 code-insiders --install-extension
-```
+## Install Chocolatey
 
-# Install packages using winget
-``` powershell
-winget install -e Microsoft.WindowsTerminal
-winget install -e Microsoft.AzureDataStudio
-winget install -e Mozilla.Firefox
-winget install -e Google.Chrome --force
-winget install -e BraveSoftware.BraveBrowser
-winget install -e OBSProject.OBSStudio
-winget install -e Git.Git
-winget install -e SlackTechnologies.Slack
-winget install -e WinDirStat.WinDirStat
-winget install -e SumatraPDF.SumatraPDF
-winget install -e Python.Python
-winget install -e Microsoft.dotnet
-winget install -e TeamViewer.TeamViewer --force
-winget install -e DigitalScholar.Zotero
-winget install -e TheDocumentFoundation.LibreOffice
-winget install -e Valve.Steam
-winget install -e Oracle.VirtualBox
-winget install -e VMware.WorkstationPlayer
-winget install -e NordVPN.NordVPN
-winget install -e JetBrains.IntelliJIDEA.Ultimate
-winget install -e Google.AndroidStudio
-winget install -e 7zip.7zip
-winget install -e Ytmdesktop.Ytmdesktop
-winget install -e --id VSCodium.VSCodium
-winget install -e Chocolatey.ChocolateyGUI
-winget install Neovim.Neovim
-```
+Launch Admin PowerShell:
 
-# Install packages using choco
-
-### Launch Admin PowerShell
-Install Chocolatey
-``` powershell
+```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 ```
 
-``` powershell
-choco install -y mpv
+## Install Packages
 
-# R statistics
-choco install -y r.project
-choco install -y r.studio
-
-choco install -y miktex
+```powershell
+choco install -y docker-desktop
+choco install -y fzf
+choco install -y microsoft-windows-terminal
+choco install -y mpv.install
+choco install -y nerd-fonts-JetBrainsMono
+choco install -y opencode
+choco install -y ripgrep
+choco install -y steam
+choco install -y tailscale
+choco install -y unzip
+choco install -y vnc-viewer
+choco install -y vscode.install
+choco install -y wezterm
+choco install -y zen-browser
 ```
-# Debloat Windows 10 in 2021
-see [christitus.com](https://christitus.com/debloat-windows-10-2020/#january-2021-update)
 
-``` powershell
-iex ((New-Object System.Net.WebClient).DownloadString('https://git.io/JJ8R4'))
+## VS Code Config Symlinks
 
+```cmd
+mklink /h "C:\Users\ice\.ideavimrc" "C:\Users\ice\projects\dotfiles\.ideavimrc"
 ```
-

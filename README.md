@@ -1,103 +1,83 @@
-# Dot Files
+# Dotfiles
 
-Current dofiles is separated into 2 parts, `configs/` which stores all the configs and `ansible/` that used to install all the applications. Ansible is used for both macos and ubunut.
+Dotfiles separated into two parts: `configs/` stores all configuration files and `ansible/` handles installation of applications. Ansible supports both macOS and Ubuntu/WSL.
+
+## Quick Start
+
+```bash
+# Install Ansible
+make install_ansible
+
+# Run full setup (installs packages, symlinks configs, sets up shell)
+make install
+```
+
+See `make help` for all available targets.
 
 ## Configs
 
 See: `configs/`
 
-This is using `stow` to symbolic link config files from this repo to the system.
+Uses `stow` to symlink config files from this repo to the system.
 
-Examples
-
-just using symlinking the nvim directory:
+Symlink a single config:
 
 ```bash
 stow -t ~/ nvim
 ```
 
-all directories(all configs)
+Symlink all configs:
 
 ```bash
 stow -t ~/ */
 ```
 
+Unsymlink all configs:
+
+```bash
+make unstow
+```
+
+### Available Configs
+
+`aerospace`, `ghostty`, `idea`, `lazygit`, `nerdfonts`, `nvim`, `opencode`, `raycast`, `scripts`, `sketchy_bar`, `tiling`, `tmux`, `vscode`, `yazi`, `zsh`
+
 ## Ansible
 
-Using ansible to install most core applications for the different OS. See `./ansible/README.md`
+Uses Ansible to install applications for both macOS and Ubuntu/WSL. See `ansible/README.md` for details.
 
-## Other
+### Key Make Targets
 
-### Vim cheat sheet
+| Target | Description |
+|---|---|
+| `make install` | Full installation |
+| `make dotfiles` | Dotfiles configurations only |
+| `make packages` | OS-specific packages only |
+| `make stow` | Symlink all configs |
+| `make homebrew` | Homebrew and CLI packages |
+| `make tmux` | Tmux plugins |
 
-https://gist.github.com/tuxfight3r/0dca25825d9f2608714b
+## Tips
 
 ### Mpv
 
-Add keyboard shortcut to play links copied to clipboard, `libnotify-bin` package contains bin `notify-send`
+Add keyboard shortcut to play links copied to clipboard (`libnotify-bin` package contains `notify-send`):
 
 ```bash
 sh -c 'notify-send -t 7000 --icon=mpv "Playing video" "$(xclip -selection clipboard -o)"; mpv "$(xclip -selection clipboard -o)"'
 ```
 
-### VsCode
+### VS Code
 
-Ctrl+Shift+E inserts special characters into file instead of showing Explorer Pane in VS Code
-Run `ibus-setup` in the terminal. A GUI dialog will open.
-Go to the 'Emoji' tab --> Ellipsis(...) buttton --> Delete --> OK.
-
-## Switching Windows in Ubuntu
-
-See [this post](https://techwiser.com/ubuntu-alt-tab-ungroup/)
-
-To turn on switch-windows instead of switch-applications
-
-```bash
-gsettings set org.gnome.desktop.wm.keybindings switch-windows "['<Alt>Tab']"
-```
-
-To revert
-
-```bash
-gsettings set org.gnome.desktop.wm.keybindings switch-windows []
-gsettings set org.gnome.desktop.wm.keybindings switch-applications "['<Alt>Tab']"
-```
-
-Can also be done with GUI settings in Keybord shortcuts, add the `Alt+Tab` shortcut to `Switch windows`
-
-### Tmux
-
-TODO: look into vi mode
-tmux has a built-in vi-mode for copy mode
-
-```
-set-window-option -g mode-keys vi
-bind-key -t vi-copy v begin-selection
-bind-key -t vi-copy y copy-selection
-```
-
-prefix + [ enter copy mode
-V visually select lines
-v toggle visual block mode
-space start selection
-enter copy it and leave copy mode
-
-### F#
-
-```bash
-PATH=$PATH:~/.dotnet/tools/
-dotnet tool install --global fsautocomplete
-```
+`Ctrl+Shift+E` inserts special characters instead of showing Explorer Pane.
+Fix: run `ibus-setup` in the terminal, go to the Emoji tab, click the ellipsis (...) button, delete, and OK.
 
 ### Windows
 
-For nerdfont installation
+For Nerd Font installation:
 
 ```
-curl.exe https://webi.ms/nerdfont | powershell
+choco install nerd-fonts-jetbrainsmono
 ```
 
-```
-yabai --start-service
-shkd --start-service
-```
+See `install_win.md` for Windows-specific setup.
