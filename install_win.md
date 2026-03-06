@@ -24,7 +24,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco install -y docker-desktop
 choco install -y fzf
 choco install -y microsoft-windows-terminal
-choco install -y mpv.install
+choco install -y mpvio
 choco install -y nerd-fonts-JetBrainsMono
 choco install -y opencode
 choco install -y ripgrep
