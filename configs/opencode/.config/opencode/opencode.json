@@ -3,7 +3,7 @@
   "plugin": [
     "opencode-anthropic-auth@latest",
     "opencode-pty",
-    "opencode-antigravity-auth@beta"
+    "opencode-gemini-auth@latest"
   ],
   "lsp": {
     "scala-lsp": {
@@ -137,7 +137,7 @@
         "-t",
         "stdio",
         "--enabled-tools",
-        "search,datasource,loki,searchlogs,prometheus"
+        "search,datasource,searchlogs,prometheus"
       ],
       "environment": {
         "GRAFANA_URL": "http://host.docker.internal:3000",
@@ -166,6 +166,13 @@
         "OLLAMA_HOST": "http://100.103.182.62:11434",
         "OLLAMA_EMBED_MODEL": "nomic-embed-text",
         "OLLAMA_CHAT_MODEL": "gemma3:4b"
+      }
+    }
+  },
+  "provider": {
+    "google": {
+      "options": {
+        "projectId": "opencode-dev-489617"
       }
     }
   }
