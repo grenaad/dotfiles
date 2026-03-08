@@ -1,0 +1,11 @@
+- name: Install uv via curl
+  become: false
+  shell: |
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/uv"
+  tags:
+    - install
+    - dotfiles
+    - uv

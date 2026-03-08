@@ -38,6 +38,7 @@
       - txn2/tap/kubefwd # port forword to kubernetes
       - gh # Github CLI
       - bun
+      - uv
 
       # yazi and all its dependencies
       - yazi # yazi, and it's dependencies

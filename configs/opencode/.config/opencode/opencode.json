@@ -156,10 +156,11 @@
     "tldr": {
       "type": "local",
       "enabled": true,
-      "command": ["tldr-mcp", "--project", "."]
+      "command": ["uvx", "--from", "llm-tldr", "tldr-mcp", "--project", "."],
     },
     "contextplus": {
       "type": "local",
+      "enabled": true,
       "command": ["bunx", "contextplus"],
       "timeout": 60000,
       "environment": {
