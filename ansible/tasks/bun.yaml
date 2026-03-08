@@ -1,0 +1,39 @@
+- name: Install bun via curl
+  become: false
+  shell: |
+    curl -fsSL https://bun.sh/install | bash
+  args:
+    executable: /bin/bash
+    creates: "{{ lookup('env', 'HOME') }}/.bun/bin/bun"
+  tags:
+    - install
+    - dotfiles
+    - bun
+
+- name: Add bun to zshrc
+  become: false
+  blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.zshrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - BUN"
+    block: |
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+    create: yes
+  tags:
+    - install
+    - dotfiles
+    - bun
+
+- name: Add bun to bashrc
+  become: false
+  blockinfile:
+    path: "{{ lookup('env', 'HOME') }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - BUN"
+    block: |
+      export BUN_INSTALL="$HOME/.bun"
+      export PATH="$BUN_INSTALL/bin:$PATH"
+    create: yes
+  tags:
+    - install
+    - dotfiles
+    - bun

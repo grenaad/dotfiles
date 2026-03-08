@@ -12,6 +12,8 @@
     # Install OS specific packages
     - include_tasks: packages-ubuntu.yaml
       when: ansible_facts['distribution'] == "Ubuntu" or ansible_facts['distribution'] == "Pop!_OS"
+      tags:
+        - always
 
     - include_tasks: packages-macos.yaml
       when: ansible_facts['os_family'] == "Darwin"

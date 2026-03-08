@@ -37,6 +37,7 @@
       - sst/tap/opencode
       - txn2/tap/kubefwd # port forword to kubernetes
       - gh # Github CLI
+      - bun
 
       # yazi and all its dependencies
       - yazi # yazi, and it's dependencies
@@ -84,6 +85,7 @@
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
+      - oven-sh/bun
 
   roles:
     - geerlingguy.mac.homebrew
