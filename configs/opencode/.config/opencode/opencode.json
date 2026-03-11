@@ -160,12 +160,12 @@
     },
     "tldr": {
       "type": "local",
-      "enabled": true,
+      "enabled": false,
       "command": ["uvx", "--from", "llm-tldr", "tldr-mcp", "--project", "."]
     },
     "contextplus": {
       "type": "local",
-      "enabled": true,
+      "enabled": false,
       "command": ["bunx", "contextplus"],
       "timeout": 60000,
       "environment": {
