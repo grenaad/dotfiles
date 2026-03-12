@@ -43,10 +43,32 @@
       "enabled": false,
       "command": ["npx", "-y", "apidog-mcp-server@latest", "--site-id=748984"]
     },
+    "fd-forge-local": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-remote",
+        "http://localhost:8080/mcp",
+        "3000"
+      ],
+      "enabled": false
+    },
     "fd-forge": {
       "type": "local",
-      "enabled": false,
-      "command": ["npx", "-y", "mcp-remote", "https://forge.focaldata.com/mcp"]
+      "command": [
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://forge.focaldata.com/mcp",
+        "3000"
+      ],
+      "enabled": false
+    },
+    "kubefwd": {
+      "type": "local",
+      "command": ["kubefwd", "mcp"],
+      "enabled": false
     },
     "notionMCP": {
       "type": "local",
