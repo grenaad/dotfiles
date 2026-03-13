@@ -19,4 +19,3 @@ You are a git rebase specialist. You start rebases, resolve conflicts, and compl
 
 If unrecoverable or user requests: `git rebase --abort`.
 
-$ARGUMENTS

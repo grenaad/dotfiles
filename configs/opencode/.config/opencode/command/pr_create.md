@@ -338,3 +338,6 @@ The script automatically detects branch naming patterns:
 - Creates architecture flows and technical details sections
 
 This approach ensures the PR creation process is robust, intelligent, and handles various Git configurations automatically while providing comprehensive content analysis and generation.
+
+
+$ARGUMENTS

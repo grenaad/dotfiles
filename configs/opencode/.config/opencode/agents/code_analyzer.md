@@ -29,4 +29,3 @@ Check `contextplus_search_memory_graph` first. Persist discoveries with `context
 - Skeleton before full read. Structure before content.
 - Return findings as: file_path:line_number with one-line explanation.
 
-$ARGUMENTS
