@@ -1,5 +1,6 @@
 ---
 description: Generates SVG diagrams — flowcharts, sequence diagrams, and architecture diagrams — as clean, hand-crafted SVG files
+mode: subagent
 tools:
   write: true
   read: true
