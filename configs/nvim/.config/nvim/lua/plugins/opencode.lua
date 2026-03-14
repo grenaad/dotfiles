@@ -2,10 +2,28 @@
 
 return {
   "NickvanDyke/opencode.nvim",
+  version = "*",
   dependencies = {
-    -- Recommended for `ask()` and `select()`.
-    -- Required for `toggle()`.
-    { "folke/snacks.nvim", opts = { input = {}, picker = {}, terminal = {} } },
+    {
+      ---@module "snacks"
+      "folke/snacks.nvim",
+      opts = {
+        input = {},
+        terminal = {},
+        picker = {
+          actions = {
+            opencode_send = function(...) return require("opencode").snacks_picker_send(...) end,
+          },
+          win = {
+            input = {
+              keys = {
+                ["<a-a>"] = { "opencode_send", mode = { "n", "i" } },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   init = function()
     ---@type opencode.Opts
@@ -20,12 +38,12 @@ return {
       opts = {
         mappings = {
           n = {
-            ["<Leader>O"] = {
-              function()
-                require("neo-tree.command").execute({ action = "focus" })
-              end,
-              desc = "Neotree focus",
-            },
+            -- ["<Leader>O"] = {
+            --   function()
+            --     require("neo-tree.command").execute({ action = "focus" })
+            --   end,
+            --   desc = "Neotree focus",
+            -- },
             ["<Leader>o"] = { desc = "OpenCode" },
             ["<Leader>oa"] = {
               function()
@@ -50,12 +68,6 @@ return {
                 require("opencode").toggle()
               end,
               desc = "Toggle embedded",
-            },
-            ["<Leader>oc"] = {
-              function()
-                require("opencode").select()
-              end,
-              desc = "Select command",
             },
             ["<Leader>on"] = {
               function()
@@ -110,12 +122,6 @@ return {
                 require("opencode").ask("@this: ", { submit = true })
               end,
               desc = "Ask about this",
-            },
-            ["<Leader>os"] = {
-              function()
-                require("opencode").select()
-              end,
-              desc = "Select prompt",
             },
             ["<Leader>o+"] = {
               function()

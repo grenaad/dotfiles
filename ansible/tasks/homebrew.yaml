@@ -55,6 +55,7 @@
       - sst/tap/opencode
       - ripgrep
       - tlrc
+      - uv
       - yazi
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
