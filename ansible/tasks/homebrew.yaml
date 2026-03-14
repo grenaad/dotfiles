@@ -52,7 +52,7 @@
       - git-delta
       - lazygit
       - neovim
-      - opencode
+      - sst/tap/opencode
       - ripgrep
       - tlrc
       - yazi
