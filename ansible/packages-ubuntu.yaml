@@ -10,9 +10,9 @@
         "zip",
         "stow",
         "mpv",
-        "make",
         "parallel",
         "tmux",
+        "build-essential",
       ]
   become: true
   tags:
