@@ -6,6 +6,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
 fi
 
 alias w="whisper --language English --output_format txt"
+alias opencode_web="opencode web --hostname 0.0.0.0 --port 4096"
 
 # Macos Automator:
 # export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
