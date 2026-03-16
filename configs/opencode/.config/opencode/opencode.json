@@ -195,6 +195,22 @@
         "OLLAMA_EMBED_MODEL": "nomic-embed-text",
         "OLLAMA_CHAT_MODEL": "gemma3:4b"
       }
+    },
+    "float": {
+      "type": "local",
+      "command": [
+        "/Users/ice/.local/bin/uv",
+        "--directory",
+        "/Users/ice/projects/float/mcp",
+        "run",
+        "fastmcp",
+        "run",
+        "server.py:mcp"
+      ],
+      "environment": {
+        "FLOAT_EMAIL": "your-email@example.com",
+        "FLOAT_PASSWORD": "your-password"
+      }
     }
   },
   "provider": {

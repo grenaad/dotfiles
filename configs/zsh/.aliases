@@ -14,6 +14,7 @@ alias opencode_web="opencode web --hostname 0.0.0.0 --port 4096"
 alias metatrader="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/terminal64.exe"
 alias metaeditor="WINEPREFIX='/Users/ice/.wine' wine ~/.wine/drive_c/Program\ Files/GoMetaTrader5/metaeditor64.exe"
 
+alias kf="sudo -E kubefwd --tui"
 alias eoc="vim ~/.config/opencode/opencode.json"  
 alias ec="vim ~/Library/Application\ Support/Claude/claude_desktop_config.json"  
 alias lg="lazygit"
