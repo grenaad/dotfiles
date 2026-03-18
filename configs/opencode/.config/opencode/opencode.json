@@ -50,7 +50,7 @@
         "-y",
         "mcp-remote",
         "http://localhost:8080/mcp",
-        "3000"
+        "19876"
       ],
       "enabled": false
     },
@@ -61,7 +61,7 @@
         "-y",
         "mcp-remote",
         "https://forge.focaldata.com/mcp",
-        "3000"
+        "19876"
       ],
       "enabled": false
     },
@@ -198,6 +198,7 @@
     },
     "float": {
       "type": "local",
+      "enabled": false,
       "command": [
         "/Users/ice/.local/bin/uv",
         "--directory",
