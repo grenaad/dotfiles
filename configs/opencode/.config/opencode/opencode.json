@@ -52,7 +52,7 @@
         "http://localhost:8080/mcp",
         "19876"
       ],
-      "enabled": false
+      "enabled": true
     },
     "fd-forge": {
       "type": "local",
@@ -209,8 +209,8 @@
         "server.py:mcp"
       ],
       "environment": {
-        "FLOAT_EMAIL": "your-email@example.com",
-        "FLOAT_PASSWORD": "your-password"
+        "FLOAT_EMAIL": "{env:FLOAT_EMAIL}",
+        "FLOAT_PASSWORD": "{env:FLOAT_PASSWORD}"
       }
     }
   },
