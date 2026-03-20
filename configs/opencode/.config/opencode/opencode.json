@@ -215,6 +215,11 @@
     }
   },
   "provider": {
+    "anthropic": {
+      "options": {
+        "baseURL": "http://127.0.0.1:8317/v1"
+      }
+    },
     "google": {
       "options": {
         "projectId": "opencode-dev-489617"

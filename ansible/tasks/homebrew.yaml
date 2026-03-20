@@ -57,9 +57,20 @@
       - tlrc
       - uv
       - yazi
+      - cliproxyapi
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
   tags:
     - install
     - homebrew
     - packages
+
+- name: Start cliproxyapi service
+  become: false
+  shell: /home/linuxbrew/.linuxbrew/bin/brew services start cliproxyapi
+  register: cliproxyapi_service
+  changed_when: "'Successfully started' in cliproxyapi_service.stdout"
+  failed_when: false
+  tags:
+    - install
+    - homebrew

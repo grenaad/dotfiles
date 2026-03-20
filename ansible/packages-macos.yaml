@@ -58,6 +58,8 @@
       - sf-pro
       - font-sketchybar-app-font
 
+      - cliproxyapi
+
     homebrew_cask_apps:
       - docker
       - firefox
@@ -91,4 +93,11 @@
   roles:
     - geerlingguy.mac.homebrew
 
+  tasks:
     - include_tasks: tasks/mpv.yaml
+
+    - name: Start cliproxyapi service
+      shell: brew services start cliproxyapi
+      register: cliproxyapi_service
+      changed_when: "'Successfully started' in cliproxyapi_service.stdout"
+      failed_when: false
