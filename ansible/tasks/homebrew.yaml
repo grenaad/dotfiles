@@ -57,7 +57,6 @@
       - tlrc
       - uv
       - yazi
-      - cliproxyapi
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
   tags:
@@ -65,12 +64,12 @@
     - homebrew
     - packages
 
-- name: Start cliproxyapi service
+- name: Install cliproxyapi via Linux installer
   become: false
-  shell: /home/linuxbrew/.linuxbrew/bin/brew services start cliproxyapi
-  register: cliproxyapi_service
-  changed_when: "'Successfully started' in cliproxyapi_service.stdout"
-  failed_when: false
+  shell: |
+    curl -fsSL https://raw.githubusercontent.com/brokechubb/cliproxyapi-installer/refs/heads/master/cliproxyapi-installer | bash
+  args:
+    executable: /bin/bash
   tags:
     - install
     - homebrew
