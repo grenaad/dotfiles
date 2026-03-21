@@ -52,7 +52,7 @@
         "http://localhost:8080/mcp",
         "19876"
       ],
-      "enabled": true,
+      "enabled": false,
       "timeout": 120000
     },
     "fd-forge": {

@@ -96,6 +96,24 @@
   tasks:
     - include_tasks: tasks/mpv.yaml
 
+    - name: Configure cliproxyapi API key
+      lineinfile:
+        path: /opt/homebrew/etc/cliproxyapi.conf
+        regexp: '^\s*- "sk-mykey"'
+        line: '  - "key"'
+      tags:
+        - install
+        - packages
+
+    - name: Configure cliproxyapi routing strategy
+      lineinfile:
+        path: /opt/homebrew/etc/cliproxyapi.conf
+        regexp: '^\s*strategy:.*'
+        line: '  strategy: "fill-first"'
+      tags:
+        - install
+        - packages
+
     - name: Start cliproxyapi service
       shell: brew services start cliproxyapi
       register: cliproxyapi_service
