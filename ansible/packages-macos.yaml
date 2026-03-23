@@ -96,26 +96,20 @@
   tasks:
     - include_tasks: tasks/mpv.yaml
 
-    - name: Configure cliproxyapi API key
-      lineinfile:
-        path: /opt/homebrew/etc/cliproxyapi.conf
-        regexp: '^\s*- "sk-mykey"'
-        line: '  - "key"'
-      tags:
-        - install
-        - packages
-
-    - name: Configure cliproxyapi routing strategy
-      lineinfile:
-        path: /opt/homebrew/etc/cliproxyapi.conf
-        regexp: '^\s*strategy:.*'
-        line: '  strategy: "fill-first"'
-      tags:
-        - install
-        - packages
-
-    - name: Start cliproxyapi service
-      shell: brew services start cliproxyapi
-      register: cliproxyapi_service
-      changed_when: "'Successfully started' in cliproxyapi_service.stdout"
+    - name: Stop and unload cliproxyapi brew service
+      shell: |
+        brew services stop cliproxyapi
+        launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/homebrew.mxcl.cliproxyapi.plist 2>/dev/null || true
       failed_when: false
+      tags:
+        - install
+        - packages
+
+    - name: Load custom cliproxyapi service
+      shell: launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.cliproxyapi.plist
+      register: cliproxyapi_load
+      changed_when: cliproxyapi_load.rc == 0
+      failed_when: false
+      tags:
+        - install
+        - packages

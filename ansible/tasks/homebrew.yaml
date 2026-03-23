@@ -73,3 +73,23 @@
   tags:
     - install
     - homebrew
+
+- name: Reload systemd user daemon
+  become: false
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    scope: user
+  tags:
+    - install
+    - homebrew
+
+- name: Enable and start cliproxyapi systemd service
+  become: false
+  ansible.builtin.systemd:
+    name: cliproxyapi
+    enabled: yes
+    state: started
+    scope: user
+  tags:
+    - install
+    - homebrew
