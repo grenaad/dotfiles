@@ -1,7 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    "opencode-claude-auth",
     "opencode-anthropic-auth@latest",
     "opencode-pty",
     "opencode-gemini-auth@latest"
