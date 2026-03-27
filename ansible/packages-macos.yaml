@@ -80,11 +80,13 @@
       - zen
       - raycast
       - font-jetbrains-mono-nerd-font
+
       # Aerospace and SketchyBar
       - nikitabobko/tap/aerospace
       - FelixKratz/formulae/sketchybar
       - FelixKratz/formulae/borders
       - sf-symbols # SketchyBar font
+
       - notunes # Stops Music/iTunes from launching, need to add the login item in System Preferences
 
     homebrew_taps:
