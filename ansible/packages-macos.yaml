@@ -85,6 +85,7 @@
       - FelixKratz/formulae/sketchybar
       - FelixKratz/formulae/borders
       - sf-symbols # SketchyBar font
+      - notunes # Stops Music/iTunes from launching, need to add the login item in System Preferences
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
