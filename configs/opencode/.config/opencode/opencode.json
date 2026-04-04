@@ -3,12 +3,19 @@
   "plugin": [
     "opencode-anthropic-auth@latest",
     "opencode-pty",
-    "opencode-gemini-auth@latest"
+    "opencode-gemini-auth@latest",
+    "@rynfar/meridian/plugin/meridian.ts"
   ],
   "lsp": {
     "scala-lsp": {
-      "command": ["metals"],
-      "extensions": [".scala", ".sc", ".sbt"]
+      "command": [
+        "metals"
+      ],
+      "extensions": [
+        ".scala",
+        ".sc",
+        ".sbt"
+      ]
     }
   },
   "agent": {
@@ -22,7 +29,10 @@
     "dart": {
       "type": "local",
       "enabled": false,
-      "command": ["dart", "mcp-server"]
+      "command": [
+        "dart",
+        "mcp-server"
+      ]
     },
     "mcp-obsidian": {
       "type": "local",
@@ -41,7 +51,12 @@
     "PureSpectrum": {
       "type": "local",
       "enabled": false,
-      "command": ["npx", "-y", "apidog-mcp-server@latest", "--site-id=748984"]
+      "command": [
+        "npx",
+        "-y",
+        "apidog-mcp-server@latest",
+        "--site-id=748984"
+      ]
     },
     "fd-forge-local": {
       "type": "local",
@@ -68,13 +83,21 @@
     },
     "kubefwd": {
       "type": "local",
-      "command": ["kubefwd", "mcp"],
+      "command": [
+        "kubefwd",
+        "mcp"
+      ],
       "enabled": false
     },
     "notionMCP": {
       "type": "local",
       "enabled": false,
-      "command": ["npx", "-y", "mcp-remote", "https://mcp.notion.com/mcp"]
+      "command": [
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://mcp.notion.com/mcp"
+      ]
     },
     "focaldata": {
       "type": "local",
@@ -91,7 +114,11 @@
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "@playwright/mcp@latest", "--extension"],
+      "command": [
+        "npx",
+        "@playwright/mcp@latest",
+        "--extension"
+      ],
       "enabled": false
     },
     "mcp-atlassian": {
@@ -121,7 +148,11 @@
     "digitalocean": {
       "type": "local",
       "enabled": false,
-      "command": ["npx", "-y", "@digitalocean/mcp"],
+      "command": [
+        "npx",
+        "-y",
+        "@digitalocean/mcp"
+      ],
       "environment": {
         "DIGITALOCEAN_API_TOKEN": "{env:DIGITALOCEAN_ACCESS_TOKEN}"
       }
@@ -184,12 +215,22 @@
     "tldr": {
       "type": "local",
       "enabled": false,
-      "command": ["uvx", "--from", "llm-tldr", "tldr-mcp", "--project", "."]
+      "command": [
+        "uvx",
+        "--from",
+        "llm-tldr",
+        "tldr-mcp",
+        "--project",
+        "."
+      ]
     },
     "contextplus": {
       "type": "local",
       "enabled": false,
-      "command": ["bunx", "contextplus"],
+      "command": [
+        "bunx",
+        "contextplus"
+      ],
       "timeout": 60000,
       "environment": {
         "OLLAMA_HOST": "http://100.103.182.62:11434",
