@@ -259,7 +259,8 @@
   "provider": {
     "anthropic": {
       "options": {
-        "baseURL": "http://100.65.21.71:8317/v1"
+        "baseURL": "http://127.0.0.1:3456",
+        "apiKey": "dummy"
       }
     },
     "google": {
