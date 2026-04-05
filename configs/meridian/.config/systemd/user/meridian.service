@@ -1,0 +1,10 @@
+[Unit]
+Description=Meridian - Claude Max API Proxy
+After=network.target
+
+[Service]
+ExecStart=/bin/bash -lc 'meridian'
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

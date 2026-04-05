@@ -1,0 +1,43 @@
+- name: Install Meridian globally via npm
+  ansible.builtin.shell: |
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh" ] && \. "/home/linuxbrew/.linuxbrew/opt/nvm/nvm.sh"
+    [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
+    npm install -g @rynfar/meridian
+  args:
+    executable: /bin/bash
+  tags:
+    - install
+    - meridian
+
+- name: Reload systemd user daemon (Linux)
+  become: false
+  ansible.builtin.systemd:
+    daemon_reload: yes
+    scope: user
+  when: ansible_facts['os_family'] != "Darwin"
+  tags:
+    - install
+    - meridian
+
+- name: Enable and start Meridian systemd service (Linux)
+  become: false
+  ansible.builtin.systemd:
+    name: meridian
+    enabled: yes
+    state: started
+    scope: user
+  when: ansible_facts['os_family'] != "Darwin"
+  tags:
+    - install
+    - meridian
+
+- name: Load Meridian LaunchAgent (macOS)
+  shell: launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.meridian.plist
+  register: meridian_load
+  changed_when: meridian_load.rc == 0
+  failed_when: false
+  when: ansible_facts['os_family'] == "Darwin"
+  tags:
+    - install
+    - meridian

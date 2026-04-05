@@ -22,6 +22,8 @@
 
 - include_tasks: tasks/vscode.yaml
 - import_tasks: tasks/homebrew.yaml
+- import_tasks: tasks/nvm.yaml
 - import_tasks: tasks/rust.yaml
 - import_tasks: tasks/bun.yaml
+- import_tasks: tasks/meridian.yaml
 

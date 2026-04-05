@@ -4,20 +4,20 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.cliproxyapi</string>
+    <string>com.meridian</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/opt/homebrew/opt/cliproxyapi/bin/cliproxyapi</string>
-        <string>-config</string>
-        <string>/Users/ice/.config/cliproxyapi/config.yaml</string>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>meridian</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/tmp/cliproxyapi.log</string>
+    <string>/tmp/meridian.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/cliproxyapi.err</string>
+    <string>/tmp/meridian.err</string>
 </dict>
 </plist>
