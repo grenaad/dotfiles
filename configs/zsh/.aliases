@@ -8,6 +8,8 @@ fi
 alias w="whisper --language English --output_format txt"
 alias opencode_web="opencode web --hostname 0.0.0.0 --port 4096"
 
+alias claude="claude --dangerously-skip-permissions"
+
 # Macos Automator:
 # export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 # WINEPREFIX="/Users/ice/.wine" wine ~/.wine/drive_c/Program\ Files/GoMetaTrader7/terminal64.exe
