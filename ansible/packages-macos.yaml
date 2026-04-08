@@ -59,6 +59,7 @@
       - font-sketchybar-app-font
 
       - cliproxyapi
+      - p7zip
 
     homebrew_cask_apps:
       - docker

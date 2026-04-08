@@ -57,6 +57,7 @@
       - tlrc
       - uv
       - yazi
+      - p7zip
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
   tags:
