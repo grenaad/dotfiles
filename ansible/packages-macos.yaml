@@ -60,6 +60,7 @@
 
       - cliproxyapi
       - p7zip
+      - ocrmypdf
 
     homebrew_cask_apps:
       - docker
