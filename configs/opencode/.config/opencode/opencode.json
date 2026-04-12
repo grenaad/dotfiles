@@ -213,6 +213,14 @@
         "FLOAT_EMAIL": "{env:FLOAT_EMAIL}",
         "FLOAT_PASSWORD": "{env:FLOAT_PASSWORD}"
       }
+    },
+    "onyx": {
+      "type": "remote",
+      "enabled": true,
+      "url": "http://localhost:8090/",
+      "headers": {
+        "Authorization": "Bearer on_eHxe6dmXtY7zsl08wwQltm-Ksb42LMoeGZA-dlVrvVfM2YZk1goz9z74wT94PE0RANs3R6ZBCoZiFQP4IBV89Ol1CSwzlegib-f25HE19jyDnNIW-BMj1O2WsUkIZ7oNTpsz_E__L6W89xCt2Jwtx4HyKe1WzmivEbzDfJl1e2c9_xOfxxuup8_RrB2fldmilS_w4wQ2nBM5mtpnmzbBNLGuXFZl_k2cL8cx5RX7XlklDb7kUsEgiE7zJXRYJvAy"
+      }
     }
   },
   "provider": {
