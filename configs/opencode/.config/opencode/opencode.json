@@ -197,6 +197,19 @@
         "OLLAMA_CHAT_MODEL": "gemma3:4b"
       }
     },
+    "takealot": {
+      "type": "local",
+      "enabled": false,
+      "command": [
+        "/Users/ice/.local/bin/uv",
+        "--directory",
+        "/Users/ice/projects/takealot",
+        "run",
+        "fastmcp",
+        "run",
+        "server.py:mcp"
+      ]
+    },
     "float": {
       "type": "local",
       "enabled": false,
