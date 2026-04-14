@@ -66,6 +66,17 @@
       ],
       "enabled": false
     },
+    "fd-forge-dev": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "mcp-remote",
+        "https://forge.focaldata.dev/mcp",
+        "19876"
+      ],
+      "enabled": false
+    },
     "kubefwd": {
       "type": "local",
       "command": ["kubefwd", "mcp"],

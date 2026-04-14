@@ -92,7 +92,7 @@
   "dart.lineLength": 120,
 
   "liveshare.audio.joinCallBehavior": "accept",
-  "workbench.colorTheme": "Default Dark+",
+  "workbench.colorTheme": "Dark+",
 
   // Plugin vscode-neovim
   "vscode-neovim.neovimExecutablePaths.darwin": "/opt/homebrew/bin/nvim",
