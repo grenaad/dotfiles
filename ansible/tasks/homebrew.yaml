@@ -50,6 +50,7 @@
       - bat
       - fzf
       - git-delta
+      - gogcli # Google Suite CLI (Gmail, Calendar, Drive, etc.)
       - lazygit
       - neovim
       - sst/tap/opencode

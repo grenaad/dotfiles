@@ -63,6 +63,9 @@ homebrew:
 tmux:
 	cd ansible && ansible-playbook main.yaml --tags tmux
 
+himalaya:
+	cd ansible && ansible-playbook main.yaml --tags himalaya --ask-vault-pass
+
 # Run stow manually
 stow:
 	cd configs && stow -t "$$HOME" */

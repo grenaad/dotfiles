@@ -1,0 +1,79 @@
+# Himalaya CLI email client with email-oauth2-proxy for OAuth2 authentication
+# Prerequisites: rustup (for cargo) must be installed via homebrew
+
+# Installation tasks
+- name: Install pipx via homebrew
+  community.general.homebrew:
+    name: pipx
+    state: present
+  tags:
+    - install
+    - packages
+    - himalaya
+
+- name: Ensure pipx path is set
+  shell: pipx ensurepath
+  changed_when: false
+  tags:
+    - install
+    - packages
+    - himalaya
+
+- name: Install email-oauth2-proxy via pipx
+  shell: pipx install "emailproxy[gui]"
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/emailproxy"
+  tags:
+    - install
+    - packages
+    - himalaya
+
+- name: Install himalaya via cargo (with oauth2 feature)
+  shell: cargo install himalaya --features oauth2
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.cargo/bin/himalaya"
+  tags:
+    - install
+    - packages
+    - himalaya
+
+# Config deployment tasks
+- name: Create himalaya config directory
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.config/himalaya"
+    state: directory
+    mode: 0755
+  tags:
+    - dotfiles
+    - install
+    - himalaya
+
+- name: Create emailproxy config directory
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.config/emailproxy"
+    state: directory
+    mode: 0755
+  tags:
+    - dotfiles
+    - install
+    - himalaya
+
+- name: Copy himalaya config
+  copy:
+    src: "{{ playbook_dir }}/himalaya/config.toml"
+    dest: "{{ lookup('env', 'HOME') }}/.config/himalaya/config.toml"
+    mode: 0644
+  tags:
+    - dotfiles
+    - install
+    - himalaya
+
+- name: Copy emailproxy config (contains OAuth tokens)
+  copy:
+    src: "{{ playbook_dir }}/himalaya/emailproxy.config"
+    dest: "{{ lookup('env', 'HOME') }}/.config/emailproxy/emailproxy.config"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - himalaya

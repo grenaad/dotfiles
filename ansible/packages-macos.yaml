@@ -39,6 +39,7 @@
       - gh # Github CLI
       - bun
       - uv
+      - gogcli # Google Suite CLI (Gmail, Calendar, Drive, etc.)
 
       # yazi and all its dependencies
       - yazi # yazi, and it's dependencies

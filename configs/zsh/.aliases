@@ -31,6 +31,7 @@ alias opencode_p='XDG_DATA_HOME=~/.local/share/opencode-personal opencode'
 alias opencode_w='XDG_DATA_HOME=~/.local/share/opencode-work opencode'
 alias claude_w='CLAUDE_CONFIG_DIR=~/.claude-work claude'
 alias cliproxy='cliproxyapi -config ~/.config/cliproxyapi/config.yaml'
+alias emailproxy='emailproxy --config-file ~/.config/emailproxy/emailproxy.config'
 
 ###### OS Specific ######
 if [[ "$OSTYPE" == "darwin"* ]]; then

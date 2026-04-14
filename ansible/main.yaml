@@ -6,6 +6,11 @@
     - include_tasks: tasks/env.yaml
     - include_tasks: tasks/ssh.yaml
     - include_tasks: tasks/git.yaml
+    - include_tasks: tasks/himalaya.yaml
+      tags:
+        - himalaya
+        - install
+        - dotfiles
     - include_tasks: tasks/rust.yaml
     - include_tasks: tasks/tmux.yaml
 
