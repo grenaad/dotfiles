@@ -40,6 +40,7 @@
       - bun
       - uv
       - gogcli # Google Suite CLI (Gmail, Calendar, Drive, etc.)
+      - qpdf # PDF decryption and transformation tool
 
       # yazi and all its dependencies
       - yazi # yazi, and it's dependencies

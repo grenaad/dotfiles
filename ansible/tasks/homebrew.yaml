@@ -59,6 +59,7 @@
       - uv
       - yazi
       - p7zip
+      - qpdf # PDF decryption and transformation tool
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
   tags:
