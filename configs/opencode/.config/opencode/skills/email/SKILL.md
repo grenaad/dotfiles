@@ -5,9 +5,20 @@ description: CLI email client for Outlook/Hotmail
 
 ## Prerequisites
 
-Start the proxy first:
+Start the proxy first (runs in foreground):
 
 ```bash
+emailproxy
+```
+
+**Check if proxy is already running:**
+```bash
+ps aux | grep emailproxy | grep -v grep
+```
+
+**If himalaya commands timeout**, kill and restart the proxy:
+```bash
+pkill -f emailproxy
 emailproxy
 ```
 
@@ -34,6 +45,14 @@ Some email attachments (e.g., bank statements) are password-protected. Use `qpdf
 ```bash
 qpdf --password=mysecretpassword --decrypt statement.pdf statement_decrypted.pdf
 ```
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Commands timeout | Kill and restart proxy: `pkill -f emailproxy && emailproxy` |
+| Connection refused | Start the proxy: `emailproxy` |
+| Config not found | Proxy must use `--config-file ~/.config/emailproxy/emailproxy.config` (handled by alias) |
 
 ## When to use me
 
