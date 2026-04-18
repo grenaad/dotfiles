@@ -241,7 +241,7 @@
     "onyx": {
       "type": "remote",
       "enabled": false,
-      "url": "http://localhost:8090/",
+      "url": "http://100.103.182.62:8090/",
       "headers": {
         "Authorization": "Bearer onyx_pat_bCgZQdnxRAWRJe53-H0tK3zkyVjM2WFVLsVHqjRKDKLU2_ae-kjxL1Qo4ijUG4UUGydXVtxmJ4_InAfJnln0aWumlNss3ihv6nJAetYCJh1WUl6OUlAUDmjip-XFNBXRhJe6THxKE5agM8JXik_bClHrePkwVQkABdgdjTrmlyuLdUMhu7aMIEG8mqUeC5a94wkRUCbdIyFekIl4ndml7X3_GBt3ngzDQlZ7Jbh2SnYHE_UVuFW4FgayP9zz8xS-"
       }
