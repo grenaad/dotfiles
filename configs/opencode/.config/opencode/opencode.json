@@ -240,10 +240,10 @@
     },
     "onyx": {
       "type": "remote",
-      "enabled": false,
-      "url": "http://100.103.182.62:8090/",
+      "enabled": true,
+      "url": "localhost:7002/mcp",
       "headers": {
-        "Authorization": "Bearer onyx_pat_bCgZQdnxRAWRJe53-H0tK3zkyVjM2WFVLsVHqjRKDKLU2_ae-kjxL1Qo4ijUG4UUGydXVtxmJ4_InAfJnln0aWumlNss3ihv6nJAetYCJh1WUl6OUlAUDmjip-XFNBXRhJe6THxKE5agM8JXik_bClHrePkwVQkABdgdjTrmlyuLdUMhu7aMIEG8mqUeC5a94wkRUCbdIyFekIl4ndml7X3_GBt3ngzDQlZ7Jbh2SnYHE_UVuFW4FgayP9zz8xS-"
+        "Authorization": "Bearer on_8T1hjB5FKwlTTnHYIvLQa0VNaePxsVFKdVKIpDf2I4FVwz8Qlwk9bw8BqdqnKDOWkdQhTQwXrKJ-TvKjRDbenOeQd7sd4UBuf_pkLSCWKLabXRQRkLexD8xjFXXfceqbGAnKESyIoBfGClkL-IS1IDxLcBJB9lArN8ADUPRacB9HXHPoEhNB8v2J2yjyb3fmBx5lzkCOnVPDmubsGamLaNMTeVWvUjaRqOd5dxmdzJxBYgVHIl1luM_Nb6wW9lxO"
       }
     }
   },
