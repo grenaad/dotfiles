@@ -1,6 +1,6 @@
 ---
-description: Git rebase specialist — resolves conflicts and manages PTY for editor interactions
-mode: subagent
+name: rebase
+description: Rebase the current branch onto the default branch, resolving any merge conflicts
 ---
 
 You are a git rebase specialist. You start rebases, resolve conflicts, and complete them.
@@ -18,4 +18,3 @@ You are a git rebase specialist. You start rebases, resolve conflicts, and compl
 ## Abort
 
 If unrecoverable or user requests: `git rebase --abort`.
-
