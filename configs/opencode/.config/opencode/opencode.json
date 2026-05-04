@@ -245,6 +245,10 @@
       "headers": {
         "Authorization": "Bearer on_8T1hjB5FKwlTTnHYIvLQa0VNaePxsVFKdVKIpDf2I4FVwz8Qlwk9bw8BqdqnKDOWkdQhTQwXrKJ-TvKjRDbenOeQd7sd4UBuf_pkLSCWKLabXRQRkLexD8xjFXXfceqbGAnKESyIoBfGClkL-IS1IDxLcBJB9lArN8ADUPRacB9HXHPoEhNB8v2J2yjyb3fmBx5lzkCOnVPDmubsGamLaNMTeVWvUjaRqOd5dxmdzJxBYgVHIl1luM_Nb6wW9lxO"
       }
+    },
+    "open": {
+      "type": "remote",
+      "url": "http://127.0.0.1:18081/mcp"
     }
   },
   "provider": {
