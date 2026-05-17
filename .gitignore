@@ -21,3 +21,4 @@ keymap.toml-*
 !**/settings.json
 !**/keybindings.json
 .mcp_data/
+
