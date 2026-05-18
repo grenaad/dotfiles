@@ -69,7 +69,7 @@ runtime logic with no build/ecosystem dimension — and say so explicitly.
 - Read-only. No code edits.
 - Cite every claim with a URL or source name.
 - No speculation. If a claim isn't sourced, drop it.
-- Maximum 600 words (raised from 400 to accommodate ecosystem section when relevant).
+- Maximum 500 words (~3000 chars). If you find yourself listing 6+ items per section, you are padding — keep only the 3–4 strongest. The orchestrator will compress further before forwarding to downstream subagents; longer output is wasted.
 - Skip if the problem is purely internal/codebase-bound and external context adds nothing — say so explicitly.
 
 ## Output

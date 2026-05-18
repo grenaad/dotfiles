@@ -27,7 +27,7 @@ Enumerate edge cases, failure modes, and risks for a problem given prior researc
 ## Constraints
 - Each edge case must be specific and actionable, not generic ("handle errors" is not an edge case).
 - If a category has nothing relevant, omit it. Do not pad.
-- Maximum 700 words (raised from 500 to accommodate conditional operational categories).
+- Maximum 500 words (~3000 chars). Cap per category at 5 bullets. If you have more than 5 in a category, you are listing variants — apply the Dedup rule and merge.
 - **Dedup rule.** If two enumerated edge cases would be handled by the same
   code path with the same mechanism, MERGE them into ONE bullet listing the
   sub-triggers. Do NOT list variants of the same failure mode separately.

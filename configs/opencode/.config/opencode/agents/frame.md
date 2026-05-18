@@ -81,7 +81,7 @@ Confidence:
 ## Constraints
 - No code. No file paths. No implementation hints.
 - No speculation beyond what the user said.
-- Maximum 250 words (raised from 200 to accommodate Task Type).
+- Maximum 200 words. If your output exceeds this, you are explaining instead of framing — cut.
 - If the request is ambiguous, list ambiguities under "Open Questions" — do not guess.
 
 ## Output
