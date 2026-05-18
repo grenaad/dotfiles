@@ -11,6 +11,8 @@ configs/lvim/.config/lvim/plugin/packer_compiled.lua
 
 configs/scripts/.local/share/
 configs/scripts/.local/state/
+configs/opencode/.config/opencode/plugins/*/node_modules/
+configs/opencode/.config/opencode/plugins/*/bun.lock
 configs/lazygit/.config/lazygit/state.yml
 *.opencode
 *OpenCode.md

@@ -3,7 +3,8 @@
   "plugin": [
     "@ex-machina/opencode-anthropic-auth@1.7.5",
     "opencode-pty",
-    "opencode-gemini-auth@latest"
+    "opencode-gemini-auth@latest",
+    "./plugins/arc-agent/src/index.ts"
   ],
   "lsp": {
     "scala-lsp": {
