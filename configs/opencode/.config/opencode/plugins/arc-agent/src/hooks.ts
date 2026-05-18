@@ -2,14 +2,22 @@
  * Hook implementations. Every hook is wrapped in a top-level try/catch so any
  * plugin error logs and falls through (workflow continues unchanged).
  *
+ * v0.15 additions:
+ *   - Auto-prepend delegation preamble + REASONING CONVENTIONS to every prompt
+ *   - Inject task-type template on plan subagent calls
+ *   - Capture task type from frame output; classify triviality
+ *   - Mark plan with missing-required-section annotations (advisory to reviewer)
+ *   - Normalize reviewer verdict; emit plan-size advisory
+ *
  * Hooks implemented:
- *   tool.execute.before: enforce per-subagent ceilings, strip Open Questions
+ *   tool.execute.before: auto-prepend constants, inject template on plan,
+ *                        enforce per-subagent ceilings, strip Open Questions
  *                        from subagent prompts (pre-filtered, time-bounded),
  *                        on `review` substitute compressed plan if stashed
- *   tool.execute.after:  on `plan` returns, measure size and stash; on bucket
- *                        === "compress", precompute compressed-for-review
- *                        variant (time-bounded, sanity-checked)
- *   event:               passive logging only
+ *   tool.execute.after:  capture frame task type, capture review verdict,
+ *                        on `plan` returns measure size + mark missing sections,
+ *                        on bucket compress precompute compressed-for-review
+ *   event:               passive logging + session cleanup
  */
 
 import type { Hooks } from "@opencode-ai/plugin"
@@ -26,10 +34,30 @@ import {
   COMPRESS_TIMEOUT_MS,
 } from "./transforms"
 import {
+  extractTaskType,
+  checkRequiredSections,
+  classifyTriviality,
+  extractOpenQuestions,
+  normalizeVerdict,
+  planSizeAdvisory,
+} from "./analyzers"
+import {
+  DELEGATION_PREAMBLE,
+  REASONING_CONVENTIONS,
+  PREAMBLE_MARKER,
+  CONVENTIONS_MARKER,
+  REQUIRED_SECTIONS_BLOCK_HEADER,
+  REQUIRED_SECTIONS_BLOCK_FOOTER,
+  REQUIRED_SECTIONS_MARKER_PREFIX,
+  REQUIRED_SECTIONS_MARKER_SUFFIX,
+} from "./constants"
+import { TASK_TYPE_TEMPLATES, REQUIRED_SECTIONS_BY_TYPE } from "./templates"
+import {
   CEILINGS,
   bucketFor,
   isSubagent,
   isTaskToolArgs,
+  NO_OPEN_QUESTIONS_SUBAGENTS,
   type SubagentType,
 } from "./types"
 
@@ -61,6 +89,45 @@ async function withTimeout<T>(fn: (signal: AbortSignal) => Promise<T>, ms: numbe
   }
 }
 
+/**
+ * Prepend delegation preamble + REASONING CONVENTIONS if not already present.
+ * Detection is permissive (first ~500 chars contain the marker = present).
+ */
+function injectPreamble(prompt: string): string {
+  const head = prompt.slice(0, 500)
+  const hasPreamble = head.includes(PREAMBLE_MARKER)
+  const hasConventions = head.includes(CONVENTIONS_MARKER) || prompt.slice(0, 2000).includes(CONVENTIONS_MARKER)
+  if (hasPreamble && hasConventions) return prompt
+  const pieces: string[] = []
+  if (!hasPreamble) pieces.push(DELEGATION_PREAMBLE, "")
+  if (!hasConventions) pieces.push(REASONING_CONVENTIONS, "")
+  pieces.push(prompt)
+  return pieces.join("\n")
+}
+
+/**
+ * Append the task-type structural template to a plan-subagent prompt.
+ * No-op if the prompt already references the template's first heading.
+ */
+function injectTemplate(prompt: string, taskType: import("./templates").TaskType): string {
+  const template = TASK_TYPE_TEMPLATES[taskType]
+  if (!template) return prompt
+  // If prompt already has the "What you asked for" header (likely manually included), skip.
+  if (prompt.includes("## What you asked for") && prompt.includes("## Sanity Check")) {
+    return prompt
+  }
+  return `${prompt.trimEnd()}\n\nYour output MUST contain these sections in this exact order, using these exact headings:\n\n${template}\n`
+}
+
+/** Build the required-section-check annotation block. Empty string when nothing missing. */
+function buildSectionMarkers(missing: readonly string[]): string {
+  if (missing.length === 0) return ""
+  const items = missing
+    .map((s) => `${REQUIRED_SECTIONS_MARKER_PREFIX}"${s}"${REQUIRED_SECTIONS_MARKER_SUFFIX}`)
+    .join("\n")
+  return `${REQUIRED_SECTIONS_BLOCK_HEADER}\n${items}\n${REQUIRED_SECTIONS_BLOCK_FOOTER}\n\n`
+}
+
 export function buildHooks(client: Client): Hooks {
   if (DISABLED) {
     return {
@@ -78,18 +145,27 @@ export function buildHooks(client: Client): Hooks {
         if (!isSubagent(output.args.subagent_type)) return
 
         const sub: SubagentType = output.args.subagent_type
-        const originalChars = output.args.prompt.length
+        const s = getState(input.sessionID)
         let working = output.args.prompt
 
-        // Step 1 — semantic dedup of Open Questions, with pre-filter + timeout.
-        // Skip on frame (its prompt is just preamble + raw user prompt — no
-        // Open Questions possible). Skip when the cheap heading-scan finds no
-        // candidate phrases. Otherwise invoke model with 30s timeout.
+        // Phase 5 — auto-prepend delegation preamble + REASONING CONVENTIONS
+        working = injectPreamble(working)
+
+        // Phase 3 — on plan subagent, inject task-type structural template
+        if (sub === "plan" && s.taskType) {
+          working = injectTemplate(working, s.taskType)
+        }
+
+        const originalChars = working.length
+
+        // Phase 7 (prep) — strip Open Questions semantically. Skip for
+        // subagents whose prompts never carry them; skip when no candidate
+        // heading present. Otherwise invoke model with timeout.
         let strippedFlag = false
         let preFilterSkip = false
         let stripTimedOut = false
 
-        if (sub === "frame" || !hasCandidateHeading(working)) {
+        if (NO_OPEN_QUESTIONS_SUBAGENTS.has(sub) || !hasCandidateHeading(working)) {
           preFilterSkip = true
         } else {
           try {
@@ -114,10 +190,9 @@ export function buildHooks(client: Client): Hooks {
           }
         }
 
-        // Step 2 — on review, swap in compressed plan if stashed
+        // On review, swap in compressed plan if stashed
         let compressedFlag = false
         if (sub === "review") {
-          const s = getState(input.sessionID)
           const compressed = s.lastPlan?.compressedForReview
           if (compressed && s.lastPlan) {
             const marker = "Implementation plan to review:"
@@ -133,7 +208,7 @@ export function buildHooks(client: Client): Hooks {
           }
         }
 
-        // Step 3 — hard ceiling enforcement
+        // Hard ceiling enforcement
         const ceiling = CEILINGS[sub]
         let ceilingHit = false
         if (working.length > ceiling) {
@@ -175,11 +250,80 @@ export function buildHooks(client: Client): Hooks {
         const sub: SubagentType = input.args.subagent_type
         const outText = typeof output.output === "string" ? output.output : ""
         const size = outText.length
+        const s = getState(input.sessionID)
+
+        // Phase 3+6 — capture task type AND classify triviality from frame
+        if (sub === "frame") {
+          const tt = extractTaskType(outText)
+          if (tt) s.taskType = tt
+
+          // Phase 6 — best-effort triviality classification. The orchestrator's
+          // frame call body ends with `User task: <raw user prompt>`; extract
+          // that and run the classifier. Orchestrator may override after the
+          // clarification subroutine resolves Open Questions.
+          const framePrompt = typeof input.args.prompt === "string" ? input.args.prompt : ""
+          const taskMatch = /User task:\s*([\s\S]+?)$/m.exec(framePrompt)
+          const rawUserTask = taskMatch?.[1]?.trim() ?? ""
+          if (rawUserTask.length > 0 && tt) {
+            const tier = classifyTriviality({
+              taskType: tt,
+              userPrompt: rawUserTask,
+              hasResolvedClarifications: false,
+            })
+            s.trivialityTier = tier
+          }
+
+          await log({
+            kind: "tool.execute.after",
+            session: input.sessionID,
+            subagent: sub,
+            original_chars: size,
+            task_type: tt ?? undefined,
+            triviality_tier: s.trivialityTier,
+          })
+          return
+        }
+
+        // Phase 8 — normalize reviewer verdict
+        if (sub === "review") {
+          const v = normalizeVerdict(outText)
+          if (v) s.normalizedVerdict = v
+          await log({
+            kind: "tool.execute.after",
+            session: input.sessionID,
+            subagent: sub,
+            original_chars: size,
+            normalized_verdict: v ?? undefined,
+          })
+          return
+        }
+
+        // Phase 7 — extract Open Questions for primary subagents. Micro-agents
+        // are exempt (NO_OPEN_QUESTIONS_SUBAGENTS).
+        if (!NO_OPEN_QUESTIONS_SUBAGENTS.has(sub)) {
+          const questions = extractOpenQuestions(outText)
+          if (questions.length > 0) {
+            const arr = s.openQuestions ?? []
+            arr.push({ source: sub, questions })
+            s.openQuestions = arr
+          }
+        }
 
         if (sub === "plan") {
           const bucket = bucketFor(size)
-          const s = getState(input.sessionID)
-          s.lastPlan = { size, bucket, content: outText }
+
+          // Phase 4 — required-section enforcement (advisory annotation)
+          let annotatedPlan = outText
+          let missingSections: string[] = []
+          if (s.taskType) {
+            const required = REQUIRED_SECTIONS_BY_TYPE[s.taskType] ?? []
+            missingSections = checkRequiredSections(outText, required)
+            if (missingSections.length > 0) {
+              annotatedPlan = buildSectionMarkers(missingSections) + outText
+            }
+          }
+
+          s.lastPlan = { size, bucket, content: annotatedPlan }
 
           if (bucket === "compress") {
             try {
@@ -195,12 +339,11 @@ export function buildHooks(client: Client): Hooks {
                   original_chars: size,
                   plan_bucket: bucket,
                   compressed: false,
+                  missing_sections: missingSections.length > 0 ? missingSections : undefined,
                 })
               } else {
                 const sanityFail = compressSanityCheck(outText, compressed)
                 if (sanityFail) {
-                  // Discard the compressed output; fall back to forwarding the
-                  // original plan to review. Log so we know why.
                   await log({
                     kind: "helper",
                     session: input.sessionID,
@@ -216,6 +359,7 @@ export function buildHooks(client: Client): Hooks {
                     original_chars: size,
                     plan_bucket: bucket,
                     compressed: false,
+                    missing_sections: missingSections.length > 0 ? missingSections : undefined,
                   })
                 } else {
                   s.lastPlan.compressedForReview = compressed
@@ -227,6 +371,7 @@ export function buildHooks(client: Client): Hooks {
                     final_chars: compressed.length,
                     plan_bucket: bucket,
                     compressed: true,
+                    missing_sections: missingSections.length > 0 ? missingSections : undefined,
                   })
                 }
               }
@@ -247,6 +392,7 @@ export function buildHooks(client: Client): Hooks {
               original_chars: size,
               plan_bucket: bucket,
               compressed: false,
+              missing_sections: missingSections.length > 0 ? missingSections : undefined,
             })
           }
           return
@@ -280,4 +426,11 @@ export function buildHooks(client: Client): Hooks {
       }
     },
   }
+}
+
+// Re-export public analyzers and constants for downstream consumers.
+export {
+  classifyTriviality,
+  extractOpenQuestions,
+  planSizeAdvisory,
 }

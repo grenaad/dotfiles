@@ -17,6 +17,7 @@
  * requires editing exactly one place.
  */
 export const CEILINGS = {
+  // primary subagents (v0.1+)
   frame: 2_000,
   librarian: 5_000,
   explore: 5_000,
@@ -25,6 +26,18 @@ export const CEILINGS = {
   review: 18_000,
   "quick-answer": 4_000,
   general: 8_000,
+  // micro-subagents (v0.14): specialized reasoning moves
+  // Note: ceilings here cap the INPUT prompt size, not the output budget.
+  // Critic reads the full plan as input, so its ceiling must approximate review's.
+  restater: 1_000,
+  "delta-mapper": 1_500,
+  "ambiguity-spotter": 2_000,
+  alternatives: 3_000,
+  "batch-planner": 5_000,
+  critic: 18_000,
+  // v0.15 additions
+  synthesis: 6_000,
+  "decision-options": 20_000,
 } as const
 
 export type SubagentType = keyof typeof CEILINGS
@@ -34,6 +47,25 @@ const SUBAGENT_NAMES = Object.keys(CEILINGS) as readonly SubagentType[]
 export function isSubagent(s: unknown): s is SubagentType {
   return typeof s === "string" && (SUBAGENT_NAMES as readonly string[]).includes(s)
 }
+
+/**
+ * Subagents whose outputs are NOT expected to contain `## Open Questions`
+ * sections. The plugin hardcode-skips the strip helper for these.
+ *
+ * Primary subagent `frame` is also in this set because its prompt is
+ * just preamble + raw user text (no Open Questions possible).
+ */
+export const NO_OPEN_QUESTIONS_SUBAGENTS = new Set<SubagentType>([
+  "frame",
+  "restater",
+  "delta-mapper",
+  "ambiguity-spotter",
+  "alternatives",
+  "batch-planner",
+  "critic",
+  "synthesis",
+  "decision-options",
+])
 
 /**
  * Plan-size buckets. Buckets are ordered by ascending size; `bucketFor`
@@ -94,8 +126,20 @@ export interface ArcState {
   parentSessionID?: string
   helperSessionID?: string
   lastPlan?: PlanInfo
+  /** Captured from frame output post-Step 1.25; drives template injection + section enforcement. */
+  taskType?: import("./templates").TaskType
+  /** Computed from frame output by classifyTriviality (Phase 6). */
+  trivialityTier?: TrivialityTier
+  /** Captured from review output by normalizeVerdict (Phase 8). */
+  normalizedVerdict?: NormalizedVerdict
+  /** Extracted open-question strings per source subagent (Phase 7). */
+  openQuestions?: Array<{ source: SubagentType; questions: string[] }>
   hookErrors: Array<{ hook: string; t: number; error: string }>
 }
+
+export type TrivialityTier = "ultra" | "trivial" | "full"
+
+export type NormalizedVerdict = "proceed" | "needs-revision" | "reject"
 
 /**
  * Discriminated LogLine union.
@@ -136,6 +180,14 @@ export interface ToolAfterLog extends LogBase {
   plan_bucket?: PlanSizeBucket
   final_chars?: number
   compressed?: boolean
+  /** v0.15 — captured task type when subagent is frame */
+  task_type?: import("./templates").TaskType
+  /** v0.15 — computed triviality tier when subagent is frame */
+  triviality_tier?: TrivialityTier
+  /** v0.15 — normalized verdict when subagent is review */
+  normalized_verdict?: NormalizedVerdict
+  /** v0.15 — missing required sections on plan */
+  missing_sections?: string[]
 }
 
 export interface HelperLog extends LogBase {

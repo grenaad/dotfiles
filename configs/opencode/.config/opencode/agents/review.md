@@ -20,6 +20,8 @@ Critique an implementation plan against the framed problem, findings, and edge c
 - Edge cases (from `edgecases`).
 - The implementation plan (from `plan`).
 
+Note: in the parallel workflow, a `critic` micro-subagent runs concurrently with you against the same plan. Its self-correction findings are NOT in your input — they are merged into the final rendered Reviewer Notes as an addendum AFTER both you and critic finish. You are the gate-keeper with verdict authority; critic is advisory. Do your full analysis as if critic did not exist.
+
 ## Task
 - Run the **Required-section gate** (below). Missing sections force `needs-revision`.
 - Run the **Consistency checks** (below). Any failure forces `needs-revision`.
@@ -29,82 +31,26 @@ Critique an implementation plan against the framed problem, findings, and edge c
 - Identify scope drift (steps unrelated to the stated Goals).
 - Rate plan readiness: `ready`, `needs-revision`, or `reject`.
 
-## Required-section gate (type-aware)
+## Required-section gate (TS-enforced; you confirm)
 
-Your input includes a `Task type:` line. Use the matching required-section list
-for that type. ANY missing or empty required section → verdict MUST be
-`needs-revision` and each missing section name MUST appear in your `## Missing`
-output. Do this even if the rest of the plan is excellent.
+Required-section presence is now enforced deterministically by the plugin
+(`plugins/arc-agent/src/templates.ts` → `REQUIRED_SECTIONS_BY_TYPE`). When a
+required heading is missing from the plan, the plugin prepends advisory
+markers of the form:
 
-### Universal required sections (ALL task types)
+```
+<!-- arc-agent: required-section-check
+<!-- arc-agent: missing-required-section "## Test Plan" -->
+<!-- arc-agent: missing-required-section "## Verification" -->
+<!-- arc-agent: end-required-section-check -->
+```
 
-These are required regardless of task type, IN ADDITION to the type-specific list:
+**Treat each marker as an automatic `## Missing` entry** in your output, and
+force `verdict: needs-revision` if the marker block is present. You do NOT
+need to re-scan the plan for these sections — trust the marker block.
 
-- `## What you asked for` (restate intent — 2-4 bullets in planner's own words; missing or vague = needs-revision)
-- `## Alternatives Considered` (2-3 named alternatives with pros/cons/picked verdict; single-path or missing = needs-revision)
-- `## Sanity Check` (mid-plan self-correction; missing or empty = needs-revision)
-
-### Required for `feature`
-
-- `## Scope & Goals`
-- `## Assumptions`
-- `## Out of Scope`
-- `## Architecture Decisions`
-- `## Scaffolding Policy` (may contain only "Not applicable — no scaffolding in this plan.")
-- `## Tooling Configuration`
-- `## Dependencies`
-- `## Implementation Steps`
-- `## Edge Case → Handling Matrix`
-- `## Test Plan`
-- `## Verification`
-
-### Required for `fix`
-
-- `## Scope & Goals`
-- `## Assumptions`
-- `## Reproduction`
-- `## Root Cause`
-- `## Fix Strategy`
-- `## Implementation Steps`
-- `## Regression Test`
-- `## Rollback Plan`
-- `## Verification`
-
-### Required for `refactor`
-
-- `## Scope & Goals`
-- `## Assumptions`
-- `## Current Shape`
-- `## Target Shape`
-- `## Behaviour Invariants`
-- `## Out of Scope`
-- `## Migration Steps`
-- `## Equivalence Tests`
-- `## Verification`
-
-### Required for `investigate`
-
-- `## Scope & Goals`
-- `## Assumptions`
-- `## Question(s)`
-- `## Methodology`
-- `## Findings`
-- `## Recommendation`
-- `## Verification`
-
-(`## Tradeoffs` and `## Open Questions` are conditional — required only if the
-question asks for a comparison, or if findings leave residual ambiguity.)
-
-### Required for `docs`
-
-- `## Scope & Goals`
-- `## Assumptions`
-- `## Audience`
-- `## Source Material`
-- `## Document Outline`
-- `## Files Affected`
-- `## Style & Voice`
-- `## Verification`
+If the plan contains NO marker block, all required sections are present;
+focus your analysis on quality, contradictions, scope drift, and risks.
 
 ### Quality gates on the universal sections
 

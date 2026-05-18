@@ -45,27 +45,12 @@ When you detect this, the FIRST Open Question MUST be a deliverable-shape
 question listing 2–4 plausible shapes for that domain. Do NOT anchor on one
 shape in Goals or Assumptions. Do NOT proceed as if the shape is obvious.
 
-Examples of generic-domain prompts and the deliverable-shape question they
-require:
+Examples:
+- "create a python pydantic application" → ask "What kind of application?" with options like CRUD HTTP API, pydantic-settings loader, CLI validator, codegen tool.
+- "build a rust microservice" → ask "What does the service do?" with options like HTTP REST, gRPC, queue worker, WASM worker.
+- "refactor to clean architecture" → ask "Which boundaries get enforced?" with options like full ports-and-adapters, use-case refactor without DI, hexagonal with 1 primary + 1 secondary adapter.
 
-- "create a python pydantic application" → "What kind of application?
-  Options: (a) a CRUD HTTP API demonstrating Pydantic models on a small
-  domain; (b) a configuration/settings loader using pydantic-settings;
-  (c) a CLI data-validation tool that loads user schemas; (d) a code-
-  generation tool emitting Pydantic models from another schema."
-- "build a rust microservice" → "What does the service do? Options:
-  (a) HTTP REST API; (b) gRPC service; (c) message-queue worker;
-  (d) WebAssembly worker."
-- "refactor to clean architecture" → "Which boundaries get enforced?
-  Options: (a) full ports-and-adapters with domain/app/infra layers and
-  DI container; (b) lighter use-case-class refactor without DI; (c) hexagonal
-  with one primary and one secondary adapter."
-- "write a python script" → "What does the script do? This is too generic
-  to plan without a concrete task."
-
-Generic-domain detection takes precedence over other Open Questions. If the
-deliverable shape cannot be inferred from the prompt with high confidence,
-this is the open question to ask — list it FIRST in `## Open Questions`.
+Generic-domain detection takes precedence over other Open Questions. List the deliverable-shape question FIRST in `## Open Questions`.
 
 ## Task Type (classification)
 
