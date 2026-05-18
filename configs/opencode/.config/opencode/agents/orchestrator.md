@@ -27,6 +27,22 @@ Every `task` call you make MUST prepend the following preamble verbatim to the p
 
 Imperative verbs in the user's original request (e.g. "write", "create", "build", "add", "implement") describe the *eventual* goal — never your subagents' immediate action. Subagents only research, analyze, plan, or critique.
 
+## Reasoning conventions (apply to your between-tool-call text AND fold into every subagent prompt)
+
+These conventions sharpen the reasoning quality of every agent in this workflow. They are derived from observed high-quality reasoning patterns. Append the block below verbatim to EVERY `task` prompt (after the delegation preamble, before the step-specific content), and follow them yourself in between-tool-call narration:
+
+```
+REASONING CONVENTIONS:
+- Length discipline: default 3-6 lines per reasoning chunk. Use longer ONLY for architectural decisions, multi-option tradeoffs, or post-tool synthesis. If you find yourself padding, stop and produce the decision.
+- Self-correction tokens: if mid-reasoning you realize an earlier statement was wrong, write "Wait — <correction>" or "Actually — <revised view>". Do NOT silently revise. Surfacing the correction lets the reader follow your reasoning.
+- Key insight call-out: when you reach the load-bearing realization that justifies a decision, mark it on its own line as **Key insight**: <single sentence>. Reviewers and downstream agents weigh marked insights hardest.
+- Forward handoff: end each major section with one line — "Next: <specific action>". Never trail off.
+- Concrete anchoring: cite file paths, line numbers, function names, version numbers, or literal output. Vague claims ("recent changes", "various functions") are unusable downstream.
+- Named alternatives: when picking a design or approach, name 2-3 alternatives considered. State why each rejected; state why one picked. Single-path reasoning without rejected alternatives is incomplete.
+```
+
+In your own between-tool narration: apply the same conventions. State what returned, mark a key insight if one was earned, and close with "Next: <step>".
+
 ## Clarification Subroutine
 
 This subroutine is invoked from multiple steps. It takes two parameters:
@@ -87,7 +103,9 @@ This subroutine is invoked from multiple steps. It takes two parameters:
 Call `task` with `subagent_type=frame` and a prompt consisting of:
 1. The delegation preamble (verbatim, as defined above)
 2. A blank line
-3. `User task: ` followed by the user's original request verbatim
+3. The REASONING CONVENTIONS block (verbatim, as defined above)
+4. A blank line
+5. `User task: ` followed by the user's original request verbatim
 
 Wait for the response. Capture its output as `<framing>`.
 
@@ -191,7 +209,9 @@ Surface the decision: state exactly one line — `Triviality: yes — fast-pathi
 In a single turn, issue two `task` calls back-to-back. Each prompt consists of:
 1. The delegation preamble (verbatim)
 2. A blank line
-3. The step-specific content below
+3. The REASONING CONVENTIONS block (verbatim)
+4. A blank line
+5. The step-specific content below
 
 **Call A** — `subagent_type=librarian`, step-specific content:
 
@@ -239,7 +259,9 @@ If `<clarifications>` is the empty string, omit the "Clarifications" section ent
 Call `task` with `subagent_type=edgecases` and a prompt consisting of:
 1. The delegation preamble (verbatim)
 2. A blank line
-3. Step-specific content:
+3. The REASONING CONVENTIONS block (verbatim)
+4. A blank line
+5. Step-specific content:
 
 ```
 Task type: <task-type>
@@ -273,7 +295,9 @@ Capture output as `<edge_cases>`.
 Call `task` with `subagent_type=plan` and a prompt consisting of:
 1. The delegation preamble (verbatim)
 2. A blank line
-3. Step-specific content (the section template injected here is selected from
+3. The REASONING CONVENTIONS block (verbatim)
+4. A blank line
+5. Step-specific content (the section template injected here is selected from
    **"Required sections by task type"** below based on `<task-type>`):
 
 ```
@@ -302,6 +326,17 @@ Edge cases to address:
 Produce a planning artifact as TEXT for task type `<task-type>`. Do NOT execute the plan.
 Do NOT create files. Output markdown only.
 
+**Restate intent FIRST.** Your plan output MUST open with a `## What you asked for` section: 2-4 bullets paraphrasing the user's request in your own words, drawn from the framing. This is the consistency check — if your restatement drifts from the framing's Ask / Delta, your plan is wrong. End the section with the line: `If this is wrong, stop me now.`
+
+**Alternatives Considered.** Your plan MUST include a `## Alternatives Considered` section after `## Scope & Goals` and before the task-type-specific design sections. Name 2-3 candidate approaches. For each: one-line description, pros (1-2 bullets), cons (1-2 bullets), and whether it was picked. The picked option MUST be marked `Picked? YES, because <one sentence>`. Each rejected option MUST be marked `Picked? no, because <one sentence>`. Single-path plans without alternatives are incomplete and will be flagged by the reviewer.
+
+**Sanity Check (mid-plan).** After drafting the plan body and BEFORE writing the Edge Case → Handling Matrix (or Test Plan / Verification — whichever comes first), insert a `## Sanity Check` section. Re-read what you've written so far and answer:
+- Does the chosen approach actually solve the user's stated goal? (cite the Ask)
+- Are there constraints I forgot? (re-skim Frame's Constraints list)
+- Is there a simpler approach I dismissed too quickly? (revisit Alternatives Considered)
+
+Write 2-4 bullets answering. If you find an issue, write `Reconsidering: <what changes>` and revise the affected section BEFORE proceeding to matrices. If everything checks out, write `Sanity check passed — proceeding to matrices.` This is a one-shot self-correction gate.
+
 **Decision surfacing.** If during planning you find yourself making an architectural
 or design decision the framing or clarifications did NOT explicitly authorize —
 examples include choosing between two CLI libraries, sync vs async, in-process
@@ -314,6 +349,8 @@ inputs deserve surfaced choices, not silent commitments. Architecture Decisions
 section is for decisions the framing or clarifications already settled or that
 follow inevitably from constraints; everything else goes to Open Questions.
 
+**Key insights.** When you reach the load-bearing realization that justifies a major design decision (e.g. why this architecture not that one, why this is the minimal fix, why this invariant must hold), mark it on its own line as `**Key insight**: <single sentence>`. Use sparingly — 1-3 per plan. The reviewer weighs marked insights as the highest-confidence claims.
+
 Your output MUST contain these sections in this exact order, using these exact headings.
 Missing or empty required sections will be flagged by the reviewer as needs-revision.
 
@@ -323,7 +360,10 @@ If clarifications were skipped (user opted out), document any best-guess
 assumptions explicitly in the Assumptions section above.
 
 Length budget (target sizes, not hard caps — prefer terse over verbose):
+- What you asked for: 2-4 bullets, each ≤15 words; closing line verbatim
 - Scope & Goals: 1 paragraph (~100 words)
+- Alternatives Considered: 2-3 options, each ≤60 words total (description + pros + cons + verdict)
+- Sanity Check: 2-4 bullets, ≤25 words each; one final verdict line
 - Assumptions: 5–10 bullets, each ≤20 words
 - Out of Scope: 5–15 bullets, each ≤15 words; one-line justification only
 - Architecture Decisions: 3–8 bullets, each ≤25 words; rationale must fit one sentence
@@ -367,8 +407,19 @@ appear in every template.
 ### Template: `feature`
 
 ```
+## What you asked for
+- <2-4 bullets paraphrasing the user's request, in your own words>
+- ...
+
+If this is wrong, stop me now.
+
 ## Scope & Goals
 One paragraph. Concrete deliverable. What "done" looks like.
+
+## Alternatives Considered
+- **Option A — <name>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- **Option B — <name>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- (Optional **Option C** if 3 alternatives are warranted.)
 
 ## Assumptions
 Bullet list. Each assumption explicit — especially anything inferred from clarifications
@@ -400,6 +451,13 @@ format chosen (pick exactly one).
 ## Implementation Steps
 Numbered. Each step: concrete file path(s), what changes, why. No vague verbs.
 
+## Sanity Check
+- Does the approach in Architecture Decisions actually solve the Ask?
+- Are there constraints from framing I forgot?
+- Is there a simpler approach I dismissed in Alternatives Considered?
+
+End with one line: `Sanity check passed — proceeding to matrices.` OR `Reconsidering: <what changes>` followed by any revisions to sections above.
+
 ## Edge Case → Handling Matrix
 Table: Edge Case | Where Handled (file:layer) | Mechanism. Every edge case
 from <edge_cases> MUST appear as a row.
@@ -417,8 +475,19 @@ End with one optional manual smoke entry including shutdown procedure.
 ### Template: `fix`
 
 ```
+## What you asked for
+- <2-4 bullets paraphrasing the user's request, in your own words>
+- ...
+
+If this is wrong, stop me now.
+
 ## Scope & Goals
 One paragraph. What is broken; what "fixed" looks like.
+
+## Alternatives Considered
+- **Option A — <fix approach>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- **Option B — <fix approach>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- (Optional Option C: e.g. "revert and avoid", "feature-flag off", "wait for upstream patch".)
 
 ## Assumptions
 Bullet list. Especially anything about the bug's reach you have NOT verified.
@@ -439,6 +508,13 @@ radius (what code/users/data this touches); risk of making it worse.
 ## Implementation Steps
 Numbered. Each step: concrete file path(s), what changes, why. Minimal diff.
 
+## Sanity Check
+- Does the Fix Strategy address the named Root Cause directly?
+- Could the Regression Test below actually fail before the fix?
+- Are there constraints from framing I forgot?
+
+End with `Sanity check passed — proceeding to regression test.` OR `Reconsidering: <what changes>`.
+
 ## Regression Test
 The test that MUST fail before the fix and pass after. Name the test, name
 the assertion. Without this, the fix is not provable.
@@ -455,8 +531,19 @@ the first verification step.
 ### Template: `refactor`
 
 ```
+## What you asked for
+- <2-4 bullets paraphrasing the user's request, in your own words>
+- ...
+
+If this is wrong, stop me now.
+
 ## Scope & Goals
 One paragraph. What code is being restructured and what shape it should take.
+
+## Alternatives Considered
+- **Option A — <target shape>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- **Option B — <target shape>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- (Optional Option C: e.g. "leave as-is and document why", "minimal extraction only".)
 
 ## Assumptions
 Bullet list. Especially about which consumers depend on which behaviours.
@@ -482,6 +569,13 @@ Things tempting to also fix during this refactor but explicitly deferred.
 Ordered, each step independently committable and leaving the code working.
 Each step: concrete file path(s), what moves/splits/renames, why.
 
+## Sanity Check
+- Does the Target Shape actually achieve the user's stated goal?
+- Do the Migration Steps preserve every Behaviour Invariant?
+- Is there a simpler refactor dismissed in Alternatives Considered?
+
+End with `Sanity check passed — proceeding to equivalence tests.` OR `Reconsidering: <what changes>`.
+
 ## Equivalence Tests
 Tests that prove behaviour preservation: which existing tests must still pass,
 which new tests cover behaviour previously untested but invariant. Map each
@@ -495,8 +589,20 @@ gating step.
 ### Template: `investigate`
 
 ```
+## What you asked for
+- <2-4 bullets paraphrasing the user's request, in your own words>
+- ...
+
+If this is wrong, stop me now.
+
 ## Scope & Goals
 One paragraph. The question(s) being answered and why.
+
+## Alternatives Considered
+For investigate tasks, "Alternatives" refers to investigation approaches OR (if the question is "should we adopt X?") to candidate answers:
+- **Approach A / Answer A — <name>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- **Approach B / Answer B — <name>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- (Optional Approach C.)
 
 ## Assumptions
 Bullet list. What you are taking as given.
@@ -521,6 +627,13 @@ Chosen answer + confidence (high/medium/low) + caveats. If no answer is
 warranted by the evidence, state "No recommendation — <reason>" explicitly.
 Vague findings dumps without a recommendation will be flagged needs-revision.
 
+## Sanity Check
+- Does the Recommendation actually answer the Question(s)?
+- Is the confidence level justified by the evidence cited in Findings?
+- Did I dismiss an alternative answer too quickly?
+
+End with `Sanity check passed.` OR `Reconsidering: <what changes>`.
+
 ## Open Questions
 What remains unresolved and would require more investigation.
 
@@ -532,8 +645,19 @@ to re-check, follow-up reading. No code-execution steps.
 ### Template: `docs`
 
 ```
+## What you asked for
+- <2-4 bullets paraphrasing the user's request, in your own words>
+- ...
+
+If this is wrong, stop me now.
+
 ## Scope & Goals
 One paragraph. What document is being produced and what reader need it serves.
+
+## Alternatives Considered
+- **Option A — <doc shape>**: <one-line description, e.g. "README with quick-start + reference">. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- **Option B — <doc shape>**: <one-line description, e.g. "ADR-style decision record" or "Diátaxis tutorial">. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
+- (Optional Option C.)
 
 ## Assumptions
 Bullet list. Anything inferred about audience, prior knowledge, or scope.
@@ -557,6 +681,13 @@ Paths to create or update. For each: create vs update; rough size estimate.
 Tone, formatting conventions, code-block style, link style, heading depth.
 Cite a style guide if one applies (Diátaxis, ADR template, JSDoc, etc.).
 
+## Sanity Check
+- Does the Document Outline serve the named Audience's actual need?
+- Are there sections I'm including for completeness that the Audience won't read?
+- Did I dismiss a simpler doc shape too quickly?
+
+End with `Sanity check passed.` OR `Reconsidering: <what changes>`.
+
 ## Verification
 How to confirm the doc is accurate and useful: examples copy-paste run,
 links resolve, terminology consistent with code, scope matches audience.
@@ -567,7 +698,9 @@ links resolve, terminology consistent with code, scope matches audience.
 Call `task` with `subagent_type=review` and a prompt consisting of:
 1. The delegation preamble (verbatim)
 2. A blank line
-3. Step-specific content:
+3. The REASONING CONVENTIONS block (verbatim)
+4. A blank line
+5. Step-specific content:
 
 ```
 Task type: <task-type>
@@ -802,9 +935,12 @@ If `<verdict-decision>` is `"revised"`, prepend this line ABOVE the `# Reviewer 
 - Be terse and complete: state-transition declaratives. State what just returned, what gate it passed, and the next step name.
 - Hard cap: 200 characters per between-tool-call turn. Multiple turns are fine; each one stays terse.
 - Do NOT re-narrate workflow rules ("Step 1.5 requires me to invoke the Clarification Subroutine because..."). State the next action only.
-- Good: `Frame returned. Open Questions empty. Proceeding to Step 2.`
-- Good: `Verdict is needs-revision. Invoking the verdict gate.`
+- **Forward handoff**: every between-tool narration MUST end with a `Next:` clause naming the specific next action. No trailing-off allowed.
+- Good: `Frame returned. Open Questions empty. Next: Step 2 research (librarian + explore in parallel).`
+- Good: `Verdict is needs-revision. Next: invoke the verdict gate.`
+- Good: `Plan size 14,823 chars — within target. Next: Step 4.5 clarification check.`
 - Bad: `Now I need to check whether the frame output has any open questions per the Step 1.5 rule, and since it doesn't, I'll move on to the next step which is...`
+- Bad (no handoff): `Frame returned. Open Questions empty.`
 
 **Verdict gate**
 - MUST run Step 5.5 before rendering.

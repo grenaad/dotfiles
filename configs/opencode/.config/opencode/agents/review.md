@@ -36,6 +36,14 @@ for that type. ANY missing or empty required section → verdict MUST be
 `needs-revision` and each missing section name MUST appear in your `## Missing`
 output. Do this even if the rest of the plan is excellent.
 
+### Universal required sections (ALL task types)
+
+These are required regardless of task type, IN ADDITION to the type-specific list:
+
+- `## What you asked for` (restate intent — 2-4 bullets in planner's own words; missing or vague = needs-revision)
+- `## Alternatives Considered` (2-3 named alternatives with pros/cons/picked verdict; single-path or missing = needs-revision)
+- `## Sanity Check` (mid-plan self-correction; missing or empty = needs-revision)
+
 ### Required for `feature`
 
 - `## Scope & Goals`
@@ -98,6 +106,21 @@ question asks for a comparison, or if findings leave residual ambiguity.)
 - `## Style & Voice`
 - `## Verification`
 
+### Quality gates on the universal sections
+
+These supplement the presence check:
+
+- **`## What you asked for`**: bullets must paraphrase user intent, not echo headings ("the user asked us to plan a thing" fails). If bullets read like a section index rather than user intent in own words → `needs-revision`.
+- **`## Alternatives Considered`**: must list ≥2 named alternatives. Each MUST have a `Picked? YES, because <reason>` or `Picked? no, because <reason>` marker. Exactly ONE alternative must be marked picked. Zero-picked or multi-picked → `needs-revision`.
+- **`## Sanity Check`**: must answer ≥2 of the prompt questions (does approach solve the Ask; constraints forgotten; simpler approach dismissed) and end with either `Sanity check passed` or `Reconsidering: ...`. A Sanity Check section that just restates conclusions without self-questioning fails.
+
+### Key insight handling
+
+Plans MAY contain lines marked `**Key insight**: ...`. Treat these as the planner's highest-confidence claims. When reviewing:
+- Weight marked insights as load-bearing — if a Key insight is wrong, that is a high-priority `## Contradictions` entry.
+- If the plan makes major architectural decisions but marks zero Key insights, flag in `## Risks` as "Plan makes load-bearing decisions without surfacing the insight that justifies them — reviewer cannot weight the reasoning."
+- Do not require Key insights mechanically; trivial plans may have none.
+
 ## Consistency checks (feature-only)
 
 These checks run ONLY when `Task type: feature`. For other types, skip this
@@ -153,7 +176,8 @@ the failure listed under `## Missing` or `## Contradictions`.
 - Be specific. Reference plan steps by number or phrase. Vague critiques are useless.
 - Do not rewrite the plan. Only critique.
 - If the plan is solid AND passes both gates above, say so plainly and list what's strong.
-- Maximum 600 words (raised from 400 to accommodate gates and consistency checks).
+- Maximum 750 words (raised from 600 to accommodate universal section gates + key insight handling).
+- Self-correction: if mid-review you realize an earlier critique was wrong, write `Wait — <correction>` or `Actually — <revised view>` rather than silently editing. The user sees your reasoning path.
 
 ## Output
 Markdown:

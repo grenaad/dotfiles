@@ -3,15 +3,32 @@
  *
  * Architecture: we create one child session per main session for helper calls
  * (so we don't pollute the user's main conversation). All helper prompts go to
- * the same child session, which gives us caching for free via OpenCode's session
- * context, and keeps token costs lower by re-using the session's context window.
+ * the same child session.
+ *
+ * Why promptAsync + polling instead of prompt?
+ *   The sync `client.session.prompt(...)` endpoint waits for the entire message
+ *   lifecycle to complete on the server: streaming, persistence, indexing, and
+ *   step-finish events. Empirically (see ses_1c62586acffe6vURzZCuo7mZas) this
+ *   adds 12-159 seconds of post-stream finalization wait per call — far longer
+ *   than the model's actual completion time.
+ *
+ *   `promptAsync` returns 204 immediately, then we poll `session.messages` and
+ *   detect completion by looking for the latest assistant message's text part
+ *   with `time.end` set. That's the earliest moment we have the full response
+ *   text in our hands, without waiting for server-side finalization.
  *
  * Honors an optional AbortSignal — caller can race the helper call against a
- * timeout and abort if it overruns. On abort, helperCall rejects with an
- * AbortError; caller logs and falls open.
+ * timeout and abort if it overruns. On abort, helperCall calls session.abort
+ * server-side and rejects with AbortError; caller logs and falls open.
  */
 
-import type { createOpencodeClient, Part, AssistantMessage } from "@opencode-ai/sdk"
+import type {
+  createOpencodeClient,
+  Part,
+  TextPart,
+  AssistantMessage,
+  Message,
+} from "@opencode-ai/sdk"
 
 import { getState } from "./state"
 import { log } from "./log"
@@ -40,15 +57,15 @@ const DEFAULT_SYSTEM =
   "When asked for transformed text, respond with the transformed text only, " +
   "no commentary, no explanation."
 
+/** Poll interval while waiting for the assistant response to complete. */
+const POLL_INTERVAL_MS = 500
+
 interface SessionCreateOk {
   data?: { id?: string }
 }
 
-interface PromptResponseOk {
-  data?: {
-    info: AssistantMessage
-    parts: Part[]
-  }
+interface MessagesResponseOk {
+  data?: Array<{ info: Message; parts: Part[] }>
 }
 
 async function ensureHelperSession(client: Client, mainSessionID: string): Promise<string> {
@@ -65,15 +82,42 @@ async function ensureHelperSession(client: Client, mainSessionID: string): Promi
   return id
 }
 
-function extractText(reply: PromptResponseOk): string {
-  const parts = reply.data?.parts ?? []
-  const out: string[] = []
-  for (const p of parts) {
-    if (p.type === "text" && typeof p.text === "string") {
-      out.push(p.text)
+/**
+ * Find the most recent assistant message in the messages list, with all its
+ * text parts joined and a completion flag.
+ *
+ * The assistant message is "done" when:
+ *   - the message info has `time.completed` set, OR
+ *   - at least one text part has `time.end` set
+ *
+ * The earliest signal is text.time.end — that's set when the model finishes
+ * streaming, before any server-side finalization wait.
+ */
+function findCompletedAssistantText(
+  messages: Array<{ info: Message; parts: Part[] }>,
+  afterTimestamp: number,
+): string | null {
+  // Walk from the end (most recent) backwards.
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i]
+    if (!m || m.info.role !== "assistant") continue
+    const am = m.info as AssistantMessage
+    if (am.time.created < afterTimestamp) continue
+
+    const textParts = m.parts.filter((p): p is TextPart => p.type === "text")
+    if (textParts.length === 0) continue
+
+    // Done if message has completed timestamp, or all text parts have time.end
+    const messageDone = typeof am.time.completed === "number"
+    const textsDone = textParts.every((p) => typeof p.time?.end === "number")
+
+    if (messageDone || textsDone) {
+      return textParts.map((p) => p.text).join("\n").trim()
     }
+
+    return null // assistant message present but still streaming
   }
-  return out.join("\n").trim()
+  return null
 }
 
 class AbortError extends Error {
@@ -83,63 +127,81 @@ class AbortError extends Error {
   }
 }
 
-/**
- * Race a promise against an abort signal. Resolves with the promise's value or
- * rejects with AbortError if the signal fires first.
- */
-function withAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
-  if (!signal) return promise
-  if (signal.aborted) return Promise.reject(new AbortError())
-  return new Promise<T>((resolve, reject) => {
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new AbortError())
+      return
+    }
+    const timer = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort)
+      resolve()
+    }, ms)
     const onAbort = () => {
-      signal.removeEventListener("abort", onAbort)
+      clearTimeout(timer)
       reject(new AbortError())
     }
-    signal.addEventListener("abort", onAbort, { once: true })
-    promise.then(
-      (v) => {
-        signal.removeEventListener("abort", onAbort)
-        resolve(v)
-      },
-      (e) => {
-        signal.removeEventListener("abort", onAbort)
-        reject(e)
-      },
-    )
+    signal?.addEventListener("abort", onAbort, { once: true })
   })
 }
 
 /**
- * Make a helper call. Throws on failure (caller decides fail-open policy).
- * Throws AbortError if the optional signal aborts before the call returns.
+ * Make a helper call. Uses promptAsync + polling to avoid the post-stream
+ * finalization wait.
+ *
+ * Throws AbortError if the optional signal aborts before the response arrives.
  */
 export async function helperCall(opts: HelperCallOptions): Promise<string> {
   const start = Date.now()
   const helperID = await ensureHelperSession(opts.client, opts.sessionID)
 
   try {
-    const reply = (await withAbort(
-      opts.client.session.prompt({
-        path: { id: helperID },
-        body: {
-          parts: [{ type: "text", text: opts.prompt }],
-          system: opts.system ?? DEFAULT_SYSTEM,
-        },
-      }),
-      opts.signal,
-    )) as PromptResponseOk
-
-    const text = extractText(reply)
-    await log({
-      kind: "helper",
-      session: opts.sessionID,
-      helper_call: opts.label,
-      helper_latency_ms: Date.now() - start,
-      final_chars: text.length,
+    // Fire-and-forget the prompt. Server starts processing asynchronously.
+    await opts.client.session.promptAsync({
+      path: { id: helperID },
+      body: {
+        parts: [{ type: "text", text: opts.prompt }],
+        system: opts.system ?? DEFAULT_SYSTEM,
+      },
     })
-    return text
+
+    // Poll session.messages until we see a completed assistant response.
+    // We use `start` as the floor timestamp so we ignore responses from
+    // prior helper calls in the same child session.
+    while (true) {
+      if (opts.signal?.aborted) throw new AbortError()
+
+      await sleep(POLL_INTERVAL_MS, opts.signal)
+
+      const resp = (await opts.client.session.messages({
+        path: { id: helperID },
+      })) as MessagesResponseOk
+
+      const messages = resp.data ?? []
+      const text = findCompletedAssistantText(messages, start)
+      if (text !== null) {
+        await log({
+          kind: "helper",
+          session: opts.sessionID,
+          helper_call: opts.label,
+          helper_latency_ms: Date.now() - start,
+          final_chars: text.length,
+        })
+        return text
+      }
+    }
   } catch (err) {
     const isAbort = err instanceof AbortError || (err as Error).name === "AbortError"
+
+    if (isAbort) {
+      // Best-effort: tell the server to stop processing so we don't waste tokens
+      try {
+        await opts.client.session.abort({ path: { id: helperID } })
+      } catch {
+        /* swallow — abort is best-effort */
+      }
+    }
+
     await log({
       kind: "helper",
       session: opts.sessionID,

@@ -20,12 +20,19 @@ A raw user task description.
 
 ## Task
 - Identify the explicit ask in one sentence.
+- **Restate intent**: paraphrase what the user wants in 2-4 bullets, in your own words. This is the consistency check — if your paraphrase drifts from the ask, your framing is wrong.
+- Describe the **Current State**: what exists today (or "Nothing — greenfield" if applicable).
+- Describe the **Target State**: what the user wants after this change.
+- Surface the **Delta**: the specific gap between current and target. This is the load-bearing section — the planner consumes the Delta directly.
 - List concrete goals (what success looks like).
 - List explicit constraints (must / must-not).
 - List unstated assumptions you are making.
 - List open questions that, if answered, would change the plan.
 - Classify the task into one of five types (see Task Type below).
 - Apply **Generic-domain detection** (below) before finalizing.
+
+## Self-correction
+If during framing you realize an earlier statement (intent, current state, target state) was wrong, do NOT silently revise. Write `Wait — <correction>` or `Actually — <revised view>` and proceed with the corrected framing. Surfacing the correction lets the planner see your reasoning path.
 
 ## Generic-domain detection
 
@@ -81,15 +88,28 @@ Confidence:
 ## Constraints
 - No code. No file paths. No implementation hints.
 - No speculation beyond what the user said.
-- Maximum 200 words. If your output exceeds this, you are explaining instead of framing — cut.
+- Maximum 280 words (raised from 200 to accommodate Current/Target/Delta and Restate-intent sections). If your output exceeds this, cut prose — never drop required sections.
 - If the request is ambiguous, list ambiguities under "Open Questions" — do not guess.
+- Current State, Target State, and Delta are REQUIRED. If you cannot fill them, that itself is an Open Question (e.g. "Current State unknown — needs codebase exploration first").
 
 ## Output
-Markdown with these exact sections:
+Markdown with these exact sections, in this order:
 
 ```
 ## Ask
 <one sentence>
+
+## Restate intent
+- <2-4 bullets paraphrasing what the user wants, in your own words>
+
+## Current State
+<one paragraph or 2-5 bullets describing what exists today; "Nothing — greenfield" if applicable>
+
+## Target State
+<one paragraph or 2-5 bullets describing the post-change world>
+
+## Delta
+- <bullets naming the specific gap(s) between current and target — what must change>
 
 ## Goals
 - ...
