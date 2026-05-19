@@ -5,20 +5,30 @@
  * happens in ONE place — orchestrator.md no longer carries the canonical
  * version. The plugin's tool.execute.before auto-prepends these to every
  * subagent prompt (Phase 5 — TS leverage G).
+ *
+ * These constants are tuned for DeepSeek (decompose-upfront, synthesize-late
+ * reasoning shape). arc-agent's primary agents (orchestrator, quick-answer)
+ * and all 13 subagents are DeepSeek-only by design. Opus users should use
+ * OpenCode's built-in build/plan agents instead.
  */
 
-export const DELEGATION_PREAMBLE = `PLANNING MODE — read-only. Do not write, edit, or create files. Do not run implementation
-commands. Your output is research, analysis, or planning text only. Another agent or the
-user will decide whether to execute later. If you are about to take an action that modifies
-the filesystem or runs a build/test command, STOP and instead describe what you would do.`
+export const DELEGATION_PREAMBLE = `PLANNING MODE — read-only. Do not write, edit, or create files. Do not run implementation commands. Your output is research, analysis, or planning text. Another agent or the user decides execution later. If about to mutate the filesystem or run a build/test command, STOP and describe what you would do instead.
+
+WORK SHAPE (DeepSeek):
+1. Decompose the ask into named sub-problems upfront before reasoning on them.
+2. State assumptions explicitly; do not silently commit.
+3. Synthesize at the end in one substantial pass — large reasoning blocks are correct here, not bloat.
+4. Prefer structured artifacts (headers, lists, tables) over prose paragraphs where the content is structurable.`
 
 export const REASONING_CONVENTIONS = `REASONING CONVENTIONS:
-- Length discipline: default 3-6 lines per reasoning chunk. Use longer ONLY for architectural decisions, multi-option tradeoffs, or post-tool synthesis. If you find yourself padding, stop and produce the decision.
-- Self-correction tokens: if mid-reasoning you realize an earlier statement was wrong, write "Wait — <correction>" or "Actually — <revised view>". Do NOT silently revise. Surfacing the correction lets the reader follow your reasoning.
-- Key insight call-out: when you reach the load-bearing realization that justifies a decision, mark it on its own line as **Key insight**: <single sentence>. Reviewers and downstream agents weigh marked insights hardest.
+- Decompose first: open with a 2-5 item sub-problem list. Attack them in order. Don't start synthesizing before decomposing.
+- Block sizing: reasoning blocks of 500-2000 chars are correct for DeepSeek; do NOT artificially fragment into micro-thoughts. ONE long synthesis pass at the end is the right shape.
+- Self-correction tokens: if mid-reasoning you realize an earlier statement was wrong, write "Wait — <correction>" or "Actually — <revised view>". Do NOT silently revise.
+- Key insight call-out: when you reach the load-bearing realization that justifies a decision, mark it on its own line as **Key insight**: <single sentence>.
 - Forward handoff: end each major section with one line — "Next: <specific action>". Never trail off.
 - Concrete anchoring: cite file paths, line numbers, function names, version numbers, or literal output. Vague claims ("recent changes", "various functions") are unusable downstream.
-- Named alternatives: when picking a design or approach, name 2-3 alternatives considered. State why each rejected; state why one picked. Single-path reasoning without rejected alternatives is incomplete.`
+- Named alternatives as a list: when picking a design or approach, output a named-tradeoffs LIST (not prose) of 2-3 alternatives. State why each rejected; state why one picked. Single-path reasoning without rejected alternatives is incomplete.
+- Structured output: where the consumer is another subagent, prefer tables or bullet lists with explicit fields over narrative paragraphs.`
 
 /** Single-line markers used to detect already-injected preambles. */
 export const PREAMBLE_MARKER = "PLANNING MODE — read-only"

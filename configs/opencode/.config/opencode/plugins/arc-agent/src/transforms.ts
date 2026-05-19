@@ -14,9 +14,14 @@ import { helperCall } from "./helper"
 type Client = ReturnType<typeof createOpencodeClient>
 
 /** Helper-call timeouts. Strip is often a no-op so we fail-fast; compress
- *  is unconditionally valuable when triggered so we give it more headroom. */
+ *  is unconditionally valuable when triggered so we give it more headroom.
+ *
+ *  COMPRESS_TIMEOUT_MS raised 90s → 300s in v0.16: real ~21k-char plans on
+ *  DeepSeek require 90-180s for the helper to complete; the prior 90s cap
+ *  was firing aborts even on healthy runs. 300s leaves headroom without
+ *  burying a runaway helper indefinitely. */
 export const STRIP_TIMEOUT_MS = 30_000
-export const COMPRESS_TIMEOUT_MS = 90_000
+export const COMPRESS_TIMEOUT_MS = 300_000
 
 /**
  * Phrases that, when appearing as part of a markdown heading line, indicate

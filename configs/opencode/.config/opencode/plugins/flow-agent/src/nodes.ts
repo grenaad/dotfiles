@@ -75,7 +75,12 @@ Respond with JSON: { "goal", "scope", "deliverable_shape", "success_criteria", "
 
 const scan_target_area: NodeDef = {
   name: "scan_target_area",
-  tier: "scout",
+  // v0.2: promoted scout→synthesize. Without read/grep/glob tools (TODO below)
+  // this node has to enumerate plausible files from training memory, which
+  // takes longer than 90s on DeepSeek for non-trivial scopes. 240s budget
+  // matches its real latency profile. Same rationale applies to identify_patterns,
+  // decide_placement, decide_integration below.
+  tier: "synthesize",
   dependsOn: ["understand_ask"],
   description: "Identify the relevant files, key symbols, and conventions in the scope.",
   outputKeys: ["relevant_files", "key_symbols", "conventions"],
@@ -104,7 +109,10 @@ Respond with JSON:
 
 const identify_patterns: NodeDef = {
   name: "identify_patterns",
-  tier: "scout",
+  // v0.2: promoted scout→synthesize. This was the worst offender — 4/6 smokes
+  // timed out at 90s. DeepSeek wanders on "list patterns" prompts; 240s lets
+  // it converge. Future work: tighter prompt with explicit max-count schema.
+  tier: "synthesize",
   dependsOn: ["understand_ask"],
   description: "List existing patterns to mirror and anti-patterns to avoid.",
   outputKeys: ["existing_patterns_to_mirror", "anti_patterns"],
@@ -154,7 +162,10 @@ Respond with JSON:
 
 const decide_placement: NodeDef = {
   name: "decide_placement",
-  tier: "scout",
+  // v0.2: promoted scout→synthesize. Reads two upstream synthesize-tier
+  // outputs; the merge step on DeepSeek frequently exceeded 90s. Same fix
+  // family as identify_patterns/scan_target_area.
+  tier: "synthesize",
   dependsOn: ["scan_target_area", "identify_patterns"],
   description: "Decide where the new code lives (file + general location).",
   outputKeys: ["target_file", "rationale", "alternatives_rejected"],
@@ -208,7 +219,10 @@ Respond with JSON:
 
 const decide_integration: NodeDef = {
   name: "decide_integration",
-  tier: "scout",
+  // v0.2: promoted scout→synthesize. Depends on decide_placement (now synthesize)
+  // and identify_patterns (now synthesize). The integration reasoning is the
+  // most expensive merge in the DAG; 90s was insufficient.
+  tier: "synthesize",
   dependsOn: ["decide_placement", "identify_patterns"],
   description: "Decide where and how the new function is wired into existing code.",
   outputKeys: ["integration_points", "diff_outline"],

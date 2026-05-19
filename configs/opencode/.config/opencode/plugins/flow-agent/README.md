@@ -2,13 +2,20 @@
 
 OpenCode plugin: dataflow-graph planning workflow tuned for DeepSeek v4-pro-max.
 
-**Status**: v0.1, experimental. See `SAFETY.md` before invoking.
+**Status**: v0.2, experimental. See `SAFETY.md` before invoking.
 
 ## Concept
 
 A fixed directed acyclic graph of 12 nodes, executed in 7 topological waves.
-Most nodes are "scout" tier (one short structured prompt → JSON output).
-One node (`draft_plan`) is "synthesize" tier (full plan body in one pass).
+Each node carries an effort tier that controls its per-call deadline:
+- **scout** (90s): short structured prompt → JSON output. Used for
+  understand_ask, enumerate_risks, decide_signature, list_test_cases,
+  list_failure_modes, and the two critique nodes.
+- **synthesize** (240s): heavier reasoning. Used for scan_target_area,
+  identify_patterns, decide_placement, decide_integration, and draft_plan.
+  v0.1 had these on the scout tier; chronic 90s timeouts (especially in
+  identify_patterns) drove the promotion in v0.2.
+
 Nodes within a wave run concurrently via `Promise.all` over child sessions.
 The final render is done deterministically in TypeScript — no extra model
 call needed since it's just draft body + optional critique bullets.
