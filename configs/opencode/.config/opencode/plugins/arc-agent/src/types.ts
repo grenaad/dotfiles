@@ -15,29 +15,36 @@
  *
  * SubagentType is derived from this object's keys, so adding a new subagent
  * requires editing exactly one place.
+ *
+ * v0.16: raised by ~1000 chars across the board to absorb the larger DeepSeek
+ * preamble (DELEGATION_PREAMBLE + REASONING_CONVENTIONS now totals ~2013 chars,
+ * up from ~1400 in the Opus-tuned v0.15). Without this bump, restater (1000)
+ * and delta-mapper (1500) ceilings sit BELOW the preamble alone, and
+ * `truncateAtBoundary` (naive head-keep) silently truncates the USER task
+ * content from the tail — degrading subagent quality without surfacing it.
  */
 export const CEILINGS = {
   // primary subagents (v0.1+)
-  frame: 2_000,
-  librarian: 5_000,
-  explore: 5_000,
-  edgecases: 6_000,
-  plan: 12_000,
-  review: 18_000,
-  "quick-answer": 4_000,
-  general: 8_000,
+  frame: 3_500, // was 2_000 — preamble ~2k + task ~750 + headroom
+  librarian: 6_500, // was 5_000
+  explore: 6_500, // was 5_000
+  edgecases: 7_500, // was 6_000
+  plan: 14_000, // was 12_000
+  review: 20_000, // was 18_000
+  "quick-answer": 5_500, // was 4_000
+  general: 9_500, // was 8_000
   // micro-subagents (v0.14): specialized reasoning moves
   // Note: ceilings here cap the INPUT prompt size, not the output budget.
   // Critic reads the full plan as input, so its ceiling must approximate review's.
-  restater: 1_000,
-  "delta-mapper": 1_500,
-  "ambiguity-spotter": 2_000,
-  alternatives: 3_000,
-  "batch-planner": 5_000,
-  critic: 18_000,
+  restater: 3_000, // was 1_000 — preamble alone is 2k; need real headroom for the task verbatim
+  "delta-mapper": 3_500, // was 1_500
+  "ambiguity-spotter": 4_000, // was 2_000
+  alternatives: 5_000, // was 3_000
+  "batch-planner": 6_500, // was 5_000
+  critic: 20_000, // was 18_000
   // v0.15 additions
-  synthesis: 6_000,
-  "decision-options": 20_000,
+  synthesis: 7_500, // was 6_000
+  "decision-options": 22_000, // was 20_000
 } as const
 
 export type SubagentType = keyof typeof CEILINGS
