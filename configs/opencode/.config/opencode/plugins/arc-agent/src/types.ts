@@ -99,6 +99,24 @@ export const NO_OPEN_QUESTIONS_SUBAGENTS = new Set<SubagentType>([
 ])
 
 /**
+ * v0.19 — Workflow-memory: which subagents are authorized to write notes via
+ * the `workflow_note` tool. The set is intentionally narrow: only the analysis
+ * specialists whose job is meta-evaluation (skeptic, expectation-keeper,
+ * assumption-ledger, confidence-auditor, scope-guard, falsifier). Primary
+ * subagents (frame, librarian, plan, review) and structural micro-agents
+ * (restater, delta-mapper, etc.) do NOT write notes — their outputs are
+ * captured automatically as workflow entries instead.
+ */
+export const WRITE_NOTE_SUBAGENTS = new Set<SubagentType>([
+  "skeptic",
+  "expectation-keeper",
+  "assumption-ledger",
+  "confidence-auditor",
+  "scope-guard",
+  "falsifier",
+])
+
+/**
  * Plan-size buckets. Buckets are ordered by ascending size; `bucketFor`
  * picks the first whose `max` is not exceeded.
  *
@@ -166,7 +184,102 @@ export interface ArcState {
   /** Extracted open-question strings per source subagent (Phase 7). */
   openQuestions?: Array<{ source: SubagentType; questions: string[] }>
   hookErrors: Array<{ hook: string; t: number; error: string }>
+  /**
+   * v0.19 — Workflow-memory: intra-workflow cross-turn memory.
+   * Initialized lazily on first subagent capture. Cleared when restater is
+   * called with non-empty memory (signals start of a new workflow within the
+   * same session).
+   */
+  workflowMemory?: WorkflowMemoryState
 }
+
+/**
+ * v0.19 — Workflow-memory types.
+ *
+ * Solves Sub-problem A (intra-workflow cross-turn memory): subagents within a
+ * single workflow can query past subagent outputs and read structured notes
+ * left by analysis specialists at earlier steps.
+ *
+ * Lifecycle: in-memory only, lives in ArcState.workflowMemory, cleared when a
+ * new workflow starts. No disk persistence — for cross-session memory see
+ * Sub-problem B (separate plan, not implemented here).
+ */
+
+/**
+ * A captured subagent output. The plugin's `tool.execute.after` hook appends
+ * one entry per subagent invocation (after task type / verdict / open-question
+ * extraction has already happened). Append-only.
+ */
+export interface WorkflowEntry {
+  /** Stable id: `<subagent>-<seq>` e.g. "frame-001", "skeptic-003". */
+  id: string
+  /** Monotonic sequence number across the whole workflow. */
+  seq: number
+  /** Source subagent. */
+  subagent: SubagentType
+  /** ms-since-workflow-start when capture happened. */
+  tMs: number
+  /** Verbatim output. May be truncated; see `truncated`. */
+  output: string
+  /** Original output size in chars (before any truncation). */
+  size: number
+  /** True when `output` was truncated to fit ENTRY_MAX_CHARS. */
+  truncated: boolean
+  /** Auto-extracted tags: section headings + key terms. */
+  tags: string[]
+}
+
+/**
+ * A structured note authored by an analysis specialist (WRITE_NOTE_SUBAGENTS).
+ * Used for cross-turn signal — e.g. skeptic CP1 writes a `pattern` note that
+ * skeptic CP4 can recall to detect recurrence.
+ */
+export interface WorkflowNote {
+  /** Stable id: `note-<author>-<seq>` e.g. "note-skeptic-002". */
+  id: string
+  /** Per-author sequence number. */
+  seq: number
+  /** Author subagent (must be in WRITE_NOTE_SUBAGENTS). */
+  author: SubagentType
+  /** ms-since-workflow-start when written. */
+  tMs: number
+  /** Note category. */
+  type: "observation" | "concern" | "pattern" | "retraction"
+  /**
+   * Short anchor for cross-step matching, e.g. "expectation:postgresql" or
+   * "pattern:frame-capture-risk". Lowercased; substring-matched on query.
+   */
+  topic: string
+  /** Content of the note. Bounded by NOTE_MAX_CHARS (200). */
+  content: string
+  /** Ids of related entries/notes (best-effort; not validated). */
+  refs: string[]
+}
+
+export interface WorkflowMemoryState {
+  /** ms timestamp when the workflow started (first capture). */
+  startedAtMs: number
+  /** Append-only entry log. */
+  entries: WorkflowEntry[]
+  /** Append-only note log. */
+  notes: WorkflowNote[]
+  /** Next sequence number for entries (global). */
+  nextEntrySeq: number
+  /** Next sequence number for notes, per author. */
+  nextNoteSeqByAuthor: Partial<Record<SubagentType, number>>
+  /** Triviality at the time of creation; memory is suppressed on ultra/trivial. */
+  trivialityAtCreation?: TrivialityTier
+}
+
+/** Caps for workflow-memory writes. Soft limits enforced by store. */
+export const ENTRY_MAX_CHARS = 8_000
+export const NOTE_MAX_CHARS = 200
+export const NOTE_TOPIC_MAX_CHARS = 80
+
+/** Caps for recall queries. */
+export const RECALL_DEFAULT_LIMIT = 5
+export const RECALL_MAX_LIMIT = 20
+export const RECALL_EXCERPT_CHARS = 300
 
 export type TrivialityTier = "ultra" | "trivial" | "full"
 
@@ -239,4 +352,52 @@ export interface ErrorLog extends LogBase {
   error: string
 }
 
-export type LogLine = StartupLog | ToolBeforeLog | ToolAfterLog | HelperLog | ErrorLog
+/** v0.19 — workflow-memory log variants. */
+
+export interface WorkflowCaptureLog extends LogBase {
+  kind: "workflow.capture"
+  subagent: SubagentType
+  entry_id: string
+  size: number
+  truncated: boolean
+  tag_count: number
+  memory_total_entries: number
+}
+
+export interface WorkflowRecallLog extends LogBase {
+  kind: "workflow.recall"
+  /** Caller subagent (best-effort, may be unknown when called by orchestrator directly). */
+  caller?: SubagentType
+  query_keys: string[]
+  result_count: number
+  /** True when memory was empty / not initialized at recall time. */
+  empty: boolean
+}
+
+export interface WorkflowNoteLog extends LogBase {
+  kind: "workflow.note"
+  author: SubagentType
+  note_id: string
+  type: WorkflowNote["type"]
+  topic: string
+  /** True when author is NOT in WRITE_NOTE_SUBAGENTS and the write was rejected. */
+  rejected?: boolean
+}
+
+export interface WorkflowResetLog extends LogBase {
+  kind: "workflow.reset"
+  /** Reason for clearing memory; usually "restater-after-existing-entries". */
+  reason: string
+  prior_entry_count: number
+}
+
+export type LogLine =
+  | StartupLog
+  | ToolBeforeLog
+  | ToolAfterLog
+  | HelperLog
+  | ErrorLog
+  | WorkflowCaptureLog
+  | WorkflowRecallLog
+  | WorkflowNoteLog
+  | WorkflowResetLog

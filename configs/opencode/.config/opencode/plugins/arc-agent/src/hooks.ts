@@ -23,8 +23,9 @@
 import type { Hooks } from "@opencode-ai/plugin"
 import type { createOpencodeClient, Event } from "@opencode-ai/sdk"
 
-import { getState, clearState } from "./state"
+import { ensureWorkflowMemory, getState, clearState, resetWorkflowMemory } from "./state"
 import { log } from "./log"
+import { appendEntry } from "./workflow-memory"
 import {
   stripOpenQuestions,
   compressPlanForReview,
@@ -58,6 +59,7 @@ import {
   isSubagent,
   isTaskToolArgs,
   NO_OPEN_QUESTIONS_SUBAGENTS,
+  WRITE_NOTE_SUBAGENTS,
   type SubagentType,
 } from "./types"
 
@@ -105,6 +107,41 @@ function injectPreamble(prompt: string): string {
   return pieces.join("\n")
 }
 
+const WORKFLOW_MEMORY_MARKER = "Workflow memory available"
+
+/**
+ * v0.19 — Inject a short "workflow memory available" awareness block. Only
+ * fires on full-triviality workflows with non-empty memory. Idempotent (skips
+ * if the marker is already present in the prompt head).
+ */
+function injectWorkflowMemoryAwareness(
+  prompt: string,
+  entryCount: number,
+  noteCount: number,
+  canWriteNotes: boolean,
+): string {
+  if (prompt.slice(0, 4000).includes(WORKFLOW_MEMORY_MARKER)) return prompt
+  if (entryCount === 0 && noteCount === 0) return prompt
+
+  const lines: string[] = []
+  lines.push(`${WORKFLOW_MEMORY_MARKER} (${entryCount} entries, ${noteCount} notes from earlier in this workflow):`)
+  lines.push("- `workflow_recall` — query past subagent outputs and analysis-specialist notes by subagent/topic/keyword.")
+  if (canWriteNotes) {
+    lines.push(
+      "- `workflow_note` — write a structured note (observation/concern/pattern/retraction) " +
+        "for later specialists to recall. Authorized for analysis specialists only.",
+    )
+  }
+  lines.push(
+    "Use recall when context from an earlier step would sharpen your analysis. Do not " +
+      "duplicate verbatim content the orchestrator already threaded into this prompt. " +
+      "Recall is best-effort; if it fails or returns nothing, continue without it.",
+  )
+  lines.push("")
+
+  return `${lines.join("\n")}${prompt}`
+}
+
 /**
  * Append the task-type structural template to a plan-subagent prompt.
  * No-op if the prompt already references the template's first heading.
@@ -146,6 +183,27 @@ export function buildHooks(client: Client): Hooks {
 
         const sub: SubagentType = output.args.subagent_type
         const s = getState(input.sessionID)
+
+        // v0.19 — New-workflow detection. When restater is the next called
+        // subagent AND memory already has entries, this is a new workflow
+        // within the same session: clear memory before capture begins. Also
+        // clear stale per-workflow flags so a fresh workflow starts cleanly.
+        if (sub === "restater" && s.workflowMemory && s.workflowMemory.entries.length > 0) {
+          const prior = s.workflowMemory.entries.length
+          resetWorkflowMemory(s)
+          s.taskType = undefined
+          s.trivialityTier = undefined
+          s.normalizedVerdict = undefined
+          s.openQuestions = undefined
+          s.lastPlan = undefined
+          await log({
+            kind: "workflow.reset",
+            session: input.sessionID,
+            reason: "restater-after-existing-entries",
+            prior_entry_count: prior,
+          })
+        }
+
         let working = output.args.prompt
 
         // Phase 5 — auto-prepend delegation preamble + REASONING CONVENTIONS
@@ -154,6 +212,21 @@ export function buildHooks(client: Client): Hooks {
         // Phase 3 — on plan subagent, inject task-type structural template
         if (sub === "plan" && s.taskType) {
           working = injectTemplate(working, s.taskType)
+        }
+
+        // v0.19 — Phase D: workflow-memory awareness block. Only inject on
+        // `full` workflows (we don't have a confirmed tier yet if frame is the
+        // first call, but the memory will be empty in that case and the
+        // function no-ops). Skip on `ultra`/`trivial` even when memory exists.
+        const memory = s.workflowMemory
+        const trivialitySuppresses = s.trivialityTier === "ultra" || s.trivialityTier === "trivial"
+        if (memory && !trivialitySuppresses) {
+          working = injectWorkflowMemoryAwareness(
+            working,
+            memory.entries.length,
+            memory.notes.length,
+            WRITE_NOTE_SUBAGENTS.has(sub),
+          )
         }
 
         const originalChars = working.length
@@ -251,6 +324,37 @@ export function buildHooks(client: Client): Hooks {
         const outText = typeof output.output === "string" ? output.output : ""
         const size = outText.length
         const s = getState(input.sessionID)
+
+        // v0.19 — Phase B: auto-capture subagent output into workflow memory.
+        // Suppress on ultra/trivial triviality (memory not useful when there
+        // are only 3-5 entries; cost not justified). Capture happens BEFORE
+        // any of the existing branches so it covers every subagent uniformly.
+        try {
+          const trivialitySuppresses = s.trivialityTier === "ultra" || s.trivialityTier === "trivial"
+          if (!trivialitySuppresses && outText.length > 0) {
+            const memory = ensureWorkflowMemory(s)
+            const entry = appendEntry(memory, { subagent: sub, output: outText })
+            await log({
+              kind: "workflow.capture",
+              session: input.sessionID,
+              subagent: sub,
+              entry_id: entry.id,
+              size: entry.size,
+              truncated: entry.truncated,
+              tag_count: entry.tags.length,
+              memory_total_entries: memory.entries.length,
+            })
+          }
+        } catch (err) {
+          // Best-effort; do not let memory failures break the workflow.
+          await log({
+            kind: "error",
+            session: input.sessionID,
+            hook: "tool.execute.after.workflow-capture",
+            subagent: sub,
+            error: (err as Error).message,
+          })
+        }
 
         // Phase 3+6 — capture task type AND classify triviality from frame
         if (sub === "frame") {

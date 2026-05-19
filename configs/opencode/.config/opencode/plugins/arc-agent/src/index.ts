@@ -8,16 +8,40 @@
  * Disable with env var: ARC_AGENT_DISABLED=1
  *
  * Logs to: ~/.local/share/opencode/log/arc-agent.log
+ *
+ * v0.19 additions:
+ *   - Workflow-memory store (intra-workflow cross-turn memory)
+ *   - Tools: workflow_recall, workflow_recall_full, workflow_note
  */
 
 import type { Plugin, PluginModule } from "@opencode-ai/plugin"
 
 import { buildHooks } from "./hooks"
 import { log } from "./log"
+import {
+  workflowNoteTool,
+  workflowRecallFullTool,
+  workflowRecallTool,
+} from "./workflow-memory-tools"
+
+const ENV_DISABLE = "ARC_AGENT_DISABLED" as const
+const DISABLED = process.env[ENV_DISABLE] === "1"
 
 const server: Plugin = async ({ client }) => {
   await log({ kind: "init", session: "<startup>", note: "arc-agent loaded" })
-  return buildHooks(client)
+  const hooks = buildHooks(client)
+  // When disabled, suppress tool registration too — buildHooks already returns
+  // a minimal Hooks object; we just skip the tool map.
+  if (DISABLED) return hooks
+  return {
+    ...hooks,
+    tool: {
+      ...(hooks.tool ?? {}),
+      workflow_recall: workflowRecallTool,
+      workflow_recall_full: workflowRecallFullTool,
+      workflow_note: workflowNoteTool,
+    },
+  }
 }
 
 const pluginModule: PluginModule = {
