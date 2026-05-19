@@ -22,15 +22,21 @@
  */
 
 import {
+  DEFERRAL_AUTHORIZED_AUTHORS,
   ENTRY_MAX_CHARS,
   NOTE_MAX_CHARS,
   NOTE_TOPIC_MAX_CHARS,
+  NOTE_TYPE_AUTHORIZATION,
+  NOTE_TYPES,
   RECALL_DEFAULT_LIMIT,
   RECALL_EXCERPT_CHARS,
   RECALL_MAX_LIMIT,
+  UNKNOWN_STATUSES,
+  UNKNOWN_STATUS_VALUES,
   WRITE_NOTE_SUBAGENTS,
   type SubagentType,
   type TrivialityTier,
+  type UnknownStatus,
   type WorkflowEntry,
   type WorkflowMemoryState,
   type WorkflowNote,
@@ -119,6 +125,14 @@ export function appendNote(
   if (!WRITE_NOTE_SUBAGENTS.has(input.author)) {
     return { ok: false, reason: `subagent "${input.author}" is not authorized to write notes` }
   }
+  // v0.20 — per-author type authorization
+  const allowedTypes = NOTE_TYPE_AUTHORIZATION[input.author]
+  if (!allowedTypes || !allowedTypes.includes(input.type)) {
+    return {
+      ok: false,
+      reason: `subagent "${input.author}" is not authorized to write notes of type "${input.type}" (allowed: ${(allowedTypes ?? []).join(", ") || "none"})`,
+    }
+  }
   if (input.topic.length === 0) {
     return { ok: false, reason: "topic is required" }
   }
@@ -128,6 +142,20 @@ export function appendNote(
 
   const topic = input.topic.slice(0, NOTE_TOPIC_MAX_CHARS).toLowerCase().trim()
   const content = input.content.slice(0, NOTE_MAX_CHARS).trim()
+
+  // v0.20 — deferral authorization for unknowns ledger.
+  // If this is an unknown note with S: deferred status, the author must be in
+  // DEFERRAL_AUTHORIZED_AUTHORS (plan + analysts). Researchers can only emit
+  // S: open or S: resolved.
+  if (input.type === NOTE_TYPES.unknown) {
+    const status = parseUnknownStatus(content)
+    if (status === UNKNOWN_STATUSES.deferred && !DEFERRAL_AUTHORIZED_AUTHORS.has(input.author)) {
+      return {
+        ok: false,
+        reason: `subagent "${input.author}" is not authorized to mark unknowns as deferred (only plan + analysts can defer)`,
+      }
+    }
+  }
 
   const seq = (state.nextNoteSeqByAuthor[input.author] ?? 0) + 1
   state.nextNoteSeqByAuthor[input.author] = seq
@@ -238,6 +266,40 @@ export function recall(state: WorkflowMemoryState, q: RecallQuery): RecallHit[] 
 }
 
 /**
+ * v0.20 — Mark an entry as superseded by a later re-frame. History is
+ * preserved (entries remain in the log); the marker tells downstream consumers
+ * the entry no longer represents current understanding.
+ *
+ * Returns true if the entry was found and marked, false if no such id.
+ */
+export function markEntrySuperseded(
+  state: WorkflowMemoryState,
+  id: string,
+  reason: string,
+  byId?: string,
+): boolean {
+  for (const e of state.entries) {
+    if (e.id === id) {
+      e.superseded = byId ? { byId, reason } : { reason }
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * v0.20 — Find the latest non-superseded frame entry. Used by
+ * frame-validity-check and the re-frame mechanism.
+ */
+export function latestFrame(state: WorkflowMemoryState): WorkflowEntry | undefined {
+  for (let i = state.entries.length - 1; i >= 0; i--) {
+    const e = state.entries[i]!
+    if (e.subagent === "frame" && !e.superseded) return e
+  }
+  return undefined
+}
+
+/**
  * Fetch the full body of an entry or note by id. Used for follow-up reads
  * after the excerpt-based recall surfaces a candidate.
  */
@@ -310,6 +372,118 @@ function bestCutAt(text: string, max: number): number {
   const space = slice.lastIndexOf(" ")
   if (space > max * 0.9) return space
   return max
+}
+
+/**
+ * v0.20 — Parse the unknown-note content convention:
+ *   "Q: <question> | I: <investigation> | S: open|resolved|deferred | E: <evidence>"
+ *
+ * Permissive: returns `undefined` for status when the content doesn't follow
+ * the convention. Callers that need strict parsing should check for `undefined`.
+ */
+export interface ParsedUnknown {
+  question?: string
+  investigation?: string
+  status?: UnknownStatus
+  evidence?: string
+}
+
+/** Built from UNKNOWN_STATUS_VALUES so adding a new status updates the regex automatically. */
+const UNKNOWN_STATUS_RE = new RegExp(`\\bS:\\s*(${UNKNOWN_STATUS_VALUES.join("|")})\\b`, "i")
+
+export function parseUnknownStatus(content: string): UnknownStatus | undefined {
+  const m = UNKNOWN_STATUS_RE.exec(content)
+  if (!m) return undefined
+  const raw = m[1]!.toLowerCase()
+  // Type-safe narrowing — verify the parsed string is actually a known status.
+  for (const s of UNKNOWN_STATUS_VALUES) {
+    if (s === raw) return s
+  }
+  return undefined
+}
+
+export function parseUnknownNote(content: string): ParsedUnknown {
+  const out: ParsedUnknown = {}
+  const qMatch = /\bQ:\s*([^|]+?)(?:\s*\||$)/.exec(content)
+  if (qMatch?.[1]) out.question = qMatch[1].trim()
+  const iMatch = /\bI:\s*([^|]+?)(?:\s*\||$)/.exec(content)
+  if (iMatch?.[1]) out.investigation = iMatch[1].trim()
+  const status = parseUnknownStatus(content)
+  if (status) out.status = status
+  const eMatch = /\bE:\s*([^|]+?)(?:\s*\||$)/.exec(content)
+  if (eMatch?.[1]) out.evidence = eMatch[1].trim()
+  return out
+}
+
+/**
+ * v0.20 — Group all unknown notes by topic. For each topic, take the latest
+ * note (max tMs) and report its status. Returns grouped buckets.
+ */
+export interface UnknownsStatusReport {
+  open: UnknownsStatusEntry[]
+  resolved: UnknownsStatusEntry[]
+  deferred: UnknownsStatusEntry[]
+  unparseable: UnknownsStatusEntry[]
+}
+
+export interface UnknownsStatusEntry {
+  topic: string
+  latestNoteId: string
+  author: SubagentType
+  question?: string
+  investigation?: string
+  evidence?: string
+  status?: UnknownStatus
+  rawContent: string
+}
+
+export function unknownsStatus(state: WorkflowMemoryState): UnknownsStatusReport {
+  // Group notes by topic, keep latest per topic. Latest = highest tMs, with
+  // append order (state.notes array order) as the tiebreaker — within the
+  // same millisecond, later writes win.
+  const latestByTopic = new Map<string, WorkflowNote>()
+  for (const n of state.notes) {
+    if (n.type !== NOTE_TYPES.unknown) continue
+    const prev = latestByTopic.get(n.topic)
+    // Newer (n.tMs >= prev.tMs) — using >= ensures append-order tiebreak
+    if (!prev || n.tMs >= prev.tMs) latestByTopic.set(n.topic, n)
+  }
+
+  const report: UnknownsStatusReport = {
+    open: [],
+    resolved: [],
+    deferred: [],
+    unparseable: [],
+  }
+
+  for (const n of latestByTopic.values()) {
+    const parsed = parseUnknownNote(n.content)
+    const entry: UnknownsStatusEntry = {
+      topic: n.topic,
+      latestNoteId: n.id,
+      author: n.author,
+      question: parsed.question,
+      investigation: parsed.investigation,
+      evidence: parsed.evidence,
+      status: parsed.status,
+      rawContent: n.content,
+    }
+    switch (parsed.status) {
+      case UNKNOWN_STATUSES.open:
+        report.open.push(entry)
+        break
+      case UNKNOWN_STATUSES.resolved:
+        report.resolved.push(entry)
+        break
+      case UNKNOWN_STATUSES.deferred:
+        report.deferred.push(entry)
+        break
+      default:
+        report.unparseable.push(entry)
+    }
+  }
+
+  return report
 }
 
 /**

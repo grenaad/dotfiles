@@ -12,6 +12,16 @@
  * v0.19 additions:
  *   - Workflow-memory store (intra-workflow cross-turn memory)
  *   - Tools: workflow_recall, workflow_recall_full, workflow_note
+ *
+ * v0.20 additions:
+ *   - Layer 0 stance + Layer 5 falsification clause (prompt-level)
+ *   - Unknowns ledger (numbered U1..Un) with per-author authorization
+ *   - Multi-layer analysis (synthesis template)
+ *   - Spike-first reconnaissance node (new agent)
+ *   - Forced re-frame on contradiction (new agent + soft prompt injection)
+ *   - Tool: workflow_unknowns_status
+ *   - Observability: workflow.stance, workflow.unknown.*, workflow.layer-check,
+ *     workflow.reframe.*, workflow.spike.executed log lines
  */
 
 import type { Plugin, PluginModule } from "@opencode-ai/plugin"
@@ -22,6 +32,7 @@ import {
   workflowNoteTool,
   workflowRecallFullTool,
   workflowRecallTool,
+  workflowUnknownsStatusTool,
 } from "./workflow-memory-tools"
 
 const ENV_DISABLE = "ARC_AGENT_DISABLED" as const
@@ -40,6 +51,7 @@ const server: Plugin = async ({ client }) => {
       workflow_recall: workflowRecallTool,
       workflow_recall_full: workflowRecallFullTool,
       workflow_note: workflowNoteTool,
+      workflow_unknowns_status: workflowUnknownsStatusTool,
     },
   }
 }

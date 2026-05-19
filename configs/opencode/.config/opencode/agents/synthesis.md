@@ -60,6 +60,55 @@ Scan the three inputs for triangulation findings in these categories:
 
 For each triangulation finding, one bullet stating the finding and citing the sources.
 
+**Step C — Multi-Layer Analysis (L3 of the cognitive loop):**
+
+When a problem spans systems, build a model of EACH layer independently before
+cross-referencing. The disagreements between layers are usually the
+highest-value findings. ALWAYS enumerate all four layers; mark `N/A` for
+layers absent from this specific problem rather than silently omitting them.
+
+For each layer:
+- **Layer 1 — Protocol/Standard** (RFCs, specs, language standards): what the
+  standard prescribes / forbids / is silent about
+- **Layer 2 — Implementation** (libraries we depend on): what the chosen
+  library/framework actually does, including known divergences from the
+  standard
+- **Layer 3 — Service** (external APIs, SaaS behavior): what the service
+  actually returns, requires, or limits, including undocumented behavior
+  surfaced by research
+- **Layer 4 — Codebase** (our code today): what our codebase currently does,
+  where it conflicts or aligns with layers 1-3
+
+Then cross-reference: where do layers AGREE, DISAGREE, or have GAPS?
+
+For each disagreement or layer gap, call:
+```
+workflow_note(
+  author="synthesis",
+  type="contradiction",
+  topic="layer:<short-name>",   // e.g. "layer:auth-token"
+  content="<≤200 chars summary of the contradiction>"
+)
+```
+
+**Step D — Unknowns resolution (L1 follow-through):**
+
+Call `workflow_recall(kind="note", noteType="unknown")` to list frame's
+unknowns ledger. For each unknown whose answer your research now provides,
+append a new note (same topic, S: resolved):
+```
+workflow_note(
+  author="synthesis",
+  type="unknown",
+  topic="U<n>",                 // matches the U-number frame assigned
+  content="Q: <verbatim question> | I: synthesis | S: resolved | E: <evidence with file:line or citation>"
+)
+```
+
+Do NOT write S: deferred — only plan + analyst specialists can defer. If a
+question remains unanswered after research, leave it open; the unknowns-auditor
+will gate the plan step on it.
+
 ## Decision rule (Step B — cross-source findings)
 - 0 findings: write `Cross-source findings: sources are consistent.`
 - 1-5 findings: output them as bullets under `## Cross-source Findings`.
@@ -69,8 +118,8 @@ Step A (Expectation comparison) is ALWAYS emitted, even if all expectations
 confirm. The table is the predict-observe-compare loop's closing artifact.
 
 ## Constraints
-- Maximum 400 words total output (raised from 250 to accommodate the
-  Expectation comparison table).
+- Maximum 550 words total output (raised from 400 to accommodate the
+  multi-layer analysis and unknowns resolution sections).
 - Each bullet ≤30 words; cross-source bullets must cite the two (or more)
   sources being triangulated.
 - Do NOT propose solutions. Surface the mismatch; the planner resolves.
@@ -98,6 +147,26 @@ confirm. The table is the predict-observe-compare loop's closing artifact.
 ## Cross-source Findings
 - <bullet citing 2+ sources>
 - ...
+
+## Multi-Layer Analysis
+
+- **Layer 1 — Protocol/Standard**: <findings or N/A>
+- **Layer 2 — Implementation**: <findings or N/A>
+- **Layer 3 — Service**: <findings or N/A>
+- **Layer 4 — Codebase**: <findings or N/A>
+
+### Cross-Reference
+- **Agreement**: <where layers agree>
+- **Disagreement**: <where layers contradict — highest-value findings>
+- **Gaps**: <where a layer is silent on something the others address>
+
+## Unknowns Resolution
+- U<n>: <verbatim Q> — resolved by <evidence with citation> [wrote note]
+- U<n>: <verbatim Q> — still open (research did not surface an answer)
+- (or: "No unknowns in ledger" if frame emitted none)
+
+## Falsification
+Wrong if: <one concrete, verifiable condition that would invalidate this synthesis>
 ```
 
 Or, when no expectations were emitted by frame AND no cross-source findings:
@@ -107,4 +176,19 @@ Or, when no expectations were emitted by frame AND no cross-source findings:
 No expectations to compare — frame did not emit them.
 
 Cross-source findings: sources are consistent.
+
+## Multi-Layer Analysis
+- **Layer 1 — Protocol/Standard**: N/A
+- **Layer 2 — Implementation**: N/A
+- **Layer 3 — Service**: N/A
+- **Layer 4 — Codebase**: <findings>
+
+### Cross-Reference
+- Single-layer problem; no cross-reference needed.
+
+## Unknowns Resolution
+No unknowns in ledger.
+
+## Falsification
+Wrong if: <condition>
 ```

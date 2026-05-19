@@ -62,6 +62,14 @@ export const CEILINGS = {
   falsifier: 10_000, // reads framing + picked option + relevant findings excerpts
   "scope-guard": 8_000, // reads framing's ask/goals + latest step output
   "expectation-keeper": 15_000, // reads expectations + cumulative evidence (grows over passes)
+  // v0.20 — cognitive-loop infrastructure
+  // spike: light reconnaissance before frame; reads minimal prompt + does 1-4 tool calls
+  spike: 4_500,
+  // unknowns-auditor: gates plan; reads unknowns-status + relevant entries via tools
+  "unknowns-auditor": 8_000,
+  // frame-validity-check: detects contradiction between frame and research; reads
+  // frame + research entries + multi-layer cross-reference notes
+  "frame-validity-check": 16_000,
 } as const
 
 export type SubagentType = keyof typeof CEILINGS
@@ -96,24 +104,141 @@ export const NO_OPEN_QUESTIONS_SUBAGENTS = new Set<SubagentType>([
   "falsifier",
   "scope-guard",
   "expectation-keeper",
+  // v0.20 additions
+  "spike",
+  "unknowns-auditor",
+  "frame-validity-check",
 ])
 
 /**
- * v0.19 — Workflow-memory: which subagents are authorized to write notes via
- * the `workflow_note` tool. The set is intentionally narrow: only the analysis
- * specialists whose job is meta-evaluation (skeptic, expectation-keeper,
- * assumption-ledger, confidence-auditor, scope-guard, falsifier). Primary
- * subagents (frame, librarian, plan, review) and structural micro-agents
- * (restater, delta-mapper, etc.) do NOT write notes — their outputs are
- * captured automatically as workflow entries instead.
+ * NoteType categories for workflow_note writes.
+ *
+ * Defined as a const map so the runtime values and the literal-union type
+ * stay in sync. `NoteType` is derived from `NOTE_TYPES` — never write the
+ * string literal ("unknown" etc.) inline anywhere; always reference
+ * `NOTE_TYPES.<member>` for the value.
+ *
+ * Categories:
+ *   - observation:   neutral finding worth recording
+ *   - concern:       potential issue surfaced for later review
+ *   - pattern:       recurring shape worth flagging across turns
+ *   - retraction:    explicit withdrawal of a prior note
+ *   - unknown:       L1 unknowns-ledger entry (uses Q/I/S/E content shape)
+ *   - contradiction: L3 multi-layer or cross-source contradiction;
+ *                    also used by frame-validity-check on L4 re-frame trigger
+ *   - assumption:    L0 assumption-ledger entry
  */
-export const WRITE_NOTE_SUBAGENTS = new Set<SubagentType>([
+export const NOTE_TYPES = {
+  observation: "observation",
+  concern: "concern",
+  pattern: "pattern",
+  retraction: "retraction",
+  unknown: "unknown",
+  contradiction: "contradiction",
+  assumption: "assumption",
+} as const
+
+export type NoteType = (typeof NOTE_TYPES)[keyof typeof NOTE_TYPES]
+
+/** Ordered tuple form, useful for enum-style zod schemas and exhaustive checks. */
+export const NOTE_TYPE_VALUES = [
+  NOTE_TYPES.observation,
+  NOTE_TYPES.concern,
+  NOTE_TYPES.pattern,
+  NOTE_TYPES.retraction,
+  NOTE_TYPES.unknown,
+  NOTE_TYPES.contradiction,
+  NOTE_TYPES.assumption,
+] as const satisfies ReadonlyArray<NoteType>
+
+/**
+ * Per-author allowed NoteType map. Enforced inside `appendNote`.
+ *
+ * Two cohorts:
+ *   - Researchers (frame, librarian, explore, synthesis) — narrowly scoped:
+ *     unknowns + observations + (synthesis only) contradictions.
+ *     Researchers discover; they don't critique.
+ *   - Analysts (skeptic, falsifier, scope-guard, etc.) — broader authorship
+ *     because their job IS critique. `scope-guard` and `unknowns-auditor` are
+ *     also authorized for `unknown` so they can mark items as deferred (see
+ *     DEFERRAL_AUTHORIZED_AUTHORS).
+ *
+ * `plan` and `review` are deliberately absent — primary artifact producers
+ * are read-write through their captured entries, not via notes.
+ */
+export const NOTE_TYPE_AUTHORIZATION: Record<string, ReadonlyArray<NoteType>> = {
+  // Researchers
+  frame: [NOTE_TYPES.unknown],
+  librarian: [NOTE_TYPES.unknown, NOTE_TYPES.observation],
+  explore: [NOTE_TYPES.unknown, NOTE_TYPES.observation],
+  synthesis: [NOTE_TYPES.unknown, NOTE_TYPES.observation, NOTE_TYPES.contradiction],
+  // Analysts
+  skeptic: [
+    NOTE_TYPES.pattern,
+    NOTE_TYPES.concern,
+    NOTE_TYPES.retraction,
+    NOTE_TYPES.contradiction,
+    NOTE_TYPES.assumption,
+    NOTE_TYPES.unknown,
+  ],
+  "expectation-keeper": [NOTE_TYPES.observation, NOTE_TYPES.contradiction, NOTE_TYPES.concern],
+  "assumption-ledger": [NOTE_TYPES.assumption, NOTE_TYPES.concern],
+  "confidence-auditor": [NOTE_TYPES.observation, NOTE_TYPES.contradiction, NOTE_TYPES.concern],
+  "scope-guard": [NOTE_TYPES.observation, NOTE_TYPES.concern, NOTE_TYPES.unknown],
+  falsifier: [NOTE_TYPES.contradiction, NOTE_TYPES.concern],
+  "unknowns-auditor": [NOTE_TYPES.observation, NOTE_TYPES.unknown],
+  "frame-validity-check": [NOTE_TYPES.contradiction],
+}
+
+/**
+ * The set of subagents authorized to write notes via `workflow_note`.
+ * Derived from `NOTE_TYPE_AUTHORIZATION` keys so adding a new author requires
+ * editing exactly one place.
+ *
+ * Researchers (frame, librarian, explore, synthesis) and analysts (skeptic,
+ * falsifier, etc.) write notes. Primary artifact producers (plan, review)
+ * and structural micro-agents (restater, delta-mapper, etc.) do not —
+ * their outputs are captured automatically as entries instead.
+ */
+export const WRITE_NOTE_SUBAGENTS: ReadonlySet<SubagentType> = new Set(
+  Object.keys(NOTE_TYPE_AUTHORIZATION).filter((k): k is SubagentType =>
+    (SUBAGENT_NAMES as readonly string[]).includes(k),
+  ),
+)
+
+/**
+ * v0.20 — Unknowns ledger status. Const map + derived type so callers
+ * reference `UNKNOWN_STATUSES.open` rather than string literals.
+ */
+export const UNKNOWN_STATUSES = {
+  open: "open",
+  resolved: "resolved",
+  deferred: "deferred",
+} as const
+
+export type UnknownStatus = (typeof UNKNOWN_STATUSES)[keyof typeof UNKNOWN_STATUSES]
+
+export const UNKNOWN_STATUS_VALUES = [
+  UNKNOWN_STATUSES.open,
+  UNKNOWN_STATUSES.resolved,
+  UNKNOWN_STATUSES.deferred,
+] as const satisfies ReadonlyArray<UnknownStatus>
+
+/**
+ * Authors who may write `S: deferred` status into an unknown note.
+ *
+ * Researchers (frame, librarian, explore, synthesis) can only write open
+ * or resolved. Deferral is a *decision* about whether the unknown is
+ * acceptable to ship without — that's an analyst/specialist responsibility.
+ *
+ * Note: authors must ALSO be authorized to write `unknown`-type notes via
+ * NOTE_TYPE_AUTHORIZATION. The two checks compose: author is allowed type
+ * X AND (for unknowns specifically) author is allowed to defer.
+ */
+export const DEFERRAL_AUTHORIZED_AUTHORS: ReadonlySet<string> = new Set([
   "skeptic",
-  "expectation-keeper",
-  "assumption-ledger",
-  "confidence-auditor",
   "scope-guard",
-  "falsifier",
+  "unknowns-auditor",
 ])
 
 /**
@@ -191,6 +316,18 @@ export interface ArcState {
    * same session).
    */
   workflowMemory?: WorkflowMemoryState
+  /**
+   * v0.20 — Re-frame state. `frameRebuildPending` is set when
+   * frame-validity-check returns Status: rebuild; the next subagent prompt is
+   * augmented with a rebuild directive (Layer 4 forced re-frame). Cap of 1
+   * rebuild per workflow via `frameRebuildCount`.
+   */
+  frameRebuildCount?: number
+  frameRebuildPending?: {
+    reason: string
+    pivot: string
+    triggeredBy: string
+  }
 }
 
 /**
@@ -227,6 +364,12 @@ export interface WorkflowEntry {
   truncated: boolean
   /** Auto-extracted tags: section headings + key terms. */
   tags: string[]
+  /**
+   * v0.20 — Set when a later re-frame (frame-validity-check returning rebuild)
+   * invalidates this entry. History is preserved (entries remain append-only);
+   * downstream consumers can detect superseded artifacts via this marker.
+   */
+  superseded?: { byId?: string; reason: string }
 }
 
 /**
@@ -243,11 +386,12 @@ export interface WorkflowNote {
   author: SubagentType
   /** ms-since-workflow-start when written. */
   tMs: number
-  /** Note category. */
-  type: "observation" | "concern" | "pattern" | "retraction"
+  /** Note category. v0.20 expanded — see NoteType. */
+  type: NoteType
   /**
    * Short anchor for cross-step matching, e.g. "expectation:postgresql" or
-   * "pattern:frame-capture-risk". Lowercased; substring-matched on query.
+   * "pattern:frame-capture-risk" or "U1" (for unknowns). Lowercased;
+   * substring-matched on query.
    */
   topic: string
   /** Content of the note. Bounded by NOTE_MAX_CHARS (200). */
@@ -376,11 +520,12 @@ export interface WorkflowRecallLog extends LogBase {
 
 export interface WorkflowNoteLog extends LogBase {
   kind: "workflow.note"
-  author: SubagentType
+  /** Author as provided by the tool caller; not narrowed to SubagentType because rejected writes may carry an invalid name. */
+  author: string
   note_id: string
-  type: WorkflowNote["type"]
+  type: NoteType
   topic: string
-  /** True when author is NOT in WRITE_NOTE_SUBAGENTS and the write was rejected. */
+  /** True when the write was rejected (invalid author, unauthorized type, or other validation failure). */
   rejected?: boolean
 }
 
@@ -389,6 +534,71 @@ export interface WorkflowResetLog extends LogBase {
   /** Reason for clearing memory; usually "restater-after-existing-entries". */
   reason: string
   prior_entry_count: number
+}
+
+/** v0.20 — cognitive-loop observability log variants. */
+
+export interface WorkflowStanceLog extends LogBase {
+  kind: "workflow.stance"
+  /** First artifact subagent observed in this workflow. */
+  first_artifact_subagent: SubagentType
+}
+
+export interface WorkflowUnknownDeclaredLog extends LogBase {
+  kind: "workflow.unknown.declared"
+  author: SubagentType
+  topic: string
+  /** Truncated question text for the log. */
+  question_excerpt: string
+}
+
+export interface WorkflowUnknownResolvedLog extends LogBase {
+  kind: "workflow.unknown.resolved"
+  author: SubagentType
+  topic: string
+  note_id: string
+  /** Truncated evidence text for the log. */
+  evidence_excerpt: string
+}
+
+export interface WorkflowUnknownDeferredLog extends LogBase {
+  kind: "workflow.unknown.deferred"
+  author: SubagentType
+  topic: string
+  reason_excerpt: string
+}
+
+export interface WorkflowUnknownGateLog extends LogBase {
+  kind: "workflow.unknown.gate"
+  verdict: "ALL_RESOLVED" | "OPEN_UNKNOWNS_REMAIN" | "DEFERRED_ACCEPTABLE" | "UNKNOWN"
+  open_count: number
+  resolved_count: number
+  deferred_count: number
+}
+
+export interface WorkflowLayerCheckLog extends LogBase {
+  kind: "workflow.layer-check"
+  layers_present: number
+  layers_na: number
+  contradictions: number
+}
+
+export interface WorkflowReframeTriggeredLog extends LogBase {
+  kind: "workflow.reframe.triggered"
+  reason_excerpt: string
+  pivot_excerpt: string
+  triggered_by: string
+}
+
+export interface WorkflowReframeSuppressedLog extends LogBase {
+  kind: "workflow.reframe.suppressed"
+  reason: string
+}
+
+export interface WorkflowSpikeExecutedLog extends LogBase {
+  kind: "workflow.spike.executed"
+  output_size: number
+  na: boolean
 }
 
 export type LogLine =
@@ -401,3 +611,12 @@ export type LogLine =
   | WorkflowRecallLog
   | WorkflowNoteLog
   | WorkflowResetLog
+  | WorkflowStanceLog
+  | WorkflowUnknownDeclaredLog
+  | WorkflowUnknownResolvedLog
+  | WorkflowUnknownDeferredLog
+  | WorkflowUnknownGateLog
+  | WorkflowLayerCheckLog
+  | WorkflowReframeTriggeredLog
+  | WorkflowReframeSuppressedLog
+  | WorkflowSpikeExecutedLog

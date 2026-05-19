@@ -14,8 +14,22 @@ import { tool } from "@opencode-ai/plugin"
 
 import { getState } from "./state"
 import { log } from "./log"
-import { appendNote, getFull, recall } from "./workflow-memory"
-import { isSubagent, RECALL_EXCERPT_CHARS, type SubagentType, type WorkflowNote } from "./types"
+import {
+  appendNote,
+  getFull,
+  parseUnknownNote,
+  parseUnknownStatus,
+  recall,
+  unknownsStatus,
+} from "./workflow-memory"
+import {
+  isSubagent,
+  NOTE_TYPE_VALUES,
+  NOTE_TYPES,
+  RECALL_EXCERPT_CHARS,
+  UNKNOWN_STATUSES,
+  type SubagentType,
+} from "./types"
 
 const z = tool.schema
 
@@ -47,8 +61,8 @@ function formatRecallHits(
     lines.push("")
   }
   lines.push(
-    "Call workflow_recall again with a different query, or `workflow_recall_full` is not exposed — " +
-      "use entry/note ids in subsequent reasoning as references.",
+    "Call workflow_recall again with a different query, or workflow_recall_full(id) " +
+      "to fetch the verbatim body of any result.",
   )
   return lines.join("\n")
 }
@@ -84,9 +98,13 @@ export const workflowRecallTool = tool({
           "matches all expectation notes). Lowercased.",
       ),
     noteType: z
-      .enum(["observation", "concern", "pattern", "retraction"])
+      .enum(NOTE_TYPE_VALUES)
       .optional()
-      .describe("Note-only: filter by note type."),
+      .describe(
+        "Note-only: filter by note type. v0.20 adds 'unknown' (for the " +
+          "unknowns ledger), 'contradiction' (multi-layer cross-reference " +
+          "findings + re-frame triggers), and 'assumption' (assumption-ledger).",
+      ),
     kind: z
       .enum(["entry", "note", "both"])
       .optional()
@@ -218,14 +236,19 @@ export const workflowNoteTool = tool({
     author: z
       .string()
       .describe(
-        "Your own subagent name (e.g. 'skeptic'). Must be one of the analysis-specialist " +
-          "subagents; other authors are rejected.",
+        "Your own subagent name (e.g. 'skeptic', 'frame', 'synthesis'). Must be one " +
+          "of the authorized subagents AND authorized for the chosen `type`; other " +
+          "combinations are rejected. See NOTE_TYPE_AUTHORIZATION.",
       ),
     type: z
-      .enum(["observation", "concern", "pattern", "retraction"])
+      .enum(NOTE_TYPE_VALUES)
       .describe(
-        "observation = neutral finding; concern = potential issue surfaced; " +
-          "pattern = recurring shape worth flagging; retraction = withdraw a prior note.",
+        "Note category. Per-author allowed types are enforced. " +
+          "observation = neutral finding; concern = potential issue; " +
+          "pattern = recurring shape; retraction = withdraw a prior note; " +
+          "unknown = unknowns-ledger entry (use 'Q: ... | I: ... | S: open|resolved|deferred | E: ...' format); " +
+          "contradiction = cross-source or cross-layer contradiction; " +
+          "assumption = assumption-ledger entry.",
       ),
     topic: z
       .string()
@@ -257,9 +280,9 @@ export const workflowNoteTool = tool({
         await log({
           kind: "workflow.note",
           session: context.sessionID,
-          author: "skeptic", // best-effort placeholder for the log shape
+          author: authorArg,
           note_id: "<rejected>",
-          type: args.type as WorkflowNote["type"],
+          type: args.type,
           topic: args.topic,
           rejected: true,
         })
@@ -283,7 +306,7 @@ export const workflowNoteTool = tool({
           session: context.sessionID,
           author: authorArg,
           note_id: "<rejected>",
-          type: args.type as WorkflowNote["type"],
+          type: args.type,
           topic: args.topic,
           rejected: true,
         })
@@ -302,6 +325,40 @@ export const workflowNoteTool = tool({
         topic: result.note.topic,
       })
 
+      // v0.20 — Phase F: unknowns-ledger observability. Emit a structured log
+      // for declared / resolved / deferred unknowns so we can iterate on
+      // ledger behaviour empirically.
+      if (result.note.type === NOTE_TYPES.unknown) {
+        const parsed = parseUnknownNote(result.note.content)
+        const status = parsed.status
+        if (status === UNKNOWN_STATUSES.open) {
+          await log({
+            kind: "workflow.unknown.declared",
+            session: context.sessionID,
+            author: authorArg,
+            topic: result.note.topic,
+            question_excerpt: (parsed.question ?? result.note.content).slice(0, 160),
+          })
+        } else if (status === UNKNOWN_STATUSES.resolved) {
+          await log({
+            kind: "workflow.unknown.resolved",
+            session: context.sessionID,
+            author: authorArg,
+            topic: result.note.topic,
+            note_id: result.note.id,
+            evidence_excerpt: (parsed.evidence ?? "").slice(0, 160),
+          })
+        } else if (status === UNKNOWN_STATUSES.deferred) {
+          await log({
+            kind: "workflow.unknown.deferred",
+            session: context.sessionID,
+            author: authorArg,
+            topic: result.note.topic,
+            reason_excerpt: (parsed.evidence ?? parsed.investigation ?? "").slice(0, 160),
+          })
+        }
+      }
+
       return {
         title: `workflow_note: ${result.note.id} recorded`,
         output: `Note ${result.note.id} recorded (type=${result.note.type}, topic="${result.note.topic}").`,
@@ -315,6 +372,107 @@ export const workflowNoteTool = tool({
         error: (err as Error).message,
       })
       return { title: "workflow_note: error", output: "Note write failed (best-effort; continue)." }
+    }
+  },
+})
+
+/**
+ * v0.20 — Tool that reports the status of all unknowns in the ledger.
+ *
+ * Used primarily by `unknowns-auditor` to gate the workflow before plan, but
+ * any subagent may call it. Returns grouped buckets (open / resolved /
+ * deferred / unparseable) with latest-per-topic semantics.
+ */
+export const workflowUnknownsStatusTool = tool({
+  description:
+    "Report the status of all unknowns in the workflow-memory ledger. Returns " +
+    "grouped lists (open / resolved / deferred / unparseable). Each entry shows " +
+    "the latest note for that topic. Use this to check whether any blocking " +
+    "unknowns remain before committing to a plan, or to see which questions " +
+    "the workflow surfaced that still need answers.",
+  args: {},
+  async execute(_args, context) {
+    try {
+      const s = getState(context.sessionID)
+      const memory = s.workflowMemory
+      if (!memory) {
+        return {
+          title: "workflow_unknowns_status: empty",
+          output:
+            "Workflow memory is not initialized — no unknowns recorded yet (or this is a " +
+            "triviality fast-path that skips the unknowns ledger).",
+        }
+      }
+
+      const report = unknownsStatus(memory)
+      const total =
+        report.open.length + report.resolved.length + report.deferred.length + report.unparseable.length
+
+      if (total === 0) {
+        return {
+          title: "workflow_unknowns_status: no unknowns",
+          output:
+            "No unknown notes have been written this workflow. Either the framer did not " +
+            "enumerate any open questions, or the task is in a triviality tier that skips " +
+            "the ledger.",
+        }
+      }
+
+      const formatEntry = (e: { topic: string; latestNoteId: string; author: SubagentType; question?: string; investigation?: string; evidence?: string; rawContent: string }): string => {
+        const q = e.question ?? "<unparseable question>"
+        const evidence = e.evidence ? ` — evidence: ${e.evidence}` : ""
+        const investigation = e.investigation ? ` (I: ${e.investigation})` : ""
+        return `  - ${e.topic} [${e.latestNoteId} by ${e.author}]: ${q}${investigation}${evidence}`
+      }
+
+      const lines: string[] = []
+      lines.push(`Unknowns ledger: ${report.open.length} open / ${report.resolved.length} resolved / ${report.deferred.length} deferred / ${report.unparseable.length} unparseable`)
+      lines.push("")
+
+      if (report.open.length > 0) {
+        lines.push(`## ${UNKNOWN_STATUSES.open.toUpperCase()} (blocking)`)
+        for (const e of report.open) lines.push(formatEntry(e))
+        lines.push("")
+      }
+      if (report.resolved.length > 0) {
+        lines.push(`## ${UNKNOWN_STATUSES.resolved.toUpperCase()}`)
+        for (const e of report.resolved) lines.push(formatEntry(e))
+        lines.push("")
+      }
+      if (report.deferred.length > 0) {
+        lines.push(`## ${UNKNOWN_STATUSES.deferred.toUpperCase()}`)
+        for (const e of report.deferred) lines.push(formatEntry(e))
+        lines.push("")
+      }
+      if (report.unparseable.length > 0) {
+        lines.push("## UNPARSEABLE (notes that did not follow the Q/I/S/E convention)")
+        for (const e of report.unparseable) {
+          lines.push(`  - ${e.topic} [${e.latestNoteId} by ${e.author}]: ${e.rawContent.slice(0, 120)}`)
+        }
+        lines.push("")
+      }
+
+      return {
+        title: `workflow_unknowns_status: ${report.open.length} open, ${total} total`,
+        output: lines.join("\n"),
+        metadata: {
+          open: report.open.length,
+          resolved: report.resolved.length,
+          deferred: report.deferred.length,
+          unparseable: report.unparseable.length,
+        },
+      }
+    } catch (err) {
+      await log({
+        kind: "error",
+        session: context.sessionID,
+        hook: "tool:workflow_unknowns_status",
+        error: (err as Error).message,
+      })
+      return {
+        title: "workflow_unknowns_status: error",
+        output: "Unknowns status lookup failed (best-effort; continue).",
+      }
     }
   },
 })

@@ -85,7 +85,10 @@ Case matrix MUST have at least one test row. Add happy-path tests too.
 ## Verification
 Ordered numbered commands with pass criteria. Format:
   1. <command> — expect: <criterion>
-End with one optional manual smoke entry including shutdown procedure.`
+End with one optional manual smoke entry including shutdown procedure.
+
+## Falsification
+Wrong if: <one concrete, verifiable condition that would invalidate this plan>`
 
 const FIX_TEMPLATE = `## What you asked for
 - <2-4 bullets paraphrasing the user's request, in your own words>
@@ -137,7 +140,10 @@ config flags, what monitoring to watch.
 
 ## Verification
 Ordered numbered commands with pass criteria. Include repro from above as
-the first verification step.`
+the first verification step.
+
+## Falsification
+Wrong if: <one concrete, verifiable condition that would invalidate this fix>`
 
 const REFACTOR_TEMPLATE = `## What you asked for
 - <2-4 bullets paraphrasing the user's request, in your own words>
@@ -191,7 +197,10 @@ invariant from above to a test.
 
 ## Verification
 Ordered numbered commands. Include the equivalence test suite as the
-gating step.`
+gating step.
+
+## Falsification
+Wrong if: <one concrete, verifiable condition that would invalidate this refactor>`
 
 const INVESTIGATE_TEMPLATE = `## What you asked for
 - <2-4 bullets paraphrasing the user's request, in your own words>
@@ -243,7 +252,10 @@ What remains unresolved and would require more investigation.
 
 ## Verification
 How a reader can validate the recommendation: reproducible queries, citations
-to re-check, follow-up reading. No code-execution steps.`
+to re-check, follow-up reading. No code-execution steps.
+
+## Falsification
+Wrong if: <one concrete, verifiable condition that would invalidate this recommendation>`
 
 const DOCS_TEMPLATE = `## What you asked for
 - <2-4 bullets paraphrasing the user's request, in your own words>
@@ -290,7 +302,10 @@ End with \`Sanity check passed.\` OR \`Reconsidering: <what changes>\`.
 
 ## Verification
 How to confirm the doc is accurate and useful: examples copy-paste run,
-links resolve, terminology consistent with code, scope matches audience.`
+links resolve, terminology consistent with code, scope matches audience.
+
+## Falsification
+Wrong if: <one concrete, verifiable condition that would invalidate this doc plan>`
 
 export const TASK_TYPE_TEMPLATES: Record<TaskType, string> = {
   feature: FEATURE_TEMPLATE,
@@ -322,6 +337,7 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
     "## Edge Case → Handling Matrix",
     "## Test Plan",
     "## Verification",
+    "## Falsification",
   ],
   fix: [
     "## What you asked for",
@@ -336,6 +352,7 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
     "## Regression Test",
     "## Rollback Plan",
     "## Verification",
+    "## Falsification",
   ],
   refactor: [
     "## What you asked for",
@@ -350,6 +367,7 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
     "## Sanity Check",
     "## Equivalence Tests",
     "## Verification",
+    "## Falsification",
   ],
   investigate: [
     "## What you asked for",
@@ -362,6 +380,7 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
     "## Recommendation",
     "## Sanity Check",
     "## Verification",
+    "## Falsification",
   ],
   docs: [
     "## What you asked for",
@@ -375,5 +394,6 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
     "## Style & Voice",
     "## Sanity Check",
     "## Verification",
+    "## Falsification",
   ],
 }

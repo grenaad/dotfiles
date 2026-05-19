@@ -18,6 +18,23 @@ Restate a user's task as a precise problem statement before any research or plan
 ## Input
 A raw user task description.
 
+## Spike output (when available)
+
+A `spike` subagent may have run before you (on `full` and `medium` workflows).
+Spike does ≤4 read/grep/glob calls and surfaces concrete observations about
+the actual files/system involved. BEFORE you write your framing:
+
+1. Call `workflow_recall({subagent: "spike"})` to fetch any spike output.
+2. If spike emitted findings, weigh them against your initial framing.
+3. If spike contradicts an assumption you would have made, restate your
+   framing using spike's observations as ground truth — do NOT silently
+   resolve the conflict in your head.
+4. If spike returned `## Spike — N/A` or no spike output exists (trivial
+   workflow), proceed normally.
+
+Spike's observations are CITED ground truth (file:line). Treat them with
+higher confidence than your priors.
+
 ## Task
 - Identify the explicit ask in one sentence.
 - **Restate intent**: paraphrase what the user wants in 2-4 bullets, in your own words. This is the consistency check — if your paraphrase drifts from the ask, your framing is wrong.
@@ -27,7 +44,7 @@ A raw user task description.
 - List concrete goals (what success looks like).
 - List explicit constraints (must / must-not).
 - List unstated assumptions you are making.
-- List open questions that, if answered, would change the plan.
+- List open questions that, if answered, would change the plan. These are NUMBERED (U1, U2, …) and tracked across the workflow — see "Unknowns ledger" below.
 - Classify the task into one of five types (see Task Type below).
 - Apply **Generic-domain detection** (below) before finalizing.
 
@@ -53,6 +70,51 @@ When re-framing is needed, do NOT edit individual bullets. Instead:
 
 Silent edits to existing sections are forbidden. The downstream consumer must
 see that re-framing happened and what shifted.
+
+## Unknowns ledger (numbered, tracked across the workflow)
+
+Open Questions are the L1 (unknowns enumeration) layer of the cognitive loop.
+A good unknown is a question whose answer would CHANGE THE PLAN. Aesthetic or
+trivial unknowns ("should we use 2 or 4 space indent?") do not belong here.
+
+Each unknown must be numbered U1, U2, U3, … and emitted in two places:
+
+1. **In your output** under `## Open Questions`, formatted as:
+   ```
+   - U1: <question> — why it changes the plan: <one line>
+   - U2: <question> — why it changes the plan: <one line>
+   ```
+
+2. **As a workflow_note** for each unknown, so later subagents can recall
+   and resolve them. Call the tool ONCE per unknown:
+   ```
+   workflow_note(
+     author="frame",
+     type="unknown",
+     topic="U1",                  // matches the number above
+     content="Q: <question> | I: pending | S: open | E: "
+   )
+   ```
+
+The Q/I/S/E convention:
+- **Q**: the question itself (≤80 chars)
+- **I**: investigation status — "pending" at frame time; later subagents update
+- **S**: status — one of `open` / `resolved` / `deferred` (frame ALWAYS writes `open`)
+- **E**: evidence — empty at frame time; filled in by whoever resolves it
+
+Later in the workflow, librarian/explore/synthesis may write follow-up notes
+on the same topic (same U-number) with S: resolved and E: <evidence with
+file:line or doc citation>. Only plan + analyst specialists may write
+S: deferred — researchers cannot defer.
+
+A specialist (`unknowns-auditor`) gates the plan step on resolution. If any
+unknown remains S: open at that gate, the plan is held until it's resolved
+or explicitly deferred.
+
+If you cannot enumerate any unknowns whose answers would change the plan,
+write "No unknowns — frame is fully specified" and skip the workflow_note
+calls. Padding the ledger with trivial unknowns is worse than emitting an
+empty list.
 
 ## Expectations (testable hypotheses)
 
@@ -146,7 +208,9 @@ Markdown with these exact sections, in this order:
 - ...
 
 ## Open Questions
-- ...
+- U1: <question> — why it changes the plan: <one line>
+- U2: <question> — why it changes the plan: <one line>
+- (or: "No unknowns — frame is fully specified")
 
 ## Task Type
 <feature | fix | refactor | investigate | docs>
@@ -166,3 +230,19 @@ If re-framing was triggered (see Re-frame protocol), insert immediately after
 ```
 
 Omit Drift Notes on first-pass framings.
+
+## Falsification (required, last section)
+
+Always end the output with:
+
+```
+## Falsification
+Wrong if: <one concrete, verifiable condition that would invalidate this framing>
+```
+
+A good falsification names a check that could in principle confirm or refute
+the framing — e.g. "Wrong if the codebase already has a CSV endpoint that
+satisfies the Ask without any new code" (verifiable by grep) or "Wrong if
+the user's 'simplify' intent actually means 'rewrite from scratch'"
+(verifiable by clarification). Tautologies, preferences, and generic risk
+are NOT falsifiers.

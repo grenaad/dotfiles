@@ -3,7 +3,7 @@
  * Keyed by sessionID. Cleared when a session ends (best-effort via event hook).
  */
 
-import { createMemory } from "./workflow-memory"
+import { createMemory, markEntrySuperseded } from "./workflow-memory"
 import type { ArcState, WorkflowMemoryState } from "./types"
 
 const store = new Map<string, ArcState>()
@@ -39,7 +39,43 @@ export function ensureWorkflowMemory(state: ArcState): WorkflowMemoryState {
 /**
  * v0.19 — Reset workflow memory. Used when restater is called with non-empty
  * memory (signals start of a new workflow within the same session).
+ *
+ * v0.20 — Also clears frame-rebuild state so a fresh workflow doesn't inherit
+ * a pending rebuild directive from the previous one.
  */
 export function resetWorkflowMemory(state: ArcState): void {
   state.workflowMemory = createMemory(state.trivialityTier)
+  state.frameRebuildCount = undefined
+  state.frameRebuildPending = undefined
+}
+
+/**
+ * v0.20 — Mark the current frame entry as superseded by a re-frame, and set
+ * the pending-rebuild directive that the next tool.execute.before hook will
+ * inject as a preamble. Idempotent: if a rebuild is already pending, returns
+ * false without changing state.
+ */
+export function markFrameSuperseded(
+  state: ArcState,
+  frameEntryId: string,
+  reason: string,
+  pivot: string,
+  triggeredBy: string,
+): boolean {
+  if (state.frameRebuildPending) return false
+  const memory = state.workflowMemory
+  if (memory) markEntrySuperseded(memory, frameEntryId, reason)
+  state.frameRebuildPending = { reason, pivot, triggeredBy }
+  return true
+}
+
+/**
+ * v0.20 — Clear the pending rebuild directive (called after frame re-runs).
+ * Increments frameRebuildCount so the 1-rebuild cap is enforceable.
+ */
+export function clearFrameRebuild(state: ArcState): void {
+  if (state.frameRebuildPending) {
+    state.frameRebuildCount = (state.frameRebuildCount ?? 0) + 1
+    state.frameRebuildPending = undefined
+  }
 }

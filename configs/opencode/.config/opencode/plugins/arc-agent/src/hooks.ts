@@ -23,9 +23,16 @@
 import type { Hooks } from "@opencode-ai/plugin"
 import type { createOpencodeClient, Event } from "@opencode-ai/sdk"
 
-import { ensureWorkflowMemory, getState, clearState, resetWorkflowMemory } from "./state"
+import {
+  clearFrameRebuild,
+  clearState,
+  ensureWorkflowMemory,
+  getState,
+  markFrameSuperseded,
+  resetWorkflowMemory,
+} from "./state"
 import { log } from "./log"
-import { appendEntry } from "./workflow-memory"
+import { appendEntry, latestFrame, unknownsStatus } from "./workflow-memory"
 import {
   stripOpenQuestions,
   compressPlanForReview,
@@ -105,6 +112,143 @@ function injectPreamble(prompt: string): string {
   if (!hasConventions) pieces.push(REASONING_CONVENTIONS, "")
   pieces.push(prompt)
   return pieces.join("\n")
+}
+
+/** v0.20 — marker for the frame-rebuild directive preamble. Idempotent injection. */
+const FRAME_REBUILD_MARKER = "FRAME REBUILD REQUIRED"
+
+/**
+ * v0.20 — When a re-frame is pending, inject a rebuild directive into the
+ * next subagent prompt. Two shapes:
+ *   - For non-frame subagents: tell them to STOP and let restater+frame run
+ *     before any further analysis (soft injection — agent's prompt-following
+ *     does the actual halt)
+ *   - For frame itself: thread the pivot into its preamble so the next frame
+ *     output incorporates the rebuild context
+ *
+ * Returns the (possibly modified) prompt. Idempotent.
+ */
+function injectFrameRebuildDirective(
+  prompt: string,
+  sub: SubagentType,
+  pending: { reason: string; pivot: string; triggeredBy: string },
+): string {
+  if (prompt.slice(0, 1200).includes(FRAME_REBUILD_MARKER)) return prompt
+
+  if (sub === "frame") {
+    const directive =
+      `${FRAME_REBUILD_MARKER} — incorporate this pivot into your output.\n` +
+      `Pivot: ${pending.pivot}\n` +
+      `Reason: ${pending.reason}\n` +
+      `Triggered by: ${pending.triggeredBy}\n` +
+      `Use the re-frame protocol from your spec: emit \`Re-framing: <reason>.\`, ` +
+      `re-emit the ENTIRE frame output from scratch, and add a \`## Drift Notes\` ` +
+      `section listing what changed.\n\n`
+    return directive + prompt
+  }
+
+  // For non-frame/non-restater subagents, refuse-by-prompt: tell them not to
+  // do further analysis until frame re-runs.
+  if (sub !== "restater") {
+    const directive =
+      `${FRAME_REBUILD_MARKER}.\n` +
+      `Reason: ${pending.reason}\n` +
+      `New pivot: ${pending.pivot}\n` +
+      `Triggered by: ${pending.triggeredBy}\n\n` +
+      `STOP. Do NOT proceed with the requested analysis. The frame that this ` +
+      `workflow is based on has been factually contradicted. The orchestrator ` +
+      `must re-run restater + frame with the pivot above before any further ` +
+      `analysis is meaningful. Output one short line acknowledging this and ` +
+      `return without doing work.\n\n`
+    return directive + prompt
+  }
+
+  return prompt
+}
+
+/**
+ * v0.20 — Parse a frame-validity-check output for `Status: rebuild` and
+ * extract the structured fields. Returns null when the verdict is valid /
+ * refine or when parsing fails (best-effort).
+ */
+function parseRebuildVerdict(
+  output: string,
+): { reason: string; pivot: string } | null {
+  // Status line must explicitly say rebuild.
+  const statusMatch = /^\s*Status:\s*(valid|refine|rebuild)\b/im.exec(output)
+  if (!statusMatch || statusMatch[1]!.toLowerCase() !== "rebuild") return null
+
+  const reasonMatch = /Contradicted assumption:\s*"?([^"\n]+?)"?\s*$/im.exec(output)
+  const pivotMatch = /New pivot:\s*([^\n]+?)\s*$/im.exec(output)
+  if (!reasonMatch || !pivotMatch) return null
+
+  const reason = (reasonMatch[1] ?? "").trim().slice(0, 300)
+  const pivot = (pivotMatch[1] ?? "").trim().slice(0, 300)
+  if (!reason || !pivot) return null
+  return { reason, pivot }
+}
+
+/**
+ * v0.20 — Parse synthesis output to count multi-layer enumeration. Returns
+ * counts of layers explicitly listed, layers marked N/A, and the number of
+ * disagreement/contradiction bullets in the Cross-Reference section.
+ */
+function parseMultiLayerCounts(
+  output: string,
+): { present: number; na: number; contradictions: number } {
+  const layerRe = /^\s*-\s*\*\*Layer\s+\d+\s+—\s+[^*]+\*\*\s*:\s*(.+?)\s*$/gim
+  let present = 0
+  let na = 0
+  for (const m of output.matchAll(layerRe)) {
+    const body = (m[1] ?? "").trim().toLowerCase()
+    if (body === "n/a" || body === "n/a." || body === "(n/a)" || body.startsWith("n/a ")) {
+      na++
+    } else if (body.length > 0) {
+      present++
+    }
+  }
+  // Cross-Reference disagreement bullets
+  const xrefMatch = /###\s*Cross-Reference\s*\n([\s\S]*?)(?:\n##|$)/i.exec(output)
+  let contradictions = 0
+  if (xrefMatch?.[1]) {
+    const disagreementBlock = /\*\*Disagreement\*\*\s*:\s*([\s\S]*?)(?:\n-\s*\*\*|\n##|$)/i.exec(xrefMatch[1])
+    if (disagreementBlock?.[1]) {
+      const lines = disagreementBlock[1].split("\n").filter((l) => l.trim().startsWith("-"))
+      contradictions = lines.length
+      // Single inline content counts as 1 if no bullets
+      if (contradictions === 0 && disagreementBlock[1].trim().length > 0 && !disagreementBlock[1].trim().match(/^(none|n\/a|nothing)/i)) {
+        contradictions = 1
+      }
+    }
+  }
+  return { present, na, contradictions }
+}
+
+/**
+ * v0.20 — Set of subagents considered "artifact producers" for the
+ * workflow.stance log emission. We log the stance once per workflow when the
+ * first artifact subagent is invoked.
+ */
+const ARTIFACT_SUBAGENTS = new Set<SubagentType>([
+  "frame",
+  "alternatives",
+  "plan",
+  "review",
+  "critic",
+  "delta-mapper",
+  "synthesis",
+  "spike",
+])
+
+/**
+ * v0.20 — Extract the verdict line from an unknowns-auditor output.
+ */
+function extractUnknownsAuditVerdict(
+  output: string,
+): "ALL_RESOLVED" | "OPEN_UNKNOWNS_REMAIN" | "DEFERRED_ACCEPTABLE" | "UNKNOWN" {
+  const m = /^\s*(ALL_RESOLVED|OPEN_UNKNOWNS_REMAIN|DEFERRED_ACCEPTABLE)\b/im.exec(output)
+  if (m) return m[1]! as "ALL_RESOLVED" | "OPEN_UNKNOWNS_REMAIN" | "DEFERRED_ACCEPTABLE"
+  return "UNKNOWN"
 }
 
 const WORKFLOW_MEMORY_MARKER = "Workflow memory available"
@@ -227,6 +371,31 @@ export function buildHooks(client: Client): Hooks {
             memory.notes.length,
             WRITE_NOTE_SUBAGENTS.has(sub),
           )
+        }
+
+        // v0.20 — Phase E: forced re-frame soft-injection. When a rebuild is
+        // pending, prepend a directive instructing the next subagent to halt
+        // (or, for frame itself, to incorporate the pivot). The flag clears
+        // in tool.execute.after when frame captures successfully.
+        if (s.frameRebuildPending) {
+          working = injectFrameRebuildDirective(working, sub, s.frameRebuildPending)
+        }
+
+        // v0.20 — Phase F: workflow.stance log. Fires once per workflow on the
+        // first artifact-subagent call. The marker for "first artifact" is
+        // the absence of prior artifact captures in memory.
+        if (ARTIFACT_SUBAGENTS.has(sub) && !trivialitySuppresses) {
+          const memoryNow = s.workflowMemory
+          const priorArtifacts = memoryNow
+            ? memoryNow.entries.some((e) => ARTIFACT_SUBAGENTS.has(e.subagent))
+            : false
+          if (!priorArtifacts) {
+            await log({
+              kind: "workflow.stance",
+              session: input.sessionID,
+              first_artifact_subagent: sub,
+            })
+          }
         }
 
         const originalChars = working.length
@@ -377,6 +546,13 @@ export function buildHooks(client: Client): Hooks {
             s.trivialityTier = tier
           }
 
+          // v0.20 — Phase E: clear pending rebuild after frame completes. The
+          // next workflow steps will see the new frame entry; rebuild count
+          // increments so the cap is enforceable.
+          if (s.frameRebuildPending) {
+            clearFrameRebuild(s)
+          }
+
           await log({
             kind: "tool.execute.after",
             session: input.sessionID,
@@ -384,6 +560,109 @@ export function buildHooks(client: Client): Hooks {
             original_chars: size,
             task_type: tt ?? undefined,
             triviality_tier: s.trivialityTier,
+          })
+          return
+        }
+
+        // v0.20 — Phase E: detect frame-validity-check rebuild verdict.
+        if (sub === "frame-validity-check") {
+          const verdict = parseRebuildVerdict(outText)
+          if (verdict) {
+            const rebuildCount = s.frameRebuildCount ?? 0
+            if (rebuildCount >= 1) {
+              await log({
+                kind: "workflow.reframe.suppressed",
+                session: input.sessionID,
+                reason: `rebuild cap (1) already reached; current count=${rebuildCount}`,
+              })
+            } else {
+              const memoryNow = s.workflowMemory
+              const frame = memoryNow ? latestFrame(memoryNow) : undefined
+              if (frame) {
+                const triggeredBy = `frame-validity-check entry for ${frame.id}`
+                markFrameSuperseded(s, frame.id, verdict.reason, verdict.pivot, triggeredBy)
+                await log({
+                  kind: "workflow.reframe.triggered",
+                  session: input.sessionID,
+                  reason_excerpt: verdict.reason.slice(0, 200),
+                  pivot_excerpt: verdict.pivot.slice(0, 200),
+                  triggered_by: triggeredBy,
+                })
+              } else {
+                await log({
+                  kind: "workflow.reframe.suppressed",
+                  session: input.sessionID,
+                  reason: "no frame entry in workflow memory to supersede",
+                })
+              }
+            }
+          }
+          await log({
+            kind: "tool.execute.after",
+            session: input.sessionID,
+            subagent: sub,
+            original_chars: size,
+          })
+          return
+        }
+
+        // v0.20 — Phase F: synthesis multi-layer log.
+        if (sub === "synthesis") {
+          const counts = parseMultiLayerCounts(outText)
+          await log({
+            kind: "workflow.layer-check",
+            session: input.sessionID,
+            layers_present: counts.present,
+            layers_na: counts.na,
+            contradictions: counts.contradictions,
+          })
+          // Fall through to the generic open-questions extraction below
+        }
+
+        // v0.20 — Phase F: spike executed log.
+        if (sub === "spike") {
+          const na = /^\s*##\s*Spike\s*[—-]\s*N\/A\b/im.test(outText)
+          await log({
+            kind: "workflow.spike.executed",
+            session: input.sessionID,
+            output_size: size,
+            na,
+          })
+          await log({
+            kind: "tool.execute.after",
+            session: input.sessionID,
+            subagent: sub,
+            original_chars: size,
+          })
+          return
+        }
+
+        // v0.20 — Phase F: unknowns-auditor verdict log + gate.
+        if (sub === "unknowns-auditor") {
+          const verdict = extractUnknownsAuditVerdict(outText)
+          const memoryNow = s.workflowMemory
+          let open = 0
+          let resolved = 0
+          let deferred = 0
+          if (memoryNow) {
+            const report = unknownsStatus(memoryNow)
+            open = report.open.length
+            resolved = report.resolved.length
+            deferred = report.deferred.length
+          }
+          await log({
+            kind: "workflow.unknown.gate",
+            session: input.sessionID,
+            verdict,
+            open_count: open,
+            resolved_count: resolved,
+            deferred_count: deferred,
+          })
+          await log({
+            kind: "tool.execute.after",
+            session: input.sessionID,
+            subagent: sub,
+            original_chars: size,
           })
           return
         }

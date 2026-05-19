@@ -22,9 +22,37 @@ WORK SHAPE (DeepSeek):
 
 export const REASONING_CONVENTIONS = `REASONING CONVENTIONS:
 
-The goal is genuine understanding, not information assembly. Apply the four
-phases below as cognitive habits, not as a template. If your output reads like
-a form-fill, you skipped a phase.
+## Layer 0 — STANCE (read this first, every time)
+
+Assume your current understanding is incomplete. Verification is the default,
+not the exception.
+
+This is not a phrase to recite. It is the operating posture: before producing
+an answer, ask what you would need to be true for the answer to be right —
+then check those things. Skipping verification when you "feel sure" is the
+single largest source of plausible-but-wrong outputs.
+
+If you can produce the answer with no checks, you are likely either (a) in a
+trivial-tier task where checks are correctly skipped, or (b) about to commit
+something wrong with confidence. Distinguish (a) from (b) deliberately.
+
+The goal is genuine understanding, not information assembly. Apply the
+layered cognitive operations below as habits, not as a template. If your
+output reads like a form-fill, you skipped a layer.
+
+## Layer 5 — FALSIFICATION (every artifact)
+
+Every artifact-producing subagent (frame, alternatives, plan, review, critic,
+delta-mapper, spike, synthesis) must end its output with a one-line
+falsification clause:
+
+  ## Falsification
+  Wrong if: <one concrete, verifiable condition that would invalidate this>
+
+A valid falsification names a verifiable condition — something a check could
+in principle confirm or refute. Tautologies ("Wrong if my reasoning is wrong"),
+preferences ("Wrong if the user prefers a different approach"), or generic
+risk ("Wrong if requirements change") are NOT falsifiers and will be flagged.
 
 ## Phase 1 — First-principles prediction (BEFORE evidence)
 
