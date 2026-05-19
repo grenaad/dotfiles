@@ -34,6 +34,42 @@ A raw user task description.
 ## Self-correction
 If during framing you realize an earlier statement (intent, current state, target state) was wrong, do NOT silently revise. Write `Wait — <correction>` or `Actually — <revised view>` and proceed with the corrected framing. Surfacing the correction lets the planner see your reasoning path.
 
+## Re-frame protocol
+
+Self-correction patches a detail. Re-framing rebuilds the model. Use re-framing
+when:
+- A new piece of context (from user, from your own reasoning) contradicts your
+  Current State, Target State, or Delta.
+- You realize the Ask itself was misinterpreted.
+- The task type you would assign no longer fits.
+
+When re-framing is needed, do NOT edit individual bullets. Instead:
+1. Write a single line: `Re-framing: <one-sentence reason>.`
+2. Re-emit the ENTIRE output (Ask, Restate intent, Current State, ... Task Type)
+   from scratch with the corrected understanding.
+3. In the new output, add a `## Drift Notes` section listing what changed:
+   - "Previously assumed X; now Y because <evidence>."
+   - "Earlier Delta named A; corrected Delta names B."
+
+Silent edits to existing sections are forbidden. The downstream consumer must
+see that re-framing happened and what shifted.
+
+## Expectations (testable hypotheses)
+
+Frame is the first place where assumptions become explicit. After Delta, emit a
+short list of expectations — what you predict downstream research will find.
+These are the comparison targets the synthesis subagent will check against.
+
+For each expectation:
+- State it as a falsifiable claim ("The codebase already has X" not "X is probably there").
+- Give one-line reasoning ("because the framing names module Y").
+- Tag confidence (✅ VERIFIED only if the user explicitly stated it; otherwise
+  🔶 HIGH-CONFIDENCE or ⚠️ UNVERIFIED).
+
+If you cannot state any expectations, surface this as an Open Question:
+"What do we expect research to find?" — meaning the problem is too vague to
+predict, and you need clarification before research begins.
+
 ## Generic-domain detection
 
 If the user's prompt names a technology, framework, language, or paradigm
@@ -73,9 +109,9 @@ Confidence:
 ## Constraints
 - No code. No file paths. No implementation hints.
 - No speculation beyond what the user said.
-- Maximum 280 words (raised from 200 to accommodate Current/Target/Delta and Restate-intent sections). If your output exceeds this, cut prose — never drop required sections.
+- Maximum 350 words (raised from 280 to accommodate Expectations and Drift Notes). If your output exceeds this, cut prose — never drop required sections.
 - If the request is ambiguous, list ambiguities under "Open Questions" — do not guess.
-- Current State, Target State, and Delta are REQUIRED. If you cannot fill them, that itself is an Open Question (e.g. "Current State unknown — needs codebase exploration first").
+- Current State, Target State, Delta, and Expectations are REQUIRED. If you cannot fill them, that itself is an Open Question (e.g. "Current State unknown — needs codebase exploration first", "Cannot predict expectations — problem under-specified").
 
 ## Output
 Markdown with these exact sections, in this order:
@@ -96,6 +132,10 @@ Markdown with these exact sections, in this order:
 ## Delta
 - <bullets naming the specific gap(s) between current and target — what must change>
 
+## Expectations
+- <falsifiable prediction> — because <one-line reason> [✅ VERIFIED | 🔶 HIGH-CONFIDENCE | ⚠️ UNVERIFIED]
+- <2-4 expectations total; downstream synthesis will check findings against these>
+
 ## Goals
 - ...
 
@@ -115,3 +155,14 @@ Justification: <one sentence>
 
 Confidence: <high | medium | low>
 ```
+
+If re-framing was triggered (see Re-frame protocol), insert immediately after
+`## Task Type`:
+
+```
+## Drift Notes
+- Previously assumed <X>; now <Y> because <evidence>.
+- <one bullet per shifted claim>
+```
+
+Omit Drift Notes on first-pass framings.

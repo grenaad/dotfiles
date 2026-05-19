@@ -45,6 +45,23 @@ export const CEILINGS = {
   // v0.15 additions
   synthesis: 7_500, // was 6_000
   "decision-options": 22_000, // was 20_000
+  // v0.17 — background self-skepticism auditor; reads accumulated workflow at checkpoints.
+  // Ceiling is generous because skeptic at CP4 ingests the entire workflow-so-far
+  // (frame + expectations + librarian + explore + analysis batch + alternatives +
+  // batch-planner + plan + review + critic + decision-options). Roughly matches
+  // critic's input ceiling for similar reasons.
+  skeptic: 20_000,
+  // v0.18 — six specialist micro-agents that extract previously-inlined behaviors.
+  // Each one runs in parallel with existing Step 4/5 calls or at step transitions.
+  // Ceilings scale by typical input size: agents that read full plan (confidence-auditor,
+  // assumption-ledger, falsifier) need higher ceilings; agents that read narrower slices
+  // (cost-checker, scope-guard, expectation-keeper) need less.
+  "confidence-auditor": 18_000, // reads full plan + full findings
+  "cost-checker": 12_000, // reads framing + explore + librarian + candidates
+  "assumption-ledger": 16_000, // reads framing + plan + cross-source findings
+  falsifier: 10_000, // reads framing + picked option + relevant findings excerpts
+  "scope-guard": 8_000, // reads framing's ask/goals + latest step output
+  "expectation-keeper": 15_000, // reads expectations + cumulative evidence (grows over passes)
 } as const
 
 export type SubagentType = keyof typeof CEILINGS
@@ -72,6 +89,13 @@ export const NO_OPEN_QUESTIONS_SUBAGENTS = new Set<SubagentType>([
   "critic",
   "synthesis",
   "decision-options",
+  "skeptic",
+  "confidence-auditor",
+  "cost-checker",
+  "assumption-ledger",
+  "falsifier",
+  "scope-guard",
+  "expectation-keeper",
 ])
 
 /**

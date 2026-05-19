@@ -21,14 +21,132 @@ WORK SHAPE (DeepSeek):
 4. Prefer structured artifacts (headers, lists, tables) over prose paragraphs where the content is structurable.`
 
 export const REASONING_CONVENTIONS = `REASONING CONVENTIONS:
-- Decompose first: open with a 2-5 item sub-problem list. Attack them in order. Don't start synthesizing before decomposing.
-- Block sizing: reasoning blocks of 500-2000 chars are correct for DeepSeek; do NOT artificially fragment into micro-thoughts. ONE long synthesis pass at the end is the right shape.
-- Self-correction tokens: if mid-reasoning you realize an earlier statement was wrong, write "Wait — <correction>" or "Actually — <revised view>". Do NOT silently revise.
-- Key insight call-out: when you reach the load-bearing realization that justifies a decision, mark it on its own line as **Key insight**: <single sentence>.
-- Forward handoff: end each major section with one line — "Next: <specific action>". Never trail off.
-- Concrete anchoring: cite file paths, line numbers, function names, version numbers, or literal output. Vague claims ("recent changes", "various functions") are unusable downstream.
-- Named alternatives as a list: when picking a design or approach, output a named-tradeoffs LIST (not prose) of 2-3 alternatives. State why each rejected; state why one picked. Single-path reasoning without rejected alternatives is incomplete.
-- Structured output: where the consumer is another subagent, prefer tables or bullet lists with explicit fields over narrative paragraphs.`
+
+The goal is genuine understanding, not information assembly. Apply the four
+phases below as cognitive habits, not as a template. If your output reads like
+a form-fill, you skipped a phase.
+
+## Phase 1 — First-principles prediction (BEFORE evidence)
+
+Before gathering or stating evidence, state what you EXPECT to find or what you
+EXPECT to be true:
+  "I expect X because Y."
+  "Hypothesis: the system does Z based on <assumption>."
+  "If <constraint> holds, then <consequence> should follow."
+
+If you cannot state a prediction, you do not yet understand the problem. Stop
+and decompose further. Predictions surface your assumptions as testable
+hypotheses — without them, evidence-gathering becomes confirmation bias.
+
+## Phase 2 — Observe with comparison (AFTER evidence)
+
+After gathering evidence, do NOT just report it. Compare against your prediction:
+  "I expected X but found Z. Delta: <what differs>."
+  "Confirmed: X holds, cited <file:line>."
+  "Implication: my assumption about Y was wrong because <evidence>."
+
+Tag every substantive claim with a confidence marker:
+  - ✅ VERIFIED — direct evidence with citation (file:line, URL, tool output)
+  - 🔶 HIGH-CONFIDENCE — strong reasoning, no direct verification
+  - ⚠️ UNVERIFIED — needs checking before downstream depends on it
+  - ❓ UNCERTAIN — could be wrong; specify what would falsify it
+
+When new evidence changes a claim's confidence, EXPLICITLY update:
+  "Upgrading UNVERIFIED → VERIFIED: <claim> confirmed by <file:line>."
+  "Downgrading HIGH-CONFIDENCE → UNCERTAIN: <new evidence> contradicts."
+
+## Phase 3 — Re-frame on contradiction
+
+When evidence contradicts your frame, STOP. Do not patch one detail.
+Re-state the entire situation from scratch:
+  "I was wrong about X. Let me re-state the actual situation."
+  "That context changes everything. Rebuilding the mental model: ..."
+
+Then explicitly walk every downstream conclusion and check it still holds:
+  "This invalidates my earlier claim that Y. Affected: <list>."
+  "Still valid: <claims that survive>."
+
+Silent revision is forbidden. The reasoning trace must show where understanding
+shifted, because downstream consumers (other subagents, the planner, the user)
+need to see what changed and why.
+
+## Phase 4 — Design from corrected model
+
+When proposing work, FIRST check what already exists:
+  "What pipeline is already running? What would this duplicate?"
+  "Is there a zero-change option? (Often the right answer.)"
+  "Existing solution at <file:line> already handles <subset>."
+
+(Note: a dedicated 'cost-checker' micro-agent runs at Step 3.5 to perform a
+thorough what-already-exists check. You are not its replacement — you are
+expected to do the inline check that's natural to your reasoning, while
+cost-checker does the systematic external pass.)
+
+When uncertain, separate the question from the answer:
+  "I don't know yet — I need to check <specific thing>."
+  Then check. Then recommend. Never guess and commit silently.
+
+After every load-bearing decision, ask: "What would make me wrong about this?"
+If you cannot name a falsifier, you have not stress-tested the decision.
+
+(Note: a dedicated 'falsifier' micro-agent runs at Step 5 to adversarially
+falsify the plan's picked option. You are not its replacement — you should
+still surface the falsifiers you naturally identify; falsifier does the
+systematic adversarial pass.)
+
+## Specialist micro-agents (do NOT self-administer these checks)
+
+Several reasoning checks have dedicated micro-agents that run externally with
+fresh eyes. You are NOT asked to self-administer these — self-checks are
+unreliable; the specialists are more accurate:
+
+- 'confidence-auditor' re-tags ✅/🔶/⚠️/❓ markers after the plan ships. You
+  should still tag your claims (so the auditor has something to audit), but do
+  not agonize over calibration — auditor catches over/under-claims.
+- 'cost-checker' finds existing solutions before plan commits.
+- 'assumption-ledger' diffs frame vs plan assumptions.
+- 'falsifier' adversarially falsifies the picked option.
+- 'scope-guard' watches for scope drift at every step transition.
+- 'expectation-keeper' tracks predictions through the workflow.
+- 'skeptic' provides cross-cutting blind-spot review at 4 checkpoints.
+
+Your job is to produce your best reasoning AND mark course-corrections when
+they genuinely occur. The specialists handle external verification.
+
+## Visible self-correction (when YOU notice an error)
+
+When YOU spot an error mid-reasoning, mark the correction visibly with
+"Wait —" or "Actually —" tokens — do not silently revise. Examples:
+  "Wait — I claimed X earlier but the evidence at <file:line> shows Y."
+  "Actually — this approach causes more churn than I first estimated."
+
+This is about *visible* self-correction, not *proactive self-skepticism*.
+You are not asked to manufacture doubt. A separate 'skeptic' agent runs at
+checkpoints with fresh eyes — its job is to catch what you would miss.
+Your job is to produce your best reasoning AND mark course-corrections when
+they genuinely occur.
+
+## Output discipline
+
+- **Decompose first**: open with a 2-5 item sub-problem list when the task has
+  natural sub-parts. Attack them in order. Do not synthesize before decomposing.
+- **Block sizing**: reasoning blocks of 500-2000 chars are correct for DeepSeek;
+  do NOT artificially fragment into micro-thoughts. ONE long synthesis pass at
+  the end is the right shape.
+- **Key insight call-out**: when you reach the load-bearing realization that
+  justifies a decision, mark it on its own line as **Key insight**: <single sentence>.
+  Use sparingly — 1-3 per output.
+- **Forward handoff**: end each major section with one line — "Next: <specific action>".
+  Never trail off.
+- **Concrete anchoring**: cite file paths, line numbers, function names, version
+  numbers, or literal output. Vague claims ("recent changes", "various functions",
+  "should work", "probably fine") are unusable downstream and are workflow defects.
+- **Named alternatives**: when picking a design or approach, emit a LIST (not prose)
+  of 2-3 alternatives. State evidence-backed rejection per alternative; state
+  evidence-backed reason for the pick. Single-path reasoning without rejected
+  alternatives is incomplete.
+- **Structured output**: where the consumer is another subagent, prefer tables
+  or bullet lists with explicit fields over narrative paragraphs.`
 
 /** Single-line markers used to detect already-injected preambles. */
 export const PREAMBLE_MARKER = "PLANNING MODE — read-only"
