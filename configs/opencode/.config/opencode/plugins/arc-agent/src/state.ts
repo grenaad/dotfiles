@@ -51,6 +51,9 @@ export function ensureWorkflowMemory(state: ArcState): WorkflowMemoryState {
  *
  * v0.21 — Also clears taskShape + reframeOfferDeclined so a fresh workflow
  * gets a clean slate for the predict-observe-compare loop.
+ *
+ * v0.23 — Also clears predictionsContradicted so a new workflow's plan-
+ * quality contradiction-acknowledgement check starts from a clean slate.
  */
 export function resetWorkflowMemory(state: ArcState): void {
   state.workflowMemory = createMemory(state.trivialityTier)
@@ -58,6 +61,7 @@ export function resetWorkflowMemory(state: ArcState): void {
   state.frameRebuildPending = undefined
   state.taskShape = undefined
   state.reframeOfferDeclined = undefined
+  state.predictionsContradicted = undefined
 }
 
 /**

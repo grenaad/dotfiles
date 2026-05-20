@@ -302,6 +302,8 @@ edgecases) reconcile observations against them via `workflow_note(type:
 observation, topic: P<n>)`; synthesis aggregates into the reconciliation
 table at Step 3 Call D.
 
+**v0.24 — Prediction cap**: frame is instructed to emit AT MOST 3 predictions. If `<predictions>` contains more than 3, retain only the first 3 (in their original order). Predictions exist to be falsified during research — more than 3 dilutes attention without improving signal. See `agents/frame.md` for the corresponding capture-side rule.
+
 Extract verbatim into `<predictions>`. If the section is absent or empty:
 - If `<task-type>` is `investigate` or `docs` AND `<framing>` justified the absence
   (e.g. "No predictions — problem under-specified; research must build the
@@ -366,23 +368,47 @@ Wait for response. Capture as `<skeptic-CP1>`.
 
 Next: Step 1.6 (Triviality fast-path).
 
-### Step 1.6: Triviality fast-path (plugin-classified)
+### Step 1.6: Triviality fast-path (plugin-classified) — v0.24 compliance-enforced
 
-The plugin (`plugins/arc-agent/src/analyzers.ts` → `classifyTriviality`) inspects the user's raw prompt + frame's `## Task Type` and emits one of three tiers as a log annotation (`triviality_tier: ultra | trivial | full`). The orchestrator reads this from its plan-mode state knowledge and routes:
+The plugin (`plugins/arc-agent/src/analyzers.ts` → `classifyTriviality`) inspects the user's raw prompt + frame's `## Task Type` and emits one of three tiers as a log annotation (`triviality_tier: ultra | trivial | full`). The orchestrator reads this from its plan-mode state knowledge and MUST route per the table below.
 
-- **ultra**: question / single-file lookup that implies no code change. Skip Steps 2, 3 (4-way batch), 3.5, 4, 4.3, 5, 5.5, 5.7. Operate directly: use `read`/`grep`/`glob`/`webfetch` as needed; answer in prose. Surface `Triviality: ultra — answering directly`. Append recommendation `(For tasks like this, the quick-answer agent is a better fit; switch with /agent quick-answer)` only when the user appears to be habitually using orchestrator for small questions.
-- **trivial**: small implementation (≤2 files, no architectural decisions). Skip Steps 2, 3, 3.5. Set findings variables to `"Skipped — trivial task"`. Still run Steps 4, 4.3, 5, 5.5, 5.7. Surface `Triviality: yes — fast-pathing`.
-- **full**: anything else. Surface `Triviality: no — full workflow`. Proceed to Step 2.
+**v0.24 — Plugin-side enforcement is now active.** When the orchestrator dispatches a subagent on `ultra`/`trivial` that is in TRIVIAL_SKIPPED_SUBAGENTS (see `plugins/arc-agent/src/types.ts`), the plugin replaces the prompt with a stub-template and the subagent returns a fixed `Skipped — trivial task.` line. Compliance is mechanical, not advisory. Every such replacement emits a `workflow.trivial.skip` log line — counting these against the actual subagent calls in the same session is the v0.24 audit.
+
+| Step | `ultra` | `trivial` | `full` |
+|------|---------|-----------|--------|
+| 0.5 restater | MUST | MUST | MUST |
+| 0.7 spike | SKIP | SKIP | MUST |
+| 1 frame | MUST | MUST | MUST |
+| 1.25 task-type capture | MUST | MUST | MUST |
+| 1.27 task-shape capture | MUST | MUST | MUST |
+| 1.5 frame clarification gate | MUST | MUST | MUST |
+| 1.75 predictions capture | MUST | MUST | MUST |
+| 1.6 triviality fast-path (THIS) | MUST | MUST | MUST |
+| 2 research (librarian + explore) | **SKIP** | **SKIP** | MUST |
+| 3 analysis batch (delta-mapper + ambiguity-spotter + edgecases + synthesis) | **SKIP** | **SKIP** | MUST |
+| 3.5 alternatives + batch-planner + cost-checker | **SKIP** | **SKIP** | MUST |
+| 3.7 unknowns-auditor gate | **SKIP** | **SKIP** | MUST |
+| 3.8 frame-validity-check | **SKIP** | **SKIP** | MUST |
+| 4 plan | SKIP | MUST | MUST |
+| 4.3 scope-guard pass 3 | **SKIP** | **SKIP** | MUST |
+| 5 review + critic + confidence-auditor + assumption-ledger + falsifier (5-way) | SKIP | **2-way (review + critic only)** | MUST (5-way) |
+| 5.5 verdict gate | SKIP | MUST | MUST |
+| 5.7 decision-options | SKIP | **SKIP** | MUST |
+| skeptic CP1 (after Step 1.75) | SKIP | MUST | MUST |
+| skeptic CP2/CP3/CP4 | SKIP | **SKIP** | MUST |
+| scope-guard pass 1/2/3 | SKIP | **SKIP** | MUST |
+| expectation-keeper pass 1/2/3 | SKIP | **SKIP** | MUST |
+
+**Surfacing**:
+- **ultra**: `Triviality: ultra — answering directly`. Operate directly: use `read`/`grep`/`glob`/`webfetch` as needed; answer in prose. Append recommendation `(For tasks like this, the quick-answer agent is a better fit; switch with /agent quick-answer)` only when the user appears to be habitually using orchestrator for small questions.
+- **trivial**: `Triviality: yes — fast-pathing`. Set findings variables to `"Skipped — trivial task"` for downstream template rendering.
+- **full**: `Triviality: no — full workflow`. Proceed to Step 2.
 
 **Override rule**: if Step 1.5 resolved any clarifying questions, treat the workflow as `full` regardless of the plugin's classification — clarifications imply non-trivial uncertainty. The classifier defaults to assuming no clarifications; the orchestrator owns this override.
 
-**Skeptic skip on non-full**: if the resolved tier is `ultra` or `trivial`, set
-`<skeptic-CP2>`, `<skeptic-CP3>`, and `<skeptic-CP4>` to the empty string and
-do NOT fire skeptic at those checkpoints. (CP1 already fired in Step 1.75 —
-its output stands.) Surface `Triviality: <tier> — skipping skeptic CP2-CP4.`
-in narration alongside the standard triviality line.
+**If the plugin is disabled** (`ARC_AGENT_DISABLED=1`): fall back to inline classification — match the user's prompt against the rules described in `analyzers.ts` (investigate + no implementation verb + ≤30 words → ultra; feature/fix + ≤20 words + no architectural keywords → trivial; else full). Plugin-side stub injection does NOT fire when disabled — orchestrator-side compliance with the table above is the only enforcement.
 
-**If the plugin is disabled** (`ARC_AGENT_DISABLED=1`): fall back to inline classification — match the user's prompt against the rules described in `analyzers.ts` (investigate + no implementation verb + ≤30 words → ultra; feature/fix + ≤20 words + no architectural keywords → trivial; else full).
+**v0.24 audit**: if you ever dispatch a TRIVIAL_SKIPPED_SUBAGENTS member on a non-`full` tier, the plugin's stub injection will short-circuit it to a 50-char "Skipped — trivial task" response. This is by design — the workflow doc is the contract; the plugin is the gate. Do NOT route around the gate.
 
 ### Step 2: Research (parallel)
 
@@ -926,11 +952,27 @@ Then list the unknowns by bucket with topic + question + status.
 Wait for response. Capture as `<unknowns-audit>`. Inspect the first line:
 
 - `ALL_RESOLVED` — proceed to Step 3.8.
-- `OPEN_UNKNOWNS_REMAIN` — the plugin's plan-tool soft-injection will halt
-  the planner if any R: pre_design unknowns remain. Surface to user:
-  `Unknowns auditor: <N> R: pre_design unknown(s) still open. Research
-  cannot resolve them in this workflow — surfacing to user.` End the turn
-  with the unknowns list in the user-facing output.
+- `OPEN_UNKNOWNS_REMAIN` — **v0.24 fold-into-one-question pattern**. Do NOT just print the unknowns and end the turn (the v0.23 behavior left the user without a recovery path other than restarting). Instead, invoke `question` with ONE question that consolidates all open R: pre_design unknowns and offers three options:
+
+  ```
+  question(
+    questions: [{
+      header: "Pre-design unknowns",
+      question: "<N> unknowns are still open (R: pre_design): U<a>: <q>, U<b>: <q>, ... How do you want to proceed?",
+      options: [
+        { label: "Treat as accept_risk — proceed (Recommended when design handles both branches)", description: "Mark these as deferred with documented mitigation and continue to plan. Choose this when synthesis or edgecases proved the picked option is robust regardless of the answers." },
+        { label: "Answer the unknowns inline", description: "I will provide the answers; you incorporate them and re-run synthesis." },
+        { label: "Stop — these need real research", description: "End the workflow; I will restart with more concrete inputs or external research." }
+      ]
+    }]
+  )
+  ```
+
+  Branch on the answer:
+  - Option 1 (treat as accept_risk): synthesize one `workflow_note(type: "unknown", topic: <topic>, content: "Q: ... | I: deferred via user choice | S: deferred | R: accept_risk | E: user accepted risk; design handles both branches")` per open pre_design unknown. Re-fire `unknowns-auditor` ONCE — the new verdict should be `DEFERRED_ACCEPTABLE`. Proceed to Step 3.8.
+  - Option 2 (answer inline): treat the user's answer as resolution evidence; synthesize one `workflow_note(type: "unknown", topic: <topic>, content: "Q: ... | I: user-supplied answer | S: resolved | R: pre_design | E: <user answer>")` per open unknown. Re-fire `unknowns-auditor` ONCE.
+  - Option 3 (stop): end the turn. Surface `Unknowns auditor blocked workflow at user request: <N> R: pre_design unknown(s) need resolution before re-running.`
+
 - `USER_INPUT_REQUIRED` — invoke the **Clarification Subroutine** with a
   synthesized `<source>` containing the user_input unknowns as questions.
   After resolution, re-fire unknowns-auditor ONCE; if verdict is still
@@ -941,6 +983,14 @@ Wait for response. Capture as `<unknowns-audit>`. Inspect the first line:
 The plugin logs `workflow.unknown.gate` from `tool.execute.after` with the
 verdict + bucket counts, so observability is captured regardless of which
 path the orchestrator takes.
+
+**v0.24 — Plugin mechanical-verdict stub**: when the deterministic check
+in `analyzers.ts → computeUnknownsVerdict` returns `ALL_RESOLVED` (no
+opens, all opens accept_risk, etc.), the plugin replaces the
+unknowns-auditor prompt with a stub-template that returns the verdict line
+directly. This saves one LLM round-trip on the common case. You see this
+as a `workflow.mechanical.stub` log entry; the audit output you receive
+will be a one-line verdict instead of the full report.
 
 Next: Step 3.8 (Frame-validity-check) when proceeding.
 
@@ -988,7 +1038,7 @@ Next: Step 4 (Plan).
 
 ### Step 4: Plan
 
-Call `task` with `subagent_type=plan`. Body below. (Plugin auto-prepends preamble + REASONING CONVENTIONS AND auto-appends the task-type structural template based on the `<task-type>` it captured from frame.)
+Call `task` with `subagent_type=plan`. Body below. (v0.23: the plugin injects three layers around your task body. (a) DELEGATION_PREAMBLE + REASONING_CONVENTIONS are auto-prepended via `injectPreamble`. (b) The plan cognitive posture is injected between conventions and your body via `injectPlanPosture`, sourced from `plugins/arc-agent/prompts/plan-posture.md` — NOT from `agents/plan.md` because that filename would shadow OpenCode's built-in `plan` primary-mode agent. (c) The per-task-type structural template is auto-appended via `injectTemplate` based on the `<task-type>` captured from frame. All three layers land in the rendered prompt without orchestrator intervention.)
 
 ```
 Task type: <task-type>
@@ -1605,15 +1655,18 @@ treat as a "before you ship, consider this" signal.)
 
 <skeptic-CP4>
 
-## Next decisions
-(Pending decisions distilled from reviewer + critic. Decide each before
-implementation begins.)
+---
+
+# Plan
+
+## Open Decisions
+(v0.24: pending decisions distilled from reviewer + critic. Decide each
+before implementation begins. Placed at the TOP of the plan so users see
+them while reading the plan, not as a reviewer-notes addendum at the end.)
 
 <next-decisions>
 
 ---
-
-# Plan
 
 <plan>
 ```
@@ -1629,11 +1682,11 @@ implementation begins.)
 - `## Skeptic Addendum (advisory)` — omitted when `<skeptic-CP4>` is empty (skeptic returned `Nothing to flag at CP4.` OR triviality skip).
 
 When ALL addenda are empty (rare — clean plans on full workflows), the render
-collapses to `# Reviewer Notes` → `## Next decisions` → `# Plan`. This is the
-ideal shape: the specialists found nothing surfaceworthy, and the user gets a
-clean plan with reviewer verdict only.
+collapses to `# Reviewer Notes` → `# Plan` → `## Open Decisions` → plan body.
+This is the ideal shape: the specialists found nothing surfaceworthy, and the
+user gets a clean plan with reviewer verdict only.
 
-**Next decisions handling**: include the `## Next decisions` section verbatim from `<next-decisions>`. If `<next-decisions>` is the ready-line (`Plan ready to execute — start with <step>.`), still render it under the `## Next decisions` heading — the ready-line is the explicit forward handoff that signals no decisions are pending.
+**v0.24 — Open Decisions placement**: include the `## Open Decisions` section verbatim from `<next-decisions>` INSIDE the `# Plan` block, BEFORE the plan body. Users see the open decisions while reading the plan, not as a peripheral reviewer-notes addendum. If `<next-decisions>` is the ready-line (`Plan ready to execute — start with <step>.`), still render it under the `## Open Decisions` heading — the ready-line is the explicit forward handoff that signals no decisions are pending.
 
 If `<verdict-decision>` is `"revised"`, prepend this line ABOVE the `# Reviewer Notes` heading: `_Note: plan was revised once after reviewer feedback. Critique above is from the pre-revision pass. Critic findings (if any) are from the post-revision pass._`
 
@@ -1656,7 +1709,8 @@ All `## <Name> Addendum (advisory)` and `## <Name> Observation (advisory)` and `
 - MUST fire scope-guard at three step transitions on `full` workflow: after Step 2 (post-research), after Step 3.5 (post-alternatives), after Step 4 (post-plan). All three are skipped on `ultra`/`trivial`.
 - MUST fire expectation-keeper at three passes on `full` workflow with predictions present: post-research (end of Step 2), post-analysis (end of Step 3.5), post-plan (end of Step 4). All three are skipped on `ultra`/`trivial` or when frame did not emit predictions.
 - MUST execute Step 5.5 (verdict gate) before final render.
-- MUST prepend the delegation preamble + REASONING CONVENTIONS block to every `task` prompt.
+- MUST prepend the delegation preamble + REASONING CONVENTIONS block to every `task` prompt. **v0.24**: the plugin auto-injects the slim REASONING_CONVENTIONS_SLIM variant for MECHANICAL_CHECK_SUBAGENTS (scope-guard, expectation-keeper, unknowns-auditor, confidence-auditor, ambiguity-spotter, restater, frame-validity-check, cost-checker, batch-planner) and the full block for artifact producers. You do not control this picking; it is mechanical.
+- **v0.24 — Triviality fast-path is plugin-enforced**: if you dispatch a TRIVIAL_SKIPPED_SUBAGENTS member on `ultra`/`trivial`, the plugin replaces the prompt with a stub and the call returns `Skipped — trivial task.` Treat that response as the captured artifact for that step. Do NOT re-dispatch in an attempt to route around the gate.
 - MUST NOT do research, planning, or coding yourself.
 - MUST NOT call any tool other than `task` and `question`.
 - Before calling step N, confirm you have captured output from step N-1.
@@ -1698,13 +1752,54 @@ Hard rule: never paste a subagent's raw output verbatim into the next subagent's
   - Drop everything else
 - Hard ceiling per downstream subagent prompt: 12,000 characters. Exceeding this means forwarding is too verbose — compress harder.
 
-**Narration discipline**
-- Between-tool text is state-transition declaratives: what returned, what gate passed, what's next. Target 80-300 chars per turn; longer is acceptable if a tradeoff or key insight surfaced.
-- Every between-tool narration MUST end with `Next: <specific action>`. No trailing off, no re-narrating workflow rules.
-- Example (minimal): `Frame returned. Open Questions empty. Next: Step 2 (librarian + explore parallel).`
-- Example (with surfaced insight): `Frame returned task_type=refactor with high confidence. Delta names 3 modules. **Key insight**: this is a layering refactor, not a rewrite — the existing public API survives. Next: Step 2 (librarian + explore parallel).`
-- Apply REASONING CONVENTIONS to your own narration: tag uncertain claims with confidence markers (⚠️ UNVERIFIED), call out re-framings ("Frame re-framed: ..."), and surface prediction contradictions when synthesis flags them.
-- The `skeptic` subagent (CP1-CP4) is your external fresh-eyes auditor. You do NOT need to manufacture skepticism in your own narration — skeptic does that job. Your narration discipline is state-transition declaratives plus surfacing what skeptic flags as `Worth raising to user? yes`.
+**Narration discipline (v0.23 — mandatory surfacing)**
+
+Between-tool text is state-transition declaratives plus exactly ONE of four surfacing modes. The mode is mandatory — there is no default-quiet shape.
+
+**Every between-tool narration MUST include ONE of:**
+
+(a) `**Key insight**: <single sentence>` — when the subagent output earned a load-bearing realization. Use 1–3 times per workflow; over-marking dilutes signal.
+
+(b) `**Drift Note**: <single sentence>` — when a subagent re-framed, contradicted an earlier step, or surfaced a `## Drift Notes` block. ALWAYS surface; never silently absorb a drift.
+
+(c) `**Prediction contradicted** — <one-line>` — when synthesis or any researcher reports a prediction verdict of `contradicted`. ALWAYS surface; the user must see which predictions were wrong.
+
+(d) `(no new signal)` — explicit marker when the subagent returned an artifact that confirms the existing framing without adding anything. Use this rather than going quiet.
+
+Bare `X returned. Next: Y.` is a workflow violation. The lack of (a)/(b)/(c)/(d) means you skipped the surfacing step — go back, decide which mode applies, and re-narrate.
+
+Other rules:
+- Target 80-300 chars per turn; longer is acceptable when (a)/(b)/(c) requires it.
+- Every narration MUST end with `Next: <specific action>`. No trailing off, no re-narrating workflow rules.
+- Apply REASONING CONVENTIONS to your own narration: tag uncertain claims with confidence markers (⚠️ UNVERIFIED), call out re-framings (Drift Note), surface prediction contradictions (mode c).
+- The `skeptic` subagent (CP1-CP4) is your external fresh-eyes auditor. You do NOT manufacture skepticism in your own narration. Mode (a)/(b)/(c)/(d) is about the subagent's output, not your interpretation of it. Skeptic-flagged `Worth raising to user? yes` items surface separately and additively.
+
+**Examples by mode:**
+
+(a) Key insight:
+```
+Frame returned task_type=refactor with high confidence. Delta names 3 modules. **Key insight**: this is a layering refactor, not a rewrite — the existing public API survives. Next: Step 2 (librarian + explore parallel).
+```
+
+(b) Drift Note:
+```
+Frame re-framed: spike observed reference file absent from workspace; all pattern-mirroring predictions ungrounded. **Drift Note**: Delta corrected from "extend single-file routes" to "match multi-module convention". Next: Step 1.6 (re-running frame with corrected Current State).
+```
+
+(c) Prediction contradicted:
+```
+Synthesis returned. **Prediction contradicted** — P3 (factory-function APIRouter) was wrong: codebase uses module-level instances at `src/api/users/routes.py:1` and `src/api/translation/routes.py:1`. Plan must mirror that shape. Next: Step 3.7 (unknowns-auditor gate).
+```
+
+(d) No new signal:
+```
+Restater returned. *(no new signal — paraphrase aligns with the Ask.)* Next: Step 0.7 (spike, full-tier task).
+```
+
+Acceptable shorter form for routine pass-through (still mode d):
+```
+Edgecases returned with 4 cases enumerated. *(no new signal — all 4 confirm predictions.)* Next: Step 3 (synthesis).
+```
 
 **Verdict gate**
 - MUST run Step 5.5 before rendering.

@@ -217,9 +217,112 @@ they genuinely occur.
 - **Structured output**: where the consumer is another subagent, prefer tables
   or bullet lists with explicit fields over narrative paragraphs.`
 
+/**
+ * v0.24 — Slim variant of REASONING_CONVENTIONS for mechanical-check subagents
+ * (scope-guard, expectation-keeper, unknowns-auditor, confidence-auditor,
+ * ambiguity-spotter, restater, frame-validity-check, cost-checker, batch-
+ * planner). These return short structured verdicts; the full ~10k-char
+ * conventions block is overkill and burns DeepSeek input tokens/reasoning.
+ *
+ * Kept layers:
+ *   - Layer 0 STANCE (verbatim)
+ *   - Layer 5 FALSIFICATION clause (verbatim — every artifact ends with one)
+ *   - Output discipline (compressed to 4 essential bullets)
+ *
+ * Dropped vs full:
+ *   - DeepSeek work-shape (decompose-upfront lecture)
+ *   - Phase 1-4.6 (predict/observe/contradict/design/root-cause — these are
+ *     artifact-producer concerns; mechanical checks don't need them)
+ *   - Specialist micro-agent list
+ *   - Visible self-correction (still allowed; just not lectured about)
+ */
+export const REASONING_CONVENTIONS_SLIM = `REASONING CONVENTIONS:
+
+## Layer 0 — STANCE
+
+Assume your current understanding is incomplete. Verification is the default,
+not the exception. Before producing an answer, ask what you would need to be
+true for the answer to be right — then check those things.
+
+If you can produce the answer with no checks, you are likely either (a) in a
+trivial-tier task where checks are correctly skipped, or (b) about to commit
+something wrong with confidence. Distinguish (a) from (b) deliberately.
+
+## Layer 5 — FALSIFICATION
+
+End your output with a one-line falsification clause:
+
+  ## Falsification
+  Wrong if: <one concrete, verifiable condition that would invalidate this>
+
+A valid falsification names a verifiable condition — something a check could
+in principle confirm or refute. Tautologies, preferences, and generic risk
+are NOT falsifiers.
+
+## Output discipline
+
+- **Concrete anchoring**: cite file paths, line numbers, function names, or
+  literal output. Vague claims are workflow defects.
+- **Structured output**: prefer tables/bullets over prose where structurable.
+- **Forward handoff**: end each major section with "Next: <specific action>".
+- **Key insight call-out**: mark a load-bearing realization as
+  **Key insight**: <single sentence>. Use sparingly.`
+
 /** Single-line markers used to detect already-injected preambles. */
 export const PREAMBLE_MARKER = "PLANNING MODE — read-only"
 export const CONVENTIONS_MARKER = "REASONING CONVENTIONS:"
+
+/**
+ * v0.24 — Stub-prompt template for trivial fast-path enforcement.
+ *
+ * The OpenCode plugin `tool.execute.before` hook cannot block a `task` tool
+ * call from dispatching — it can only mutate the prompt. When the orchestrator
+ * dispatches a subagent that should be skipped on trivial workflows (per
+ * orchestrator.md Step 1.6), we replace the entire prompt with this stub so
+ * the subagent returns a fixed-shape ~50-char output without doing work.
+ *
+ * The subagent's own prompt (in agents/<name>.md) detects this template via
+ * the literal "TRIVIAL FAST-PATH SKIP" marker and short-circuits to the stub
+ * return line.
+ *
+ * Placeholders: {subagent} replaced with the subagent's name.
+ */
+export const TRIVIAL_SKIP_STUB_TEMPLATE = `TRIVIAL FAST-PATH SKIP — workflow is on the trivial fast-path per orchestrator.md Step 1.6. {subagent} is not run on trivial tasks.
+
+Return ONLY this exact text, nothing else:
+
+  Skipped — trivial task. {subagent} not run on trivial workflows per Step 1.6.
+
+Do not perform any research, analysis, or other work. Do not call tools. Do not write notes. Return the stub line and end your turn.`
+
+/** Marker the plugin uses to detect an already-injected trivial-skip stub. */
+export const TRIVIAL_SKIP_MARKER = "TRIVIAL FAST-PATH SKIP"
+
+/**
+ * v0.24 — Stub-prompt template for mechanical-verdict short-circuits.
+ *
+ * When the plugin can compute a subagent's verdict deterministically from
+ * workflow memory (scope-guard "✅ In scope" common case, unknowns-auditor
+ * ALL_RESOLVED common case), we replace the prompt with this stub so the
+ * subagent returns the pre-computed verdict line instead of doing the work.
+ *
+ * Placeholders:
+ *   {verdict_line} — the exact text to return (e.g. "✅ In scope").
+ *   {subagent}     — subagent name (for the falsification clause).
+ */
+export const MECHANICAL_VERDICT_STUB_TEMPLATE = `MECHANICAL VERDICT — the plugin computed this verdict deterministically from workflow memory.
+
+Return EXACTLY this text and nothing else:
+
+{verdict_line}
+
+## Falsification
+Wrong if: the plugin's deterministic check is broken (e.g. {subagent} stub fired despite a real drift/unresolved-unknown condition).
+
+Do not call tools. Do not write notes. Do not elaborate. End your turn.`
+
+/** Marker the plugin uses to detect an already-injected mechanical-verdict stub. */
+export const MECHANICAL_VERDICT_MARKER = "MECHANICAL VERDICT"
 
 /**
  * Verdict-gate question structure — emitted by plugin so orchestrator

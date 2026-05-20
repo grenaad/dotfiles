@@ -54,30 +54,42 @@ import {
   extractTaskType,
   checkRequiredSections,
   classifyTriviality,
+  computeScopeGuardVerdict,
+  computeUnknownsVerdict,
   extractOpenQuestions,
   normalizeVerdict,
   planSizeAdvisory,
+  predictionsAllTriviallyConfirmed,
 } from "./analyzers"
 import {
   DELEGATION_PREAMBLE,
+  MECHANICAL_VERDICT_MARKER,
+  MECHANICAL_VERDICT_STUB_TEMPLATE,
   REASONING_CONVENTIONS,
+  REASONING_CONVENTIONS_SLIM,
   PREAMBLE_MARKER,
   CONVENTIONS_MARKER,
   REQUIRED_SECTIONS_BLOCK_HEADER,
   REQUIRED_SECTIONS_BLOCK_FOOTER,
   REQUIRED_SECTIONS_MARKER_PREFIX,
   REQUIRED_SECTIONS_MARKER_SUFFIX,
+  TRIVIAL_SKIP_MARKER,
+  TRIVIAL_SKIP_STUB_TEMPLATE,
 } from "./constants"
 import { TASK_TYPE_TEMPLATES, REQUIRED_SECTIONS_BY_TYPE } from "./templates"
+import { measurePlanQuality } from "./plan-quality"
+import { getPlanPosture, PLAN_POSTURE_MARKER } from "./plan-posture"
 import {
   CEILINGS,
   bucketFor,
   isSubagent,
   isTaskToolArgs,
+  MECHANICAL_CHECK_SUBAGENTS,
   NO_OPEN_QUESTIONS_SUBAGENTS,
   NOTE_TYPES,
   suppressesWorkflowMemory,
   TASK_SHAPE_VALUES,
+  TRIVIAL_SKIPPED_SUBAGENTS,
   UNKNOWN_RESOLVABILITY,
   WRITE_NOTE_SUBAGENTS,
   type SubagentType,
@@ -115,17 +127,54 @@ async function withTimeout<T>(fn: (signal: AbortSignal) => Promise<T>, ms: numbe
 /**
  * Prepend delegation preamble + REASONING CONVENTIONS if not already present.
  * Detection is permissive (first ~500 chars contain the marker = present).
+ *
+ * v0.24: when `sub` is in MECHANICAL_CHECK_SUBAGENTS, inject the slim
+ * conventions variant (~1,500 chars) instead of the full block (~10k chars).
+ * Mechanical-check subagents emit short structured verdicts; the full
+ * conventions block is overkill and burns DeepSeek input tokens unnecessarily.
  */
-function injectPreamble(prompt: string): string {
+function injectPreamble(prompt: string, sub: SubagentType): string {
   const head = prompt.slice(0, 500)
   const hasPreamble = head.includes(PREAMBLE_MARKER)
   const hasConventions = head.includes(CONVENTIONS_MARKER) || prompt.slice(0, 2000).includes(CONVENTIONS_MARKER)
   if (hasPreamble && hasConventions) return prompt
+  const conventionsBlock = MECHANICAL_CHECK_SUBAGENTS.has(sub)
+    ? REASONING_CONVENTIONS_SLIM
+    : REASONING_CONVENTIONS
   const pieces: string[] = []
   if (!hasPreamble) pieces.push(DELEGATION_PREAMBLE, "")
-  if (!hasConventions) pieces.push(REASONING_CONVENTIONS, "")
+  if (!hasConventions) pieces.push(conventionsBlock, "")
   pieces.push(prompt)
   return pieces.join("\n")
+}
+
+/**
+ * v0.24 — Replace the entire prompt with the trivial-skip stub template.
+ * Idempotent: skip if the marker is already present.
+ *
+ * The plugin can't block a `task` tool call from dispatching (OpenCode plugin
+ * hooks can only mutate `output.args.prompt`). The stub replacement makes the
+ * call return a fixed ~50-char output in one model round-trip instead of
+ * doing the full subagent's work.
+ */
+function injectTrivialSkipStub(_prompt: string, sub: SubagentType): string {
+  return TRIVIAL_SKIP_STUB_TEMPLATE.replace(/\{subagent\}/g, sub)
+}
+
+/**
+ * v0.24 — Replace the prompt with the mechanical-verdict stub. The plugin
+ * computed the verdict deterministically from workflow memory; we tell the
+ * subagent to return the pre-computed verdict line and end.
+ */
+function injectMechanicalVerdictStub(
+  _prompt: string,
+  sub: SubagentType,
+  verdictLine: string,
+): string {
+  return MECHANICAL_VERDICT_STUB_TEMPLATE.replace(/\{verdict_line\}/g, verdictLine).replace(
+    /\{subagent\}/g,
+    sub,
+  )
 }
 
 /** v0.20 — marker for the frame-rebuild directive preamble. Idempotent injection. */
@@ -495,6 +544,69 @@ function injectTemplate(prompt: string, taskType: import("./templates").TaskType
   return `${prompt.trimEnd()}\n\nYour output MUST contain these sections in this exact order, using these exact headings:\n\n${template}\n`
 }
 
+/**
+ * v0.23 — Inject the plan cognitive posture between REASONING_CONVENTIONS
+ * (auto-prepended by injectPreamble) and the orchestrator's task body.
+ *
+ * Lives plugin-side rather than under agents/ because OpenCode has a
+ * built-in `plan` primary-mode agent (invokable via `opencode --agent plan`)
+ * — dropping `agents/plan.md` would shadow that built-in and break the
+ * user's top-level planning workflow. See plan-posture.ts for the load
+ * mechanics.
+ *
+ * Idempotent: skip if PLAN_POSTURE_MARKER is already in the prompt head
+ * (defensive — the posture should only ever appear once).
+ *
+ * Failure mode: if `getPlanPosture()` returns "" (file missing/unreadable),
+ * the prompt is returned unchanged — the plan still runs with preamble +
+ * template, the posture is the enhancement layer.
+ */
+function injectPlanPosture(prompt: string): string {
+  if (prompt.slice(0, 8000).includes(PLAN_POSTURE_MARKER)) return prompt
+  const posture = getPlanPosture()
+  if (!posture) return prompt
+  // Insert after the REASONING_CONVENTIONS block. injectPreamble has already
+  // prepended DELEGATION_PREAMBLE + "" + REASONING_CONVENTIONS + "" + prompt;
+  // find the END of REASONING_CONVENTIONS by looking for the conventions
+  // closing structure-output bullet and splicing after the trailing blank.
+  // If we can't locate it cleanly, prepend the posture at the very top —
+  // still functional (the model reads it before the rest), just suboptimal
+  // ordering.
+  const conventionsIdx = prompt.indexOf(CONVENTIONS_MARKER)
+  if (conventionsIdx < 0) {
+    return `${posture}\n${prompt}`
+  }
+  // Find the end of the conventions block: it ends with a closing backtick
+  // template-literal in the constant. Easier: split on the first blank line
+  // after the conventions marker.
+  const afterMarker = prompt.indexOf("\n\n", conventionsIdx)
+  // CONVENTIONS_MARKER itself contains internal blank lines (Phase 1, Phase 2…),
+  // so the FIRST blank line after the marker is inside the block, not after it.
+  // Walk forward past internal blanks by tracking the last "## " heading;
+  // the conventions block ends when we see a heading that isn't Phase/Layer/Output.
+  // Pragmatic fallback: insert posture AFTER the entire conventions block
+  // by searching for the next non-conventions heading (heuristic: a line
+  // that doesn't start with "## Layer", "## Phase", "## Specialist",
+  // "## Visible", "## Output discipline", and is preceded by a blank line).
+  //
+  // Simpler approach: locate the literal closing-bullet of conventions
+  // ("- **Structured output**:") — present at the very end of REASONING_CONVENTIONS
+  // — and inject AFTER its trailing newline.
+  const endMarker = "- **Structured output**:"
+  const endIdx = prompt.indexOf(endMarker, conventionsIdx)
+  if (endIdx < 0) {
+    // Could not locate the conventions end; fall back to "right after the
+    // first blank line" heuristic. This may place posture mid-conventions
+    // (unlikely in practice; injectPreamble produced the canonical block).
+    if (afterMarker < 0) return `${prompt}\n\n${posture}\n`
+    return `${prompt.slice(0, afterMarker)}\n\n${posture}\n${prompt.slice(afterMarker)}`
+  }
+  // Skip past the closing bullet's line (until next newline).
+  const lineEnd = prompt.indexOf("\n", endIdx)
+  const splitIdx = lineEnd >= 0 ? lineEnd + 1 : prompt.length
+  return `${prompt.slice(0, splitIdx)}\n${posture}\n${prompt.slice(splitIdx)}`
+}
+
 /** Build the required-section-check annotation block. Empty string when nothing missing. */
 function buildSectionMarkers(missing: readonly string[]): string {
   if (missing.length === 0) return ""
@@ -545,8 +657,55 @@ export function buildHooks(client: Client): Hooks {
 
         let working = output.args.prompt
 
+        // v0.24 — Trivial fast-path enforcement (P0). When the workflow is
+        // on the `ultra`/`trivial` tier AND the subagent is one that the
+        // orchestrator workflow doc says to skip (TRIVIAL_SKIPPED_SUBAGENTS),
+        // replace the entire prompt with the trivial-skip stub template.
+        // The subagent still runs (we can't block the dispatch from a hook)
+        // but it returns a ~50-char stub line in one round-trip instead of
+        // doing the full subagent's work.
+        //
+        // Short-circuit: log + emit and skip all downstream injections.
+        if (
+          suppressesWorkflowMemory(s.trivialityTier) &&
+          TRIVIAL_SKIPPED_SUBAGENTS.has(sub) &&
+          !working.includes(TRIVIAL_SKIP_MARKER)
+        ) {
+          const preStubLen = working.length
+          working = injectTrivialSkipStub(working, sub)
+          output.args = { ...output.args, prompt: working }
+          await log({
+            kind: "workflow.trivial.skip",
+            session: input.sessionID,
+            subagent: sub,
+            triviality_tier: s.trivialityTier!,
+          })
+          await log({
+            kind: "tool.execute.before",
+            session: input.sessionID,
+            subagent: sub,
+            original_chars: preStubLen,
+            final_chars: working.length,
+            stripped_open_questions: false,
+            ceiling_hit: false,
+            compressed: false,
+            pre_filter_skip: true,
+          })
+          return
+        }
+
         // Phase 5 — auto-prepend delegation preamble + REASONING CONVENTIONS
-        working = injectPreamble(working)
+        // v0.24: injectPreamble now picks slim vs full based on subagent type.
+        working = injectPreamble(working, sub)
+
+        // v0.23 — on plan subagent, inject the cognitive posture between
+        // REASONING_CONVENTIONS and the orchestrator's task body. The
+        // posture is what `agents/plan.md` would carry if we could write
+        // one without shadowing OpenCode's built-in `plan` primary-mode
+        // agent. See plan-posture.ts for the mechanics.
+        if (sub === "plan") {
+          working = injectPlanPosture(working)
+        }
 
         // Phase 3 — on plan subagent, inject task-type structural template
         if (sub === "plan" && s.taskType) {
@@ -574,6 +733,61 @@ export function buildHooks(client: Client): Hooks {
         // in tool.execute.after when frame captures successfully.
         if (s.frameRebuildPending) {
           working = injectFrameRebuildDirective(working, sub, s.frameRebuildPending)
+        }
+
+        // v0.24 — Mechanical-verdict stub (P3). For scope-guard and
+        // unknowns-auditor on `full` workflows, attempt to compute the verdict
+        // deterministically from workflow memory. If the deterministic
+        // verdict is the common-case clean result, replace the prompt with
+        // a stub that tells the subagent to return only the verdict line.
+        //
+        // Conservative: only fires when the deterministic check is confident.
+        // Ambiguous cases fall through to the full LLM call.
+        if (
+          memory &&
+          !trivialitySuppresses &&
+          !working.includes(MECHANICAL_VERDICT_MARKER)
+        ) {
+          if (sub === "scope-guard") {
+            // Find the latest restater entry and latest non-restater entry
+            // (the artifact being scope-checked).
+            const restaterEntry = [...memory.entries]
+              .reverse()
+              .find((e) => e.subagent === "restater")
+            const artifactEntry = [...memory.entries]
+              .reverse()
+              .find((e) => e.subagent !== "restater" && e.subagent !== "scope-guard")
+            if (restaterEntry && artifactEntry) {
+              const verdict = computeScopeGuardVerdict(
+                restaterEntry.output,
+                artifactEntry.output,
+              )
+              if (verdict === "in-scope") {
+                working = injectMechanicalVerdictStub(working, sub, "✅ In scope")
+                await log({
+                  kind: "workflow.mechanical.stub",
+                  session: input.sessionID,
+                  subagent: sub,
+                  verdict: "✅ In scope",
+                })
+              }
+            }
+          } else if (sub === "unknowns-auditor") {
+            const verdict = computeUnknownsVerdict(memory)
+            if (verdict === "ALL_RESOLVED") {
+              const verdictLine = `## Verdict\nALL_RESOLVED — no unknowns to resolve (computed deterministically by plugin).`
+              working = injectMechanicalVerdictStub(working, sub, verdictLine)
+              await log({
+                kind: "workflow.mechanical.stub",
+                session: input.sessionID,
+                subagent: sub,
+                verdict: "ALL_RESOLVED",
+              })
+            }
+            // OPEN_UNKNOWNS_REMAIN / USER_INPUT_REQUIRED / DEFERRED_ACCEPTABLE
+            // fall through — the auditor's LLM-side reasoning may still be
+            // useful (false-resolution detection, evidence sanity check).
+          }
         }
 
         // v0.21 — Unknowns-blocking gate. Before the plan subagent runs,
@@ -1003,6 +1217,29 @@ export function buildHooks(client: Client): Hooks {
                 unobserved: recon.unobserved.length,
               })
 
+              // v0.24 — Prediction auto-confirm bypass observability (P5).
+              // When all predictions in memory are confirmed with non-empty
+              // evidence, the synthesis-side reconciliation work was
+              // unnecessary — log it so the orchestrator's prompt-side
+              // bypass directive can be measured against actual savings.
+              if (predictionsAllTriviallyConfirmed(memoryNow)) {
+                await log({
+                  kind: "workflow.prediction.auto-confirm",
+                  session: input.sessionID,
+                  prediction_count: recon.confirmed.length,
+                })
+              }
+
+              // v0.23 — Persist contradicted count on ArcState so the plan-
+              // quality measurement (plan-after hook) can check whether the
+              // plan acknowledges outstanding contradictions in its design
+              // sections. Running sum across multiple synthesis passes within
+              // the same workflow (each pass overwrites with the latest count
+              // rather than accumulating — what matters is "are there
+              // contradictions still on the table at plan time", and synthesis
+              // recomputes the full set each pass).
+              s.predictionsContradicted = recon.contradicted.length
+
               if (recon.contradicted.length > 0) {
                 const rebuildCount = s.frameRebuildCount ?? 0
                 const capExhausted = rebuildCount >= 1
@@ -1184,6 +1421,40 @@ export function buildHooks(client: Client): Hooks {
                 has_root_cause: chain.hasRootCause,
                 confirmations: chain.confirmations,
                 has_attribution: chain.hasAttribution,
+              })
+            }
+          }
+
+          // v0.23 — Plan-quality measurement. Six heuristic signals describing
+          // load-bearing-ness vs form-filling. All advisory; the reviewer
+          // remains the sole verdict authority. Emitted only when taskType
+          // is known (which it always is when frame ran; falls back silently
+          // otherwise).
+          if (s.taskType) {
+            try {
+              const quality = measurePlanQuality(outText, s.taskType, s)
+              await log({
+                kind: "workflow.plan.quality",
+                session: input.sessionID,
+                task_type: s.taskType,
+                load_bearing_refs: quality.loadBearingRefs,
+                grounded: quality.grounded,
+                checkable_wrong_if: quality.checkableWrongIf,
+                forbidden_phrase_count: quality.forbiddenPhraseCount,
+                oversized_sections: quality.oversizedSections,
+                ungrounded_insufficiencies: quality.ungroundedInsufficiencies,
+                contradiction_acknowledged: quality.contradictionAcknowledged,
+              })
+            } catch (err) {
+              // Best-effort. Plan-quality measurement must NEVER block the
+              // workflow. A heuristic crash is logged as `error` and the
+              // plan proceeds normally.
+              await log({
+                kind: "error",
+                session: input.sessionID,
+                hook: "tool.execute.after",
+                subagent: sub,
+                error: `measurePlanQuality failed: ${(err as Error).message}`,
               })
             }
           }

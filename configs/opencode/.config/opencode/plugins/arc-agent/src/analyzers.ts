@@ -17,14 +17,33 @@ import { isTaskType, type TaskType } from "./templates"
 import {
   bucketFor,
   TRIVIALITY_TIERS,
+  UNKNOWN_RESOLVABILITY,
+  UNKNOWN_STATUSES,
   type PlanSizeBucket,
   type TrivialityTier,
   type NormalizedVerdict,
 } from "./types"
+import { predictionReconciliation, unknownsStatus } from "./workflow-memory"
+import type { WorkflowMemoryState } from "./types"
 
-/** Parse the ## Task Type section emitted by frame.md. Returns null if absent or unparseable. */
+/**
+ * Parse the ## Task Type section emitted by frame.md. Returns null if absent
+ * or unparseable.
+ *
+ * v0.23: also accepts inline shapes that DeepSeek occasionally emits when
+ * compressing the output:
+ *   - `## Task Type` heading followed by `feature` on a later line (original)
+ *   - `## Task Type` heading with `feature` on the same line: `## Task Type: feature`
+ *   - Inline `Task Type: feature` bullet without a heading
+ *   - Inline `**Task Type**: feature` bold bullet
+ *
+ * The match is anchored on the first occurrence of a recognized shape; later
+ * occurrences are ignored.
+ */
 export function extractTaskType(framing: string): TaskType | null {
   const lines = framing.split("\n")
+
+  // Pass 1: full ## Task Type heading (original behavior).
   let inTaskTypeSection = false
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!
@@ -35,14 +54,31 @@ export function extractTaskType(framing: string): TaskType | null {
       }
       continue
     }
-    // We're in the section — first non-blank, non-heading line is the answer
     if (trimmed === "") continue
     if (trimmed.startsWith("#")) break
-    // trimmed may be "feature" or "feature  -- justification follows"
-    const firstToken = trimmed.split(/[\s|<>]/)[0]?.toLowerCase().trim() ?? ""
+    // Strip leading bullet markers, code-fence backticks, and bold markers
+    // before tokenizing. DeepSeek often emits e.g. "`feature`" or "- feature".
+    const cleaned = trimmed.replace(/^[-*]\s+/, "").replace(/[`*_]/g, "").trim()
+    const firstToken = cleaned.split(/[\s|<>]/)[0]?.toLowerCase().trim() ?? ""
     if (isTaskType(firstToken)) return firstToken
     break
   }
+
+  // Pass 2: inline shapes. Match the FIRST occurrence (frame's output
+  // typically declares task type once; alternatives/plan templates also use
+  // the phrase but those don't appear in frame's own output).
+  //
+  // Permissive regex: optional leading `## ` heading, optional bold markers,
+  // optional colon, then one of the known task type tokens. We require the
+  // word "Task Type" or "## Task Type" near the start of the matched line.
+  const inlineRe =
+    /^(?:#{1,4}\s+)?(?:[*_]{0,2})?\s*Task Type(?:[*_]{0,2})?\s*[:=]\s*(?:[`*_]{0,2})?\s*(feature|fix|refactor|investigate|docs)\b/im
+  const m = inlineRe.exec(framing)
+  if (m) {
+    const token = m[1]!.toLowerCase()
+    if (isTaskType(token)) return token
+  }
+
   return null
 }
 
@@ -237,6 +273,145 @@ export function normalizeVerdict(text: string): NormalizedVerdict | null {
     return "needs-revision"
   }
   return null
+}
+
+/**
+ * v0.24 — Deterministic scope-guard verdict.
+ *
+ * Compares the original ask (restater output) against the latest artifact
+ * (plan, alternatives, etc.) via token-set overlap. The common "no drift"
+ * case is a token-overlap ratio of the original-ask-tokens that appear in
+ * the latest-artifact tokens. We default to ≥0.8 — strict enough to flag
+ * genuine scope expansion, loose enough to accept implementation-token
+ * introductions ("def fix() ..." that don't appear in the ask).
+ *
+ * Returns `"in-scope"` when the deterministic check is confident the
+ * verdict will be ✅ In scope. Returns `"ambiguous"` otherwise — caller
+ * dispatches the LLM-side scope-guard for the harder cases.
+ */
+export function computeScopeGuardVerdict(
+  originalAsk: string,
+  latestArtifact: string,
+  thresholdRatio = 0.6,
+): "in-scope" | "ambiguous" {
+  if (!originalAsk || !latestArtifact) return "ambiguous"
+  const askTokens = tokenize(originalAsk)
+  const artifactTokens = new Set(tokenize(latestArtifact))
+  if (askTokens.size === 0) return "ambiguous"
+  let overlap = 0
+  for (const tok of askTokens) {
+    if (artifactTokens.has(tok)) overlap++
+  }
+  const ratio = overlap / askTokens.size
+  return ratio >= thresholdRatio ? "in-scope" : "ambiguous"
+}
+
+/**
+ * Lowercase + strip punctuation + split on whitespace; drop stopwords +
+ * tokens shorter than 3 chars. Returns unique token set.
+ */
+function tokenize(text: string): Set<string> {
+  const STOPWORDS = new Set([
+    "the", "and", "for", "with", "that", "this", "from", "into", "your",
+    "have", "has", "had", "are", "was", "were", "will", "would", "should",
+    "could", "can", "may", "might", "must", "but", "not", "any", "all",
+    "use", "uses", "using", "used", "via", "per", "out", "off", "see",
+  ])
+  const tokens = new Set<string>()
+  const cleaned = text.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, " ")
+  for (const raw of cleaned.split(/\s+/)) {
+    const t = raw.trim()
+    if (t.length < 3) continue
+    if (STOPWORDS.has(t)) continue
+    tokens.add(t)
+  }
+  return tokens
+}
+
+/**
+ * v0.24 — Deterministic unknowns-auditor verdict.
+ *
+ * Reads workflow memory directly (no LLM call). Mirrors the verdict logic
+ * in agents/unknowns-auditor.md:
+ *
+ *   - ALL_RESOLVED: no opens, or no unknowns declared.
+ *   - OPEN_UNKNOWNS_REMAIN: at least one S:open + R:pre_design.
+ *   - USER_INPUT_REQUIRED: at least one S:open + R:user_input (no pre_design).
+ *   - DEFERRED_ACCEPTABLE: all opens are R:accept_risk OR have been deferred.
+ *   - UNCLASSIFIED: returns null so the orchestrator falls back to LLM.
+ *
+ * Returns null when the workflow memory has any open unknowns whose
+ * resolvability we couldn't parse — caller should dispatch the LLM-side
+ * auditor for the edge case.
+ */
+export type UnknownsVerdict =
+  | "ALL_RESOLVED"
+  | "OPEN_UNKNOWNS_REMAIN"
+  | "USER_INPUT_REQUIRED"
+  | "DEFERRED_ACCEPTABLE"
+
+export function computeUnknownsVerdict(
+  memory: WorkflowMemoryState | undefined,
+): UnknownsVerdict | null {
+  if (!memory) return "ALL_RESOLVED"
+  const report = unknownsStatus(memory)
+  const total =
+    report.open.length +
+    report.resolved.length +
+    report.deferred.length +
+    report.unparseable.length
+  if (total === 0) return "ALL_RESOLVED"
+  if (report.unparseable.length > 0) return null
+
+  // Order matters: pre_design > user_input > accept_risk
+  const openPreDesign = report.open.filter(
+    (e) => e.resolvability === UNKNOWN_RESOLVABILITY.pre_design,
+  )
+  if (openPreDesign.length > 0) return "OPEN_UNKNOWNS_REMAIN"
+
+  const openUserInput = report.open.filter(
+    (e) => e.resolvability === UNKNOWN_RESOLVABILITY.user_input,
+  )
+  if (openUserInput.length > 0) return "USER_INPUT_REQUIRED"
+
+  // Any remaining opens (no resolvability or accept_risk) → DEFERRED_ACCEPTABLE
+  const openOther = report.open.filter(
+    (e) =>
+      e.status === UNKNOWN_STATUSES.open &&
+      e.resolvability !== UNKNOWN_RESOLVABILITY.pre_design &&
+      e.resolvability !== UNKNOWN_RESOLVABILITY.user_input,
+  )
+  if (openOther.length === 0) return "ALL_RESOLVED"
+  return "DEFERRED_ACCEPTABLE"
+}
+
+/**
+ * v0.24 — Detect whether all predictions are trivially confirmed (no
+ * reconciliation work needed).
+ *
+ * Returns true when:
+ *   - At least one prediction exists in memory.
+ *   - Every prediction has a matching observation note with
+ *     verdict=confirmed AND non-empty evidence.
+ *
+ * False otherwise (any contradicted / inconclusive / unobserved, or no
+ * predictions at all). Caller skips the LLM-side synthesis reconciliation
+ * sub-step when this returns true.
+ */
+export function predictionsAllTriviallyConfirmed(
+  memory: WorkflowMemoryState | undefined,
+): boolean {
+  if (!memory) return false
+  const recon = predictionReconciliation(memory)
+  if (recon.confirmed.length === 0) return false
+  if (recon.contradicted.length > 0) return false
+  if (recon.inconclusive.length > 0) return false
+  if (recon.unobserved.length > 0) return false
+  // All predictions must have non-empty evidence to count as "trivially" confirmed.
+  for (const c of recon.confirmed) {
+    if (!c.evidence || c.evidence.trim().length === 0) return false
+  }
+  return true
 }
 
 /** Generate the plan-size advisory line. Empty string when no advisory needed. */

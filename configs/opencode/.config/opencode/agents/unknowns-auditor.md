@@ -13,6 +13,22 @@ permission:
 
 # unknowns-auditor
 
+## v0.24 — Mechanical-verdict short-circuit
+
+If your prompt starts with `MECHANICAL VERDICT`, the plugin has computed the
+verdict deterministically from `workflow_unknowns_status`. Return ONLY the
+verdict line shown in the prompt body, followed by the Falsification clause.
+Do NOT elaborate, do NOT call tools, do NOT write notes. End your turn
+immediately.
+
+The common case is `ALL_RESOLVED` — no unknowns are open, or every open is
+already `accept_risk`. Trust it. The plugin's verdict logic mirrors yours
+(see `plugins/arc-agent/src/analyzers.ts → computeUnknownsVerdict`) and
+covers the unambiguous cases. Ambiguous cases (unparseable notes, mixed
+resolvabilities) fall through to your full LLM-side audit below.
+
+---
+
 You audit the workflow's L1 unknowns ledger before the plan step. Frame
 enumerated unknowns as U1, U2, …; research subagents (librarian, explore,
 synthesis) attempted to resolve them. Your job is to report which are

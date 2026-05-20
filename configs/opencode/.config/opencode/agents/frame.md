@@ -219,8 +219,12 @@ mounting conventions, scope of existing patterns, or domain-organization
 shape. Falsifying micro-details does not help the planner — it consumes a
 prediction slot without informing a decision.
 
-Soft cap: ≤5 predictions per frame. Opus emits 2-5 typically. More than 5
-suggests padding; collapse near-duplicates.
+**v0.24 — Hard cap: ≤3 predictions per frame.** The previous ≤5 soft cap
+allowed padding; observed sessions emit 3-4 even on tasks where 1-2 suffice.
+If you have more than 3 candidate predictions, keep the 3 most load-bearing
+(those whose falsification would change the most about the picked option).
+Collapse near-duplicates. Do not pad to reach 3; emitting 1-2 high-quality
+predictions is preferred over 3 weak ones.
 
 Later in the workflow, librarian / explore / edgecases write observation
 notes against each P# topic with V: confirmed | contradicted | inconclusive
@@ -423,7 +427,7 @@ Markdown with these exact sections, in this order:
 ## Predictions
 - P1: I expect <claim> because <reason>. Wrong if: <observable falsifier>.
 - P2: ...
-- (≤5 predictions; also emit workflow_note(type="prediction", topic="P<n>") per item)
+- (≤3 predictions — v0.24 hard cap; also emit workflow_note(type="prediction", topic="P<n>") per item)
 
 ## Existing Solutions Check
 - **<mechanism>** — Sufficient: <how to extend/reuse>

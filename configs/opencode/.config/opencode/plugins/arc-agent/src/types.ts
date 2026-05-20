@@ -29,7 +29,7 @@ export const CEILINGS = {
   librarian: 6_500, // was 5_000
   explore: 6_500, // was 5_000
   edgecases: 7_500, // was 6_000
-  plan: 14_000, // was 12_000
+  plan: 32_000, // v0.23: was 14_000 — plan-posture.md adds ~14k chars between preamble and orchestrator body; the original 14k ceiling truncated the posture/template tail. Wide headroom keeps the structural template + recall directives + threaded outputs all visible.
   review: 20_000, // was 18_000
   "quick-answer": 5_500, // was 4_000
   general: 9_500, // was 8_000
@@ -328,6 +328,10 @@ export const DEFERRAL_AUTHORIZED_AUTHORS: ReadonlySet<string> = new Set([
   "skeptic",
   "scope-guard",
   "unknowns-auditor",
+  // v0.24 — synthesis is authorized to defer pre_design unknowns when its
+  // cross-source reasoning proves the picked design handles both branches
+  // (the "auto-downgrade" pattern in agents/synthesis.md Step D).
+  "synthesis",
 ])
 
 /**
@@ -433,6 +437,16 @@ export interface ArcState {
    * within the same workflow. Cleared on resetWorkflowMemory.
    */
   reframeOfferDeclined?: boolean
+  /**
+   * v0.23 — Running count of contradicted predictions across all synthesis
+   * reconciliation passes in this workflow. Consumed by
+   * `measurePlanQuality.contradictionAcknowledged`: if non-zero at plan
+   * time, the plan output is expected to surface the contradiction inside
+   * its design sections (Architecture Decisions / Fix Strategy / Target
+   * Shape). Incremented in hooks.ts at the same site that emits
+   * `workflow.prediction.reconciled`. Cleared on resetWorkflowMemory.
+   */
+  predictionsContradicted?: number
 }
 
 /**
@@ -576,6 +590,71 @@ export const MEMORY_SUPPRESSING_TIERS: ReadonlySet<TrivialityTier> = new Set([
 export function suppressesWorkflowMemory(tier: TrivialityTier | undefined): boolean {
   return tier !== undefined && MEMORY_SUPPRESSING_TIERS.has(tier)
 }
+
+/**
+ * v0.24 — Subagents that MUST be skipped on `ultra` or `trivial` workflows
+ * per orchestrator.md Step 1.6. When the orchestrator dispatches one of
+ * these on a non-`full` tier, the plugin replaces the prompt with a stub
+ * and logs `workflow.trivial.skip`.
+ *
+ * Note: `skeptic` is conditional — CP1 fires on trivial; CP2-CP4 do not.
+ * The plugin can't distinguish CPs from the subagent type alone, so skeptic
+ * is NOT in this set; orchestrator-side compliance gates CP2-CP4.
+ *
+ * Step 5 specialists: on trivial, only review + critic fire. The other 5
+ * (confidence-auditor, assumption-ledger, falsifier, decision-options) are
+ * skipped — included here.
+ *
+ * Single source of truth — every callsite that gates on "skipped on trivial"
+ * imports this set.
+ */
+export const TRIVIAL_SKIPPED_SUBAGENTS: ReadonlySet<SubagentType> = new Set([
+  // Research (Step 2)
+  "librarian",
+  "explore",
+  // Analysis batch (Step 3)
+  "delta-mapper",
+  "ambiguity-spotter",
+  "edgecases",
+  "synthesis",
+  // Alternatives + cost (Step 3.5)
+  "alternatives",
+  "batch-planner",
+  "cost-checker",
+  // Gates that don't fire on trivial
+  "unknowns-auditor",
+  "frame-validity-check",
+  // Step-transition specialists
+  "scope-guard",
+  "expectation-keeper",
+  // Step 5 specialists (review + critic only on trivial)
+  "confidence-auditor",
+  "assumption-ledger",
+  "falsifier",
+  "decision-options",
+])
+
+/**
+ * v0.24 — Subagents that are short, structured verdict-emitters. These get
+ * REASONING_CONVENTIONS_SLIM instead of the full ~10k-char REASONING_CONVENTIONS.
+ * Artifact producers (frame, plan, alternatives, review, critic, delta-mapper,
+ * synthesis, spike) keep the full preamble.
+ *
+ * Note: when one of these subagents is ALSO in TRIVIAL_SKIPPED_SUBAGENTS and
+ * the workflow is trivial-tier, the trivial-skip stub replaces the prompt
+ * entirely — the slim preamble distinction only matters on `full` workflows.
+ */
+export const MECHANICAL_CHECK_SUBAGENTS: ReadonlySet<SubagentType> = new Set([
+  "scope-guard",
+  "expectation-keeper",
+  "unknowns-auditor",
+  "confidence-auditor",
+  "ambiguity-spotter",
+  "restater",
+  "frame-validity-check",
+  "cost-checker",
+  "batch-planner",
+])
 
 export type NormalizedVerdict = "proceed" | "needs-revision" | "reject"
 
@@ -856,6 +935,100 @@ export interface WorkflowNoteFallbackParsedLog extends LogBase {
   author: SubagentType
 }
 
+/**
+ * v0.23 — Plan-quality measurement. Emitted from the plan tool.execute.after
+ * hook alongside the existing tool.execute.after log. All signals are
+ * advisory — they do NOT gate or reject a plan. The reviewer subagent
+ * remains the sole verdict authority. The measurement exists so plan-
+ * quality regressions become observable in the JSONL log the same way the
+ * v0.21 cognitive loop became observable via workflow.prediction.reconciled.
+ *
+ * Signals are heuristic; see plugins/arc-agent/src/plan-quality.ts for
+ * exact extraction rules. v0.23 thresholds are deliberately permissive;
+ * v0.24+ may tune them based on observed data.
+ */
+/**
+ * v0.24 — Trivial fast-path enforcement. Logged once per stub-injected
+ * subagent dispatch. When the orchestrator dispatches a subagent on a
+ * `trivial` or `ultra` workflow that the workflow doc says to skip
+ * (TRIVIAL_SKIPPED_SUBAGENTS), the plugin replaces the prompt with a
+ * stub-template and logs this event. Counting `workflow.trivial.skip` against
+ * the actual subagent calls in the same session is the v0.24 compliance
+ * check: if subagent calls outnumber skips for a trivial session, the
+ * enforcement is broken.
+ */
+export interface WorkflowTrivialSkipLog extends LogBase {
+  kind: "workflow.trivial.skip"
+  subagent: SubagentType
+  triviality_tier: TrivialityTier
+}
+
+/**
+ * v0.24 — Mechanical-verdict stub. Logged when the plugin computes a
+ * mechanical-check subagent's verdict deterministically from workflow memory
+ * (scope-guard "✅ In scope" common case, unknowns-auditor ALL_RESOLVED
+ * common case) and replaces the prompt with a stub-template that returns the
+ * pre-computed verdict line.
+ */
+export interface WorkflowMechanicalStubLog extends LogBase {
+  kind: "workflow.mechanical.stub"
+  subagent: SubagentType
+  verdict: string
+}
+
+/**
+ * v0.24 — Prediction auto-confirm bypass. Logged when synthesis's prediction
+ * reconciliation step is skipped because all predictions in workflow memory
+ * already have observation notes with verdict=confirmed AND non-empty
+ * evidence. Saves one synthesis sub-step LLM round-trip on the common case.
+ */
+export interface WorkflowPredictionAutoConfirmLog extends LogBase {
+  kind: "workflow.prediction.auto-confirm"
+  prediction_count: number
+}
+
+export interface WorkflowPlanQualityLog extends LogBase {
+  kind: "workflow.plan.quality"
+  task_type: import("./templates").TaskType
+  /**
+   * Count of file:line references (e.g. `routes.py:42`, `src/app/cache.ts:17`)
+   * inside the plan's design sections. Proxy for "plan grounded in real
+   * code". Higher = more concrete.
+   */
+  load_bearing_refs: number
+  /** True when load_bearing_refs >= 1. Derived convenience flag. */
+  grounded: boolean
+  /**
+   * True when the Falsification section's `Wrong if:` line names a
+   * checkable condition (verb + concrete noun / file ref / condition
+   * keyword), not a vague hedge like "Wrong if: the design is wrong".
+   */
+  checkable_wrong_if: boolean
+  /**
+   * Count of forbidden bare-justification phrases ("cleaner separation",
+   * "more maintainable", "different domain", etc.) in design sections.
+   * Higher = more form-filling.
+   */
+  forbidden_phrase_count: number
+  /** Section headings whose body exceeded the per-section length contract. */
+  oversized_sections: string[]
+  /**
+   * Count of Insufficient claims in Existing Solutions Check that did NOT
+   * name a constraint (no `because`/`requires`/`constraint`/`invariant`
+   * keyword in the surrounding bullet). Higher = more hand-wave Insufficient
+   * declarations.
+   */
+  ungrounded_insufficiencies: number
+  /**
+   * True when the plan acknowledges any prior contradicted prediction
+   * inside its design sections — only checked when
+   * `state.predictionsContradicted > 0`. When no predictions were
+   * contradicted, this is `true` (vacuously) so the field reads as "no
+   * outstanding contradiction debt".
+   */
+  contradiction_acknowledged: boolean
+}
+
 export type LogLine =
   | StartupLog
   | ToolBeforeLog
@@ -885,3 +1058,7 @@ export type LogLine =
   | WorkflowFailureChainDeclaredLog
   | WorkflowNoteMemoryUninitializedLog
   | WorkflowNoteFallbackParsedLog
+  | WorkflowPlanQualityLog
+  | WorkflowTrivialSkipLog
+  | WorkflowMechanicalStubLog
+  | WorkflowPredictionAutoConfirmLog

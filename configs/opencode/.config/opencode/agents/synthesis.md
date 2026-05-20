@@ -137,6 +137,41 @@ workflow_note(
 )
 ```
 
+**v0.24 — Auto-downgrade for design-robust unknowns**:
+
+For each unknown that remains S: open + R: pre_design after research, ask:
+**"Does the picked design (from alternatives + your reconciliation) handle BOTH branches of this question without needing the answer?"**
+
+If yes — e.g. the fix uses `zipfile.is_zipfile()` to conditionally extract,
+working whether the source returns ZIP or raw bytes — then write a downgrade
+note converting the unknown's resolvability from `pre_design` to `accept_risk`:
+
+```
+workflow_note(
+  author="synthesis",
+  type="unknown",
+  topic="U<n>",
+  content="Q: <verbatim question> | I: design handles both branches via <mechanism with file:line citation> | S: deferred | R: accept_risk | E: <one-line argument that the design is structurally robust regardless of the answer>"
+)
+```
+
+This converts what would otherwise be an OPEN_UNKNOWNS_REMAIN gate-block at
+Step 3.7 into a DEFERRED_ACCEPTABLE that proceeds to plan. The
+unknowns-auditor will accept this downgrade only when the evidence field
+names a specific design mechanism — vague hand-waves get caught by the
+auditor's false-resolution detection.
+
+ONLY downgrade when ALL THREE conditions hold:
+1. The picked option/design is concrete (you can cite the mechanism by name).
+2. The design genuinely handles both branches of the unknown (not just "the
+   answer is probably X").
+3. The unknown was R: pre_design at frame time (not R: user_input — those
+   need actual user input, not design-side mitigation).
+
+Do NOT auto-downgrade R: pre_design unknowns where the design depends on a
+specific answer — those still block the plan and must be surfaced via the
+Step 3.7 fold-into-one-question pattern.
+
 Do NOT write S: deferred — only plan + analyst specialists can defer. If a
 question remains unanswered after research, leave it open; the unknowns-auditor
 will gate the plan step on it.

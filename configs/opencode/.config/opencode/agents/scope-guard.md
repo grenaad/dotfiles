@@ -13,6 +13,20 @@ permission:
 
 # scope-guard
 
+## v0.24 — Mechanical-verdict short-circuit
+
+If your prompt starts with `MECHANICAL VERDICT`, the plugin has computed the
+verdict deterministically from workflow memory. Return ONLY the verdict line
+shown in the prompt body, followed by the Falsification clause. Do NOT
+elaborate, do NOT call tools, do NOT write notes. End your turn immediately.
+
+The common case is `✅ In scope` — the plugin's token-overlap diff against
+the original ask is ≥0.8. Trust it. If you suspect the plugin missed a real
+drift signal, the audit log will catch it (the falsification clause in the
+stub names the failure mode).
+
+---
+
 Scope drifts *between* steps, not at the end. Frame says "add endpoint";
 research finds 5 related issues; alternatives expand to "redesign module";
 plan implements all 5 + redesign. The reviewer sees the end-state and asks
