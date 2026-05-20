@@ -28,14 +28,20 @@ import {
   NOTE_TOPIC_MAX_CHARS,
   NOTE_TYPE_AUTHORIZATION,
   NOTE_TYPES,
+  PREDICTION_VERDICTS,
+  PREDICTION_VERDICT_VALUES,
   RECALL_DEFAULT_LIMIT,
   RECALL_EXCERPT_CHARS,
   RECALL_MAX_LIMIT,
+  UNKNOWN_RESOLVABILITY,
+  UNKNOWN_RESOLVABILITY_VALUES,
   UNKNOWN_STATUSES,
   UNKNOWN_STATUS_VALUES,
   WRITE_NOTE_SUBAGENTS,
+  type PredictionVerdict,
   type SubagentType,
   type TrivialityTier,
+  type UnknownResolvability,
   type UnknownStatus,
   type WorkflowEntry,
   type WorkflowMemoryState,
@@ -378,18 +384,29 @@ function bestCutAt(text: string, max: number): number {
  * v0.20 — Parse the unknown-note content convention:
  *   "Q: <question> | I: <investigation> | S: open|resolved|deferred | E: <evidence>"
  *
- * Permissive: returns `undefined` for status when the content doesn't follow
- * the convention. Callers that need strict parsing should check for `undefined`.
+ * v0.21 — Extended with optional resolvability classification:
+ *   "Q: ... | I: ... | S: open | R: pre_design|user_input|accept_risk | E: ..."
+ *
+ * Permissive: returns `undefined` for status/resolvability when the content
+ * doesn't follow the convention. Callers that need strict parsing should
+ * check for `undefined`.
  */
 export interface ParsedUnknown {
   question?: string
   investigation?: string
   status?: UnknownStatus
+  resolvability?: UnknownResolvability
   evidence?: string
 }
 
 /** Built from UNKNOWN_STATUS_VALUES so adding a new status updates the regex automatically. */
 const UNKNOWN_STATUS_RE = new RegExp(`\\bS:\\s*(${UNKNOWN_STATUS_VALUES.join("|")})\\b`, "i")
+
+/** Built from UNKNOWN_RESOLVABILITY_VALUES so adding a new resolvability updates the regex automatically. */
+const UNKNOWN_RESOLVABILITY_RE = new RegExp(
+  `\\bR:\\s*(${UNKNOWN_RESOLVABILITY_VALUES.join("|")})\\b`,
+  "i",
+)
 
 export function parseUnknownStatus(content: string): UnknownStatus | undefined {
   const m = UNKNOWN_STATUS_RE.exec(content)
@@ -402,6 +419,18 @@ export function parseUnknownStatus(content: string): UnknownStatus | undefined {
   return undefined
 }
 
+export function parseUnknownResolvability(
+  content: string,
+): UnknownResolvability | undefined {
+  const m = UNKNOWN_RESOLVABILITY_RE.exec(content)
+  if (!m) return undefined
+  const raw = m[1]!.toLowerCase()
+  for (const r of UNKNOWN_RESOLVABILITY_VALUES) {
+    if (r === raw) return r
+  }
+  return undefined
+}
+
 export function parseUnknownNote(content: string): ParsedUnknown {
   const out: ParsedUnknown = {}
   const qMatch = /\bQ:\s*([^|]+?)(?:\s*\||$)/.exec(content)
@@ -410,20 +439,90 @@ export function parseUnknownNote(content: string): ParsedUnknown {
   if (iMatch?.[1]) out.investigation = iMatch[1].trim()
   const status = parseUnknownStatus(content)
   if (status) out.status = status
+  const resolvability = parseUnknownResolvability(content)
+  if (resolvability) out.resolvability = resolvability
   const eMatch = /\bE:\s*([^|]+?)(?:\s*\||$)/.exec(content)
   if (eMatch?.[1]) out.evidence = eMatch[1].trim()
   return out
 }
 
 /**
+ * v0.21 — Parse a prediction-observation note content:
+ *   "V: confirmed|contradicted|inconclusive | E: <evidence>"
+ *
+ * Researchers (librarian/explore/edgecases/synthesis) emit these against
+ * a topic that matches a prediction's topic (P1, P2, ...). The verdict
+ * drives the reconciliation table at synthesis time.
+ */
+export interface ParsedPredictionObservation {
+  verdict?: PredictionVerdict
+  evidence?: string
+}
+
+const PREDICTION_VERDICT_RE = new RegExp(
+  `\\bV:\\s*(${PREDICTION_VERDICT_VALUES.join("|")})\\b`,
+  "i",
+)
+
+export function parsePredictionObservation(content: string): ParsedPredictionObservation {
+  const out: ParsedPredictionObservation = {}
+  const vMatch = PREDICTION_VERDICT_RE.exec(content)
+  if (vMatch?.[1]) {
+    const raw = vMatch[1].toLowerCase()
+    for (const v of PREDICTION_VERDICT_VALUES) {
+      if (v === raw) {
+        out.verdict = v
+        break
+      }
+    }
+  }
+  const eMatch = /\bE:\s*([^|]+?)(?:\s*\||$)/.exec(content)
+  if (eMatch?.[1]) out.evidence = eMatch[1].trim()
+  return out
+}
+
+/**
+ * v0.21 — Parse an insufficiency-note content:
+ *   "M: <mechanism> | I: <named insufficiency reason>"
+ *
+ * Frame and plan emit these to document rejected existing mechanisms with
+ * the specific constraint that makes each one insufficient. The reviewer
+ * checks that every insufficiency-noted mechanism is addressed in the plan.
+ */
+export interface ParsedInsufficiency {
+  mechanism?: string
+  insufficiencyReason?: string
+}
+
+export function parseInsufficiency(content: string): ParsedInsufficiency {
+  const out: ParsedInsufficiency = {}
+  const mMatch = /\bM:\s*([^|]+?)(?:\s*\||$)/.exec(content)
+  if (mMatch?.[1]) out.mechanism = mMatch[1].trim()
+  const iMatch = /\bI:\s*([^|]+?)(?:\s*\||$)/.exec(content)
+  if (iMatch?.[1]) out.insufficiencyReason = iMatch[1].trim()
+  return out
+}
+
+/**
  * v0.20 — Group all unknown notes by topic. For each topic, take the latest
  * note (max tMs) and report its status. Returns grouped buckets.
+ *
+ * v0.21 — Added `byResolvability` secondary grouping (only includes entries
+ * with a parseable resolvability). Drives orchestrator gating: open +
+ * pre_design unknowns block plan; open + user_input unknowns trigger
+ * question() gate at unknowns-auditor.
  */
 export interface UnknownsStatusReport {
   open: UnknownsStatusEntry[]
   resolved: UnknownsStatusEntry[]
   deferred: UnknownsStatusEntry[]
   unparseable: UnknownsStatusEntry[]
+  byResolvability: {
+    pre_design: UnknownsStatusEntry[]
+    user_input: UnknownsStatusEntry[]
+    accept_risk: UnknownsStatusEntry[]
+    unclassified: UnknownsStatusEntry[]
+  }
 }
 
 export interface UnknownsStatusEntry {
@@ -434,6 +533,7 @@ export interface UnknownsStatusEntry {
   investigation?: string
   evidence?: string
   status?: UnknownStatus
+  resolvability?: UnknownResolvability
   rawContent: string
 }
 
@@ -454,6 +554,12 @@ export function unknownsStatus(state: WorkflowMemoryState): UnknownsStatusReport
     resolved: [],
     deferred: [],
     unparseable: [],
+    byResolvability: {
+      pre_design: [],
+      user_input: [],
+      accept_risk: [],
+      unclassified: [],
+    },
   }
 
   for (const n of latestByTopic.values()) {
@@ -466,6 +572,7 @@ export function unknownsStatus(state: WorkflowMemoryState): UnknownsStatusReport
       investigation: parsed.investigation,
       evidence: parsed.evidence,
       status: parsed.status,
+      resolvability: parsed.resolvability,
       rawContent: n.content,
     }
     switch (parsed.status) {
@@ -480,6 +587,111 @@ export function unknownsStatus(state: WorkflowMemoryState): UnknownsStatusReport
         break
       default:
         report.unparseable.push(entry)
+    }
+    switch (parsed.resolvability) {
+      case UNKNOWN_RESOLVABILITY.pre_design:
+        report.byResolvability.pre_design.push(entry)
+        break
+      case UNKNOWN_RESOLVABILITY.user_input:
+        report.byResolvability.user_input.push(entry)
+        break
+      case UNKNOWN_RESOLVABILITY.accept_risk:
+        report.byResolvability.accept_risk.push(entry)
+        break
+      default:
+        report.byResolvability.unclassified.push(entry)
+    }
+  }
+
+  return report
+}
+
+/**
+ * v0.21 — Reconcile predictions against researcher observations.
+ *
+ * For each prediction note (frame writes type=prediction with topic=P<n>),
+ * scan observation notes with the same topic. Latest observation per topic
+ * wins (max tMs, append-order tiebreak via `>=`). Predictions with no
+ * observation are reported under `unobserved` (treated as inconclusive by
+ * the orchestrator and synthesis prompt).
+ */
+export interface PredictionReconciliationReport {
+  confirmed: PredictionReconciliationEntry[]
+  contradicted: PredictionReconciliationEntry[]
+  inconclusive: PredictionReconciliationEntry[]
+  unobserved: PredictionReconciliationEntry[]
+}
+
+export interface PredictionReconciliationEntry {
+  topic: string
+  predictionNoteId: string
+  predictionContent: string
+  observationNoteId?: string
+  observationAuthor?: SubagentType
+  verdict?: PredictionVerdict
+  evidence?: string
+}
+
+export function predictionReconciliation(
+  state: WorkflowMemoryState,
+): PredictionReconciliationReport {
+  // Index latest observation per topic (only observation notes with V: field).
+  const latestObsByTopic = new Map<string, WorkflowNote>()
+  for (const n of state.notes) {
+    if (n.type !== NOTE_TYPES.observation) continue
+    const prev = latestObsByTopic.get(n.topic)
+    if (!prev || n.tMs >= prev.tMs) latestObsByTopic.set(n.topic, n)
+  }
+
+  // For each prediction (latest per topic), look up observation.
+  const latestPredByTopic = new Map<string, WorkflowNote>()
+  for (const n of state.notes) {
+    if (n.type !== NOTE_TYPES.prediction) continue
+    const prev = latestPredByTopic.get(n.topic)
+    if (!prev || n.tMs >= prev.tMs) latestPredByTopic.set(n.topic, n)
+  }
+
+  const report: PredictionReconciliationReport = {
+    confirmed: [],
+    contradicted: [],
+    inconclusive: [],
+    unobserved: [],
+  }
+
+  for (const pred of latestPredByTopic.values()) {
+    const obs = latestObsByTopic.get(pred.topic)
+    if (!obs) {
+      report.unobserved.push({
+        topic: pred.topic,
+        predictionNoteId: pred.id,
+        predictionContent: pred.content,
+      })
+      continue
+    }
+    const parsed = parsePredictionObservation(obs.content)
+    const entry: PredictionReconciliationEntry = {
+      topic: pred.topic,
+      predictionNoteId: pred.id,
+      predictionContent: pred.content,
+      observationNoteId: obs.id,
+      observationAuthor: obs.author,
+      verdict: parsed.verdict,
+      evidence: parsed.evidence,
+    }
+    switch (parsed.verdict) {
+      case PREDICTION_VERDICTS.confirmed:
+        report.confirmed.push(entry)
+        break
+      case PREDICTION_VERDICTS.contradicted:
+        report.contradicted.push(entry)
+        break
+      case PREDICTION_VERDICTS.inconclusive:
+        report.inconclusive.push(entry)
+        break
+      default:
+        // Parseable observation note exists but verdict is missing/invalid.
+        // Treat as inconclusive (signal exists, conclusion is absent).
+        report.inconclusive.push(entry)
     }
   }
 

@@ -45,15 +45,25 @@ synthesis outputs. The unknowns ledger itself is queried via the
    evidence in `<workflow-so-far>`. If you find a resolved note whose
    evidence doesn't actually support resolution, flag it as a "false
    resolution" in your output.
-3. Emit the report and one of three verdicts:
+3. Emit the report and one of FOUR verdicts (USER_INPUT_REQUIRED added in v0.21):
    - **ALL_RESOLVED** — every unknown is resolved with real evidence (or no
      unknowns were declared)
-   - **OPEN_UNKNOWNS_REMAIN** — at least one unknown is still S: open. Plan
-     should NOT proceed without addressing these.
+   - **OPEN_UNKNOWNS_REMAIN** — at least one unknown is still S: open AND
+     its resolvability (R: field) is `pre_design`. Plan should NOT proceed
+     without addressing these; research / spike must run first.
+   - **USER_INPUT_REQUIRED** — at least one unknown is still S: open AND
+     its resolvability is `user_input`. Research cannot resolve these; the
+     orchestrator must surface them to the user before plan proceeds. List
+     each U# that needs user input verbatim.
    - **DEFERRED_ACCEPTABLE** — all open unknowns have been explicitly deferred
-     by an authorized author (plan or analyst). Plan may proceed but the
-     plan must surface the deferred items in its Assumptions or Out-of-Scope
-     section.
+     by an authorized author (plan or analyst), OR their resolvability is
+     `accept_risk`. Plan may proceed but the plan must surface the deferred
+     items in its Assumptions or Out-of-Scope section.
+
+When multiple categories apply (e.g. one pre_design open + one user_input
+open), prefer the strongest blocker: pre_design > user_input > accept_risk.
+So one pre_design open returns OPEN_UNKNOWNS_REMAIN even if the user_input
+ones are also open.
 
 ## False-resolution detection
 
@@ -74,9 +84,14 @@ where a subagent self-resolved without doing the work.
 
 ## Verdict
 
-<one of: ALL_RESOLVED | OPEN_UNKNOWNS_REMAIN | DEFERRED_ACCEPTABLE>
+<one of: ALL_RESOLVED | OPEN_UNKNOWNS_REMAIN | USER_INPUT_REQUIRED | DEFERRED_ACCEPTABLE>
 
 <one-sentence justification>
+
+<If USER_INPUT_REQUIRED, append:>
+User input required for:
+- U<n>: <verbatim question>
+- ...
 ```
 
 If the ledger is empty (frame declared no unknowns):

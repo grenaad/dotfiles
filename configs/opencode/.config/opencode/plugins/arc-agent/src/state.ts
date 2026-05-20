@@ -42,11 +42,16 @@ export function ensureWorkflowMemory(state: ArcState): WorkflowMemoryState {
  *
  * v0.20 — Also clears frame-rebuild state so a fresh workflow doesn't inherit
  * a pending rebuild directive from the previous one.
+ *
+ * v0.21 — Also clears taskShape + reframeOfferDeclined so a fresh workflow
+ * gets a clean slate for the predict-observe-compare loop.
  */
 export function resetWorkflowMemory(state: ArcState): void {
   state.workflowMemory = createMemory(state.trivialityTier)
   state.frameRebuildCount = undefined
   state.frameRebuildPending = undefined
+  state.taskShape = undefined
+  state.reframeOfferDeclined = undefined
 }
 
 /**

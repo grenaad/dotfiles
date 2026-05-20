@@ -32,10 +32,44 @@ If this is wrong, stop me now.
 ## Scope & Goals
 One paragraph. Concrete deliverable. What "done" looks like.
 
+## Existing Solutions Check (re-affirmed)
+For each mechanism frame flagged "Insufficient" (see frame's workflow_note
+emissions of type=insufficiency), restate the SPECIFIC data-flow / API-contract
+/ performance characteristic / invariant that makes it insufficient. "Doesn't
+fit" is not acceptable — name the constraint.
+
+For each mechanism frame flagged "Sufficient", confirm it is being extended
+or reused as planned (or explicitly justify why the plan diverged).
+
+Default: extend existing. Any new code MUST point to a corresponding
+Insufficient note from frame. Bare assertions of complexity will be flagged
+by the reviewer.
+
+If frame emitted no Existing Solutions Check (older frame versions or
+trivial-task skip), write "Not applicable — frame did not emit existing-check."
+
 ## Alternatives Considered
 - **Option A — <name>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
 - **Option B — <name>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
 - (Optional **Option C** if 3 alternatives are warranted.)
+
+## Choice Justification (axis-by-axis)
+Reference the alternatives subagent's Comparison Matrix. For each axis where
+the picked option is NOT the simplest, name the SPECIFIC constraint that
+forced complexity. If you cannot name the constraint on any complexity-
+adding axis, collapse to the simpler option.
+
+Format:
+- Scope: <picked beats others because constraint X>
+- Complexity: <if picked is more complex than alternative, name the constraint forcing it>
+- Reversibility: <...>
+- Risk: <...>
+- Cost (deploy / pipeline / maintain / learning): <...>
+- Fit to codebase: <...>
+
+If alternatives subagent produced "No meaningful alternatives" or the collapse
+rule applied, write "Axis-by-axis justification not applicable — single
+viable candidate."
 
 ## Assumptions
 Bullet list. Each assumption explicit — especially anything inferred from clarifications
@@ -99,6 +133,20 @@ If this is wrong, stop me now.
 ## Scope & Goals
 One paragraph. What is broken; what "fixed" looks like.
 
+## Existing Solutions Check (re-affirmed)
+Even for fixes, the simplest-path stance applies. Confirm:
+- Is there an existing code path that, if extended or re-enabled, fixes this?
+- Is there a config flag or feature toggle that addresses this without code?
+- Has this been fixed upstream in a newer version of a dependency?
+
+For each candidate mechanism: state Sufficient (use it, no fix-code needed)
+or Insufficient (named constraint). If frame emitted insufficiency notes,
+re-affirm each one. New code requires a corresponding named insufficiency.
+
+If no such mechanisms apply ("this bug is in our hand-written code, no
+existing fix mechanism shortcuts it"), write "Not applicable — fix requires
+direct code change; no existing mechanism shortcuts it."
+
 ## Alternatives Considered
 - **Option A — <fix approach>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
 - **Option B — <fix approach>**: <one-line description>. Pros: <1-2 bullets>. Cons: <1-2 bullets>. Picked? <YES / no>, because <one sentence>.
@@ -115,6 +163,32 @@ possible, state why and what evidence stands in for one (logs, traces, reports).
 ONE named root cause with mechanism. If multiple candidates remain, pick the
 likeliest and list rejected ones with reasoning. A plan with 3+ unresolved
 candidate causes will be flagged needs-revision.
+
+## Failure Chain
+### Timeline
+Chronological events. Include timestamps where logs/traces have them. If no
+timeline data is available, state "No timeline reconstructible from <reason>"
+and list what data is missing.
+
+### Classification
+Distinct failure modes, grouped. Name each mode (e.g. "ForeignKeyViolation on
+table X", "UUID parse error in mapper layer"). If only one mode, state so.
+
+### Confirmation
+Minimum 2 non-tautological corroborations. Each: a different angle of evidence
+that supports the Root Cause above. Examples:
+  1. Timing: <when the failure starts; correlation with what change>
+  2. Error spike: <rate of occurrence; what triggered it>
+  3. Architectural reason: <why the code path produces this failure>
+  4. Audit trail: <who/what action introduced the precondition>
+  5. Reproduction: <how to deliberately trigger it>
+
+If you can produce fewer than 2 corroborations, mark this section "Root cause
+NOT confirmed — N corroborations only" and treat the diagnosis as provisional.
+
+### Attribution
+Who or what action introduced this. "Unknown — searched <audit logs / git
+blame / change log> but no signal" is acceptable when honestly attempted.
 
 ## Fix Strategy
 Chosen approach in one paragraph. Then: rejected alternatives + why; blast
@@ -232,6 +306,23 @@ explicitly NOT consulted and why.
 Evidence, organized. Cite every claim with source (URL, file:line, or
 authoritative reference). Surface contradictions between sources.
 
+## Failure Chain
+For debugging-shaped investigations (task shape: failure-chain): name the
+Timeline, Classification, Root Cause, Confirmation (≥2), and Attribution.
+For non-debugging investigations: write "Not applicable — this is a
+<task-shape> investigation, not a failure trace."
+
+### Timeline
+<chronological events with timestamps OR "Not applicable">
+### Classification
+<failure modes grouped OR "Not applicable">
+### Root Cause
+<single named cause OR "Not applicable">
+### Confirmation
+<≥2 corroborations OR "Not applicable">
+### Attribution
+<who/what introduced this OR "Not applicable">
+
 ## Tradeoffs
 If comparing options: table with columns Option | Pro | Con | When to pick.
 
@@ -325,7 +416,9 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
   feature: [
     "## What you asked for",
     "## Scope & Goals",
+    "## Existing Solutions Check",
     "## Alternatives Considered",
+    "## Choice Justification",
     "## Assumptions",
     "## Out of Scope",
     "## Architecture Decisions",
@@ -342,10 +435,12 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
   fix: [
     "## What you asked for",
     "## Scope & Goals",
+    "## Existing Solutions Check",
     "## Alternatives Considered",
     "## Assumptions",
     "## Reproduction",
     "## Root Cause",
+    "## Failure Chain",
     "## Fix Strategy",
     "## Implementation Steps",
     "## Sanity Check",
@@ -377,6 +472,7 @@ export const REQUIRED_SECTIONS_BY_TYPE: Record<TaskType, readonly string[]> = {
     "## Question(s)",
     "## Methodology",
     "## Findings",
+    "## Failure Chain",
     "## Recommendation",
     "## Sanity Check",
     "## Verification",

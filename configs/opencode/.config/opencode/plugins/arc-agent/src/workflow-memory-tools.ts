@@ -17,8 +17,9 @@ import { log } from "./log"
 import {
   appendNote,
   getFull,
+  parseInsufficiency,
+  parsePredictionObservation,
   parseUnknownNote,
-  parseUnknownStatus,
   recall,
   unknownsStatus,
 } from "./workflow-memory"
@@ -101,9 +102,10 @@ export const workflowRecallTool = tool({
       .enum(NOTE_TYPE_VALUES)
       .optional()
       .describe(
-        "Note-only: filter by note type. v0.20 adds 'unknown' (for the " +
-          "unknowns ledger), 'contradiction' (multi-layer cross-reference " +
-          "findings + re-frame triggers), and 'assumption' (assumption-ledger).",
+        "Note-only: filter by note type. v0.20 adds 'unknown' (unknowns " +
+          "ledger), 'contradiction' (cross-layer findings + re-frame triggers), " +
+          "'assumption' (assumption-ledger). v0.21 adds 'prediction' (frame's " +
+          "testable beliefs) and 'insufficiency' (rejected existing mechanisms).",
       ),
     kind: z
       .enum(["entry", "note", "both"])
@@ -244,11 +246,16 @@ export const workflowNoteTool = tool({
       .enum(NOTE_TYPE_VALUES)
       .describe(
         "Note category. Per-author allowed types are enforced. " +
-          "observation = neutral finding; concern = potential issue; " +
+          "observation = neutral finding (use 'V: confirmed|contradicted|inconclusive | E: ...' " +
+          "when reconciling against a prediction P# topic); concern = potential issue; " +
           "pattern = recurring shape; retraction = withdraw a prior note; " +
-          "unknown = unknowns-ledger entry (use 'Q: ... | I: ... | S: open|resolved|deferred | E: ...' format); " +
+          "unknown = unknowns-ledger entry (use 'Q: ... | I: ... | S: open|resolved|deferred | " +
+          "R: pre_design|user_input|accept_risk | E: ...'); " +
           "contradiction = cross-source or cross-layer contradiction; " +
-          "assumption = assumption-ledger entry.",
+          "assumption = assumption-ledger entry; " +
+          "prediction = frame's testable belief (content: '<claim> | Wrong if: <observable>', " +
+          "topic 'P1', 'P2', ...); " +
+          "insufficiency = rejected existing mechanism (content: 'M: <mechanism> | I: <named constraint>').",
       ),
     topic: z
       .string()
@@ -357,6 +364,49 @@ export const workflowNoteTool = tool({
             reason_excerpt: (parsed.evidence ?? parsed.investigation ?? "").slice(0, 160),
           })
         }
+      }
+
+      // v0.21 — Predict-observe-compare loop observability.
+      if (result.note.type === NOTE_TYPES.prediction) {
+        await log({
+          kind: "workflow.prediction.declared",
+          session: context.sessionID,
+          topic: result.note.topic,
+          claim_excerpt: result.note.content.slice(0, 160),
+        })
+      } else if (result.note.type === NOTE_TYPES.observation) {
+        // Only emit prediction.observed for observations whose topic looks
+        // like a prediction id (P1, P2, p3, etc.) — the convention frame
+        // emits and researchers reconcile against. Other observations
+        // (general findings) don't carry a verdict and shouldn't pollute
+        // the prediction log.
+        if (/^p\d+$/i.test(result.note.topic)) {
+          const parsedObs = parsePredictionObservation(result.note.content)
+          await log({
+            kind: "workflow.prediction.observed",
+            session: context.sessionID,
+            author: authorArg,
+            topic: result.note.topic,
+            verdict: parsedObs.verdict ?? "unparseable",
+            evidence_excerpt: (parsedObs.evidence ?? result.note.content).slice(0, 160),
+          })
+        }
+      }
+
+      // v0.21 — Existing-solutions-check observability. Plan/frame writes one
+      // insufficiency note per rejected mechanism; aggregate counts are
+      // emitted by the orchestrator from frame/plan output parsing (see
+      // hooks.ts parseExistingCheck), but each individual write is also
+      // queryable via this log line.
+      if (result.note.type === NOTE_TYPES.insufficiency) {
+        const parsedIns = parseInsufficiency(result.note.content)
+        await log({
+          kind: "workflow.existing-check.declared",
+          session: context.sessionID,
+          author: authorArg,
+          mechanisms: parsedIns.mechanism ? 1 : 0,
+          rejections: parsedIns.insufficiencyReason ? 1 : 0,
+        })
       }
 
       return {

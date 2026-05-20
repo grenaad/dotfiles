@@ -24,6 +24,36 @@ A framed problem statement (from the `frame` stage).
 - Apply the **Type-specific guidance** below based on the `Task type:` line in your input.
 - Research **ecosystem mechanics** where relevant (see section below).
 - Apply **Cost-aware research** (see section below) — check what already exists before recommending new work.
+- Reconcile against frame's **Predictions** (P1..Pn) — see section below.
+
+## Prediction Reconciliation (v0.21)
+
+Before finishing your output:
+
+1. Call `workflow_recall({kind:"note", noteType:"prediction"})` to fetch
+   the predictions frame emitted (P1..Pn). Each carries a `Wrong if:`
+   falsifier.
+2. For EACH P# your research materially touched (the evidence you gathered
+   speaks to its claim or falsifier), emit one observation note:
+   ```
+   workflow_note(
+     author="librarian",
+     type="observation",
+     topic="P<n>",                              // matches the prediction's topic
+     content="V: confirmed|contradicted|inconclusive | E: <evidence with citation>"
+   )
+   ```
+3. For predictions your research did not touch, skip silently. Synthesis
+   treats unobserved predictions as inconclusive — no need for an explicit
+   note. Do NOT fabricate verdicts for predictions you have no evidence on.
+
+Verdict values:
+- **confirmed**: evidence supports the predicted claim
+- **contradicted**: evidence directly contradicts it
+- **inconclusive**: evidence touches the area but doesn't settle the question
+
+Cite evidence in E: with a URL or `name:line` reference. "Yes" without a
+citation is unparseable and will be reported as unobserved.
 
 ## Cost-aware research ("what already exists?")
 

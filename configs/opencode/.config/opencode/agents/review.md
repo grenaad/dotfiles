@@ -108,6 +108,13 @@ the failure listed under `## Missing` or `## Contradictions`.
 
 - **`fix`** — plan MUST name exactly ONE root cause in `## Root Cause`. If three
   or more unresolved candidate causes are listed without a chosen primary, fail.
+- **`fix` / `investigate`** — plan MUST contain a `## Failure Chain` section
+  with non-empty Timeline, Classification, Root Cause, Confirmation (≥2
+  corroborations), and Attribution subsections (or each marked "Not
+  applicable" with reason). Confirmation with <2 corroborations OR
+  tautological corroborations ("the cause causes the error") fails.
+  Investigations whose Task Shape is NOT `failure-chain` may mark the entire
+  Failure Chain section "Not applicable — this is a <shape> investigation."
 - **`refactor`** — plan MUST declare explicit behaviour invariants in
   `## Behaviour Invariants`. An empty or hand-wavy invariants section fails:
   without invariants, equivalence cannot be tested.
@@ -118,11 +125,46 @@ the failure listed under `## Missing` or `## Contradictions`.
   missing or stated only vaguely (e.g. "developers", "the codebase") fails.
 - **`feature`** — no type-specific extra gate beyond the consistency checks above.
 
+## v0.21 — Comparison-matrix, insufficiency, and constraint-citation checks
+
+These checks apply to ALL task types. Failure → `## Contradictions` and
+`needs-revision`:
+
+1. **Matrix reference**: if the alternatives subagent produced a
+   `## Comparison Matrix` (and ≥2 candidates), the plan's choice
+   justification MUST reference it axis-by-axis. Verify by checking that
+   the plan's `## Choice Justification` (or equivalent in `## Architecture
+   Decisions` / `## Fix Strategy` / etc.) names the axes from the matrix
+   when explaining why the picked alternative was chosen. If the plan
+   makes the choice with bare prose ("Option B is better") without naming
+   any axes from the matrix, flag as "Choice justification does not
+   reference the alternatives comparison matrix."
+
+2. **Insufficiency-addressed**: if frame's output contained `## Existing
+   Solutions Check` with one or more `Insufficient: <constraint>` bullets,
+   the plan's `## Existing Solutions Check (re-affirmed)` MUST address
+   each rejected mechanism with the specific data-flow / API-contract /
+   performance characteristic / invariant that is missing. "Doesn't fit"
+   is insufficient. A plan that introduces new code without addressing
+   a corresponding insufficiency note from frame fails.
+
+3. **Constraint-cited complexity**: any plan step that introduces
+   complexity (a new dependency, a new service, a new abstraction layer,
+   custom infrastructure) MUST cite the specific constraint that forced
+   the complexity. Bare assertions of complexity ("we need a new event
+   bus") without a named constraint that the simple approach fails to
+   satisfy → `## Risks` entry "Complexity added without a cited
+   constraint" → `needs-revision`.
+
+These checks operationalize the "existing-first, simplest-first" stance.
+The default verdict for any complexity-adding choice is "you don't need
+this unless you can name the constraint."
+
 ## Constraints
 - Be specific. Reference plan steps by number or phrase. Vague critiques are useless.
 - Do not rewrite the plan. Only critique.
 - If the plan is solid AND passes both gates above, say so plainly and list what's strong.
-- Maximum 750 words (raised from 600 to accommodate universal section gates + key insight handling).
+- Maximum 900 words (raised from 750 to accommodate v0.21 matrix-reference, insufficiency-addressed, and constraint-cited checks).
 - Self-correction: if mid-review you realize an earlier critique was wrong, write `Wait — <correction>` or `Actually — <revised view>` rather than silently editing. The user sees your reasoning path.
 
 ## Output

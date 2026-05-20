@@ -123,10 +123,17 @@ export const NO_OPEN_QUESTIONS_SUBAGENTS = new Set<SubagentType>([
  *   - concern:       potential issue surfaced for later review
  *   - pattern:       recurring shape worth flagging across turns
  *   - retraction:    explicit withdrawal of a prior note
- *   - unknown:       L1 unknowns-ledger entry (uses Q/I/S/E content shape)
+ *   - unknown:       L1 unknowns-ledger entry (uses Q/I/S/R/E content shape)
  *   - contradiction: L3 multi-layer or cross-source contradiction;
  *                    also used by frame-validity-check on L4 re-frame trigger
  *   - assumption:    L0 assumption-ledger entry
+ *   - prediction:    v0.21 — frame's testable belief; "Wrong if X" falsifier
+ *                    attached. Researchers reconcile via `observation` notes
+ *                    against the same topic (P1, P2...).
+ *   - insufficiency: v0.21 — frame/plan declares an existing mechanism that
+ *                    was considered and rejected, naming the specific
+ *                    constraint that makes it insufficient. Content shape:
+ *                    "M: <mechanism> | I: <named constraint>".
  */
 export const NOTE_TYPES = {
   observation: "observation",
@@ -136,6 +143,8 @@ export const NOTE_TYPES = {
   unknown: "unknown",
   contradiction: "contradiction",
   assumption: "assumption",
+  prediction: "prediction",
+  insufficiency: "insufficiency",
 } as const
 
 export type NoteType = (typeof NOTE_TYPES)[keyof typeof NOTE_TYPES]
@@ -149,6 +158,8 @@ export const NOTE_TYPE_VALUES = [
   NOTE_TYPES.unknown,
   NOTE_TYPES.contradiction,
   NOTE_TYPES.assumption,
+  NOTE_TYPES.prediction,
+  NOTE_TYPES.insufficiency,
 ] as const satisfies ReadonlyArray<NoteType>
 
 /**
@@ -168,9 +179,13 @@ export const NOTE_TYPE_VALUES = [
  */
 export const NOTE_TYPE_AUTHORIZATION: Record<string, ReadonlyArray<NoteType>> = {
   // Researchers
-  frame: [NOTE_TYPES.unknown],
+  // v0.21: frame writes prediction + insufficiency in addition to unknown.
+  // Predictions are testable beliefs that researchers later reconcile.
+  // Insufficiencies record rejected existing mechanisms ("M: foo | I: <constraint>").
+  frame: [NOTE_TYPES.unknown, NOTE_TYPES.prediction, NOTE_TYPES.insufficiency],
   librarian: [NOTE_TYPES.unknown, NOTE_TYPES.observation],
   explore: [NOTE_TYPES.unknown, NOTE_TYPES.observation],
+  edgecases: [NOTE_TYPES.observation, NOTE_TYPES.concern],
   synthesis: [NOTE_TYPES.unknown, NOTE_TYPES.observation, NOTE_TYPES.contradiction],
   // Analysts
   skeptic: [
@@ -188,6 +203,9 @@ export const NOTE_TYPE_AUTHORIZATION: Record<string, ReadonlyArray<NoteType>> = 
   falsifier: [NOTE_TYPES.contradiction, NOTE_TYPES.concern],
   "unknowns-auditor": [NOTE_TYPES.observation, NOTE_TYPES.unknown],
   "frame-validity-check": [NOTE_TYPES.contradiction],
+  // v0.21 — plan may also declare insufficiencies when re-affirming existing-check
+  // (or discovering new rejections during design). Plan is otherwise read-only.
+  plan: [NOTE_TYPES.insufficiency],
 }
 
 /**
@@ -223,6 +241,77 @@ export const UNKNOWN_STATUS_VALUES = [
   UNKNOWN_STATUSES.resolved,
   UNKNOWN_STATUSES.deferred,
 ] as const satisfies ReadonlyArray<UnknownStatus>
+
+/**
+ * v0.21 — Unknown resolvability classification. Frame declares this on each
+ * unknown via "R: <resolvability>" in note content. Drives orchestrator
+ * behavior at the plan boundary:
+ *   - pre_design: must resolve before plan runs (block + soft directive)
+ *   - user_input: requires interactive question() gate at unknowns-auditor
+ *   - accept_risk: ship without resolution; mitigation documented in note
+ */
+export const UNKNOWN_RESOLVABILITY = {
+  pre_design: "pre_design",
+  user_input: "user_input",
+  accept_risk: "accept_risk",
+} as const
+
+export type UnknownResolvability =
+  (typeof UNKNOWN_RESOLVABILITY)[keyof typeof UNKNOWN_RESOLVABILITY]
+
+export const UNKNOWN_RESOLVABILITY_VALUES = [
+  UNKNOWN_RESOLVABILITY.pre_design,
+  UNKNOWN_RESOLVABILITY.user_input,
+  UNKNOWN_RESOLVABILITY.accept_risk,
+] as const satisfies ReadonlyArray<UnknownResolvability>
+
+/**
+ * v0.21 — Task shape classification. Distinct from `TaskType` (feature/fix/
+ * refactor/investigate/docs which is production-line classification). Task
+ * Shape names the *cognitive methodology* the task requires. Frame declares
+ * primary + optional secondary in its output; orchestrator captures via
+ * parseTaskShape and propagates downstream.
+ */
+export const TASK_SHAPES = {
+  failure_chain: "failure-chain",
+  greenfield_plan: "greenfield-plan",
+  refactor_existing: "refactor-existing",
+  compare_evaluate: "compare-evaluate",
+  investigate_unknown: "investigate-unknown",
+  map_system: "map-system",
+} as const
+
+export type TaskShape = (typeof TASK_SHAPES)[keyof typeof TASK_SHAPES]
+
+export const TASK_SHAPE_VALUES = [
+  TASK_SHAPES.failure_chain,
+  TASK_SHAPES.greenfield_plan,
+  TASK_SHAPES.refactor_existing,
+  TASK_SHAPES.compare_evaluate,
+  TASK_SHAPES.investigate_unknown,
+  TASK_SHAPES.map_system,
+] as const satisfies ReadonlyArray<TaskShape>
+
+/**
+ * v0.21 — Prediction verdict. Researcher observations against a P# topic
+ * carry "V: <verdict> | E: <evidence>" content; synthesis aggregates into the
+ * reconciliation table. `inconclusive` covers both explicit non-determination
+ * and absence (no observation note found for a declared prediction).
+ */
+export const PREDICTION_VERDICTS = {
+  confirmed: "confirmed",
+  contradicted: "contradicted",
+  inconclusive: "inconclusive",
+} as const
+
+export type PredictionVerdict =
+  (typeof PREDICTION_VERDICTS)[keyof typeof PREDICTION_VERDICTS]
+
+export const PREDICTION_VERDICT_VALUES = [
+  PREDICTION_VERDICTS.confirmed,
+  PREDICTION_VERDICTS.contradicted,
+  PREDICTION_VERDICTS.inconclusive,
+] as const satisfies ReadonlyArray<PredictionVerdict>
 
 /**
  * Authors who may write `S: deferred` status into an unknown note.
@@ -328,6 +417,22 @@ export interface ArcState {
     pivot: string
     triggeredBy: string
   }
+  /**
+   * v0.21 — Task Shape captured from frame output (parseTaskShape). Drives
+   * downstream prompt-shaping (currently log-only; agent prompts may
+   * reference state.taskShape in future).
+   */
+  taskShape?: {
+    primary: TaskShape
+    secondary?: TaskShape
+    rationale: string
+  }
+  /**
+   * v0.21 — Re-frame offer state. Set true after the orchestrator's
+   * synthesis-contradiction question() gate is declined, so we don't re-ask
+   * within the same workflow. Cleared on resetWorkflowMemory.
+   */
+  reframeOfferDeclined?: boolean
 }
 
 /**
@@ -601,6 +706,68 @@ export interface WorkflowSpikeExecutedLog extends LogBase {
   na: boolean
 }
 
+/** v0.21 — predict-observe-compare loop + simplest-path + failure-chain logs. */
+
+export interface WorkflowPredictionDeclaredLog extends LogBase {
+  kind: "workflow.prediction.declared"
+  topic: string
+  /** Truncated claim text. */
+  claim_excerpt: string
+}
+
+export interface WorkflowPredictionObservedLog extends LogBase {
+  kind: "workflow.prediction.observed"
+  author: SubagentType
+  topic: string
+  verdict: PredictionVerdict | "unparseable"
+  evidence_excerpt: string
+}
+
+export interface WorkflowPredictionReconciledLog extends LogBase {
+  kind: "workflow.prediction.reconciled"
+  confirmed: number
+  contradicted: number
+  inconclusive: number
+  unobserved: number
+}
+
+export interface WorkflowReframeOfferedLog extends LogBase {
+  kind: "workflow.reframe.offered"
+  contradicted: number
+  predictions: string[]
+  /** "accepted" | "declined" | "non-interactive" | "cap-exhausted" */
+  outcome: string
+}
+
+export interface WorkflowUnknownsBlockingLog extends LogBase {
+  kind: "workflow.unknowns.blocking"
+  count: number
+  topics: string[]
+}
+
+export interface WorkflowTaskShapeDeclaredLog extends LogBase {
+  kind: "workflow.task-shape.declared"
+  primary: TaskShape
+  secondary?: TaskShape
+  rationale_excerpt: string
+}
+
+export interface WorkflowExistingCheckDeclaredLog extends LogBase {
+  kind: "workflow.existing-check.declared"
+  author: SubagentType
+  mechanisms: number
+  rejections: number
+}
+
+export interface WorkflowFailureChainDeclaredLog extends LogBase {
+  kind: "workflow.failure-chain.declared"
+  has_timeline: boolean
+  has_classification: boolean
+  has_root_cause: boolean
+  confirmations: number
+  has_attribution: boolean
+}
+
 export type LogLine =
   | StartupLog
   | ToolBeforeLog
@@ -620,3 +787,11 @@ export type LogLine =
   | WorkflowReframeTriggeredLog
   | WorkflowReframeSuppressedLog
   | WorkflowSpikeExecutedLog
+  | WorkflowPredictionDeclaredLog
+  | WorkflowPredictionObservedLog
+  | WorkflowPredictionReconciledLog
+  | WorkflowReframeOfferedLog
+  | WorkflowUnknownsBlockingLog
+  | WorkflowTaskShapeDeclaredLog
+  | WorkflowExistingCheckDeclaredLog
+  | WorkflowFailureChainDeclaredLog

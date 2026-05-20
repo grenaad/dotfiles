@@ -32,7 +32,12 @@ import {
   resetWorkflowMemory,
 } from "./state"
 import { log } from "./log"
-import { appendEntry, latestFrame, unknownsStatus } from "./workflow-memory"
+import {
+  appendEntry,
+  latestFrame,
+  predictionReconciliation,
+  unknownsStatus,
+} from "./workflow-memory"
 import {
   stripOpenQuestions,
   compressPlanForReview,
@@ -66,8 +71,11 @@ import {
   isSubagent,
   isTaskToolArgs,
   NO_OPEN_QUESTIONS_SUBAGENTS,
+  TASK_SHAPE_VALUES,
+  UNKNOWN_RESOLVABILITY,
   WRITE_NOTE_SUBAGENTS,
   type SubagentType,
+  type TaskShape,
 } from "./types"
 
 type Client = ReturnType<typeof createOpencodeClient>
@@ -225,6 +233,187 @@ function parseMultiLayerCounts(
 }
 
 /**
+ * v0.21 — Marker for the unknowns-blocking soft-injection. Plan-bound
+ * subagents get a halt directive when pre-design unknowns remain open.
+ * Idempotent via substring-check in head.
+ */
+const UNKNOWNS_BLOCKING_MARKER = "UNRESOLVED PRE-DESIGN UNKNOWNS"
+
+/**
+ * v0.21 — Soft-inject an unknowns-blocking directive at the head of the plan
+ * subagent's prompt. The frame declared one or more unknowns as
+ * `R: pre_design` (must resolve before designing). If any remain open at
+ * plan time, the plan must halt and surface them — not produce a design on
+ * top of unresolved questions. Idempotent.
+ */
+function injectUnknownsBlockingDirective(
+  prompt: string,
+  blocking: ReadonlyArray<{ topic: string; question?: string }>,
+): string {
+  if (prompt.slice(0, 1200).includes(UNKNOWNS_BLOCKING_MARKER)) return prompt
+  const lines: string[] = []
+  lines.push(`${UNKNOWNS_BLOCKING_MARKER} — ${blocking.length} item(s).`)
+  lines.push(
+    "The framer declared the following unknowns with resolvability=pre_design, " +
+      "meaning they must be resolved BEFORE design. They remain open at plan time.",
+  )
+  for (const u of blocking.slice(0, 8)) {
+    const q = u.question ? `: ${u.question}` : ""
+    lines.push(`  - ${u.topic.toUpperCase()}${q}`)
+  }
+  lines.push(
+    "STOP. Do NOT produce a design that assumes these are resolved. Either: " +
+      "(a) emit a short output stating which unknowns block the plan and what " +
+      "research is needed to resolve them, OR (b) if you can resolve them inline " +
+      "from your own knowledge with citation, write resolved-by-plan notes via " +
+      "`workflow_note` and then proceed.",
+  )
+  lines.push("")
+  return `${lines.join("\n")}${prompt}`
+}
+
+/**
+ * v0.21 — Env flag: when set to "1", the orchestrator's plugin will NOT
+ * auto-supersede the frame on synthesis-detected prediction contradictions.
+ * This is the non-interactive safety valve described in the v0.21 plan.
+ * Default: auto-supersede (mirroring v0.20 frame-validity-check behavior).
+ */
+const REFRAME_AUTO_DECLINE = process.env.ARC_AGENT_REFRAME_AUTO_DECLINE === "1"
+
+/**
+ * v0.21 — Parse a `## Task Shape` block from frame output. Recognized form:
+ *
+ *   ## Task Shape
+ *   Primary:   <one of TASK_SHAPE_VALUES>
+ *   Secondary: <optional>
+ *   Rationale: <one sentence>
+ *
+ * Returns null when the section is missing or unparseable.
+ */
+function parseTaskShape(
+  output: string,
+): { primary: TaskShape; secondary?: TaskShape; rationale: string } | null {
+  const sectionMatch = /##\s*Task Shape\s*\n([\s\S]*?)(?:\n##|$)/i.exec(output)
+  if (!sectionMatch?.[1]) return null
+  const body = sectionMatch[1]
+
+  const primaryMatch = /Primary\s*:\s*([a-z\-_]+)/i.exec(body)
+  if (!primaryMatch?.[1]) return null
+  const primaryRaw = primaryMatch[1].toLowerCase()
+  let primary: TaskShape | undefined
+  for (const v of TASK_SHAPE_VALUES) {
+    if (v === primaryRaw) {
+      primary = v
+      break
+    }
+  }
+  if (!primary) return null
+
+  let secondary: TaskShape | undefined
+  const secondaryMatch = /Secondary\s*:\s*([a-z\-_]+)/i.exec(body)
+  if (secondaryMatch?.[1]) {
+    const raw = secondaryMatch[1].toLowerCase()
+    if (raw !== "none" && raw !== "n/a" && raw !== "—") {
+      for (const v of TASK_SHAPE_VALUES) {
+        if (v === raw) {
+          secondary = v
+          break
+        }
+      }
+    }
+  }
+
+  const rationaleMatch = /Rationale\s*:\s*([^\n]+)/i.exec(body)
+  const rationale = (rationaleMatch?.[1] ?? "").trim().slice(0, 300)
+
+  return { primary, secondary, rationale }
+}
+
+/**
+ * v0.21 — Parse a `## Existing Solutions Check` block from frame or plan
+ * output for log-emission counts. Returns counts of mechanisms enumerated
+ * and the count flagged as insufficient (rejected with named constraint).
+ *
+ * Recognizes either bullet shapes:
+ *   - **<mechanism>** — Sufficient: <how to extend>
+ *   - **<mechanism>** — Insufficient: <named constraint>
+ *
+ * Permissive: any line containing "insufficient:" in the section counts as a
+ * rejection; total mechanisms is the count of bullet-lead lines.
+ */
+function parseExistingCheck(
+  output: string,
+): { mechanisms: number; rejections: number } | null {
+  const sectionMatch = /##\s*Existing Solutions Check\s*(?:\(re-affirmed\))?\s*\n([\s\S]*?)(?:\n##|$)/i.exec(
+    output,
+  )
+  if (!sectionMatch?.[1]) return null
+  const body = sectionMatch[1]
+  const bulletLines = body.split("\n").filter((l) => /^\s*[-*]\s+/.test(l))
+  const mechanisms = bulletLines.length
+  const rejections = bulletLines.filter((l) => /\binsufficient\s*:/i.test(l)).length
+  return { mechanisms, rejections }
+}
+
+/**
+ * v0.21 — Parse a `## Failure Chain` block (fix + investigate task types).
+ * Returns structural counts so the orchestrator can verify the methodology
+ * was actually applied (not just the heading present).
+ *
+ * - hasTimeline:       any non-"Not applicable" body under ### Timeline
+ * - hasClassification: ditto ### Classification
+ * - hasRootCause:      ditto ### Root Cause (or sibling ## Root Cause)
+ * - confirmations:     count of numbered/bulleted items under ### Confirmation
+ * - hasAttribution:    any non-"Not applicable" body under ### Attribution
+ */
+function parseFailureChain(output: string): {
+  hasTimeline: boolean
+  hasClassification: boolean
+  hasRootCause: boolean
+  confirmations: number
+  hasAttribution: boolean
+} | null {
+  const sectionMatch = /##\s*Failure Chain\s*\n([\s\S]*?)(?:\n##\s+|$)/i.exec(output)
+  if (!sectionMatch?.[1]) return null
+  const body = sectionMatch[1]
+  const subsection = (name: string): string | null => {
+    const m = new RegExp(`###\\s*${name}\\s*\\n([\\s\\S]*?)(?:\\n###|$)`, "i").exec(body)
+    return m?.[1]?.trim() ?? null
+  }
+  const isPresent = (s: string | null): boolean => {
+    if (!s) return false
+    const trimmed = s.trim()
+    if (trimmed.length === 0) return false
+    if (/^not applicable\b/i.test(trimmed)) return false
+    if (/^n\/a\b/i.test(trimmed)) return false
+    return true
+  }
+  const timeline = subsection("Timeline")
+  const classification = subsection("Classification")
+  const rootCauseSub = subsection("Root Cause")
+  // For fix templates the root cause may be a sibling section; check both.
+  const hasRootCause = isPresent(rootCauseSub) || /##\s*Root Cause\s*\n[\s\S]*?\S/i.test(output)
+  const confirmation = subsection("Confirmation")
+  const attribution = subsection("Attribution")
+
+  let confirmations = 0
+  if (isPresent(confirmation)) {
+    const lines = confirmation!
+      .split("\n")
+      .filter((l) => /^\s*(?:\d+\.|[-*])\s+\S/.test(l) && !/^not applicable/i.test(l.trim()))
+    confirmations = lines.length
+  }
+
+  return {
+    hasTimeline: isPresent(timeline),
+    hasClassification: isPresent(classification),
+    hasRootCause,
+    confirmations,
+    hasAttribution: isPresent(attribution),
+  }
+}
+
+/**
  * v0.20 — Set of subagents considered "artifact producers" for the
  * workflow.stance log emission. We log the stance once per workflow when the
  * first artifact subagent is invoked.
@@ -379,6 +568,41 @@ export function buildHooks(client: Client): Hooks {
         // in tool.execute.after when frame captures successfully.
         if (s.frameRebuildPending) {
           working = injectFrameRebuildDirective(working, sub, s.frameRebuildPending)
+        }
+
+        // v0.21 — Unknowns-blocking gate. Before the plan subagent runs,
+        // check the unknowns ledger for any open + pre_design entries. If
+        // present, soft-inject a halt directive (plan must surface and not
+        // proceed on top of unresolved load-bearing questions). Best-effort:
+        // skips on ultra/trivial workflows where the ledger is suppressed.
+        if (sub === "plan" && memory && !trivialitySuppresses) {
+          try {
+            const ureport = unknownsStatus(memory)
+            const blocking = ureport.open.filter(
+              (u) => u.resolvability === UNKNOWN_RESOLVABILITY.pre_design,
+            )
+            if (blocking.length > 0) {
+              working = injectUnknownsBlockingDirective(
+                working,
+                blocking.map((b) => ({ topic: b.topic, question: b.question })),
+              )
+              await log({
+                kind: "workflow.unknowns.blocking",
+                session: input.sessionID,
+                count: blocking.length,
+                topics: blocking.map((b) => b.topic).slice(0, 16),
+              })
+            }
+          } catch (err) {
+            // Best-effort; ledger lookup failures must not block plan.
+            await log({
+              kind: "error",
+              session: input.sessionID,
+              hook: "tool.execute.before.unknowns-blocking",
+              subagent: sub,
+              error: (err as Error).message,
+            })
+          }
         }
 
         // v0.20 — Phase F: workflow.stance log. Fires once per workflow on the
@@ -546,6 +770,32 @@ export function buildHooks(client: Client): Hooks {
             s.trivialityTier = tier
           }
 
+          // v0.21 — Capture Task Shape (cognitive methodology classifier).
+          // Distinct from taskType (production-line classifier).
+          const shape = parseTaskShape(outText)
+          if (shape) {
+            s.taskShape = shape
+            await log({
+              kind: "workflow.task-shape.declared",
+              session: input.sessionID,
+              primary: shape.primary,
+              secondary: shape.secondary,
+              rationale_excerpt: shape.rationale.slice(0, 200),
+            })
+          }
+
+          // v0.21 — Capture Existing Solutions Check counts from frame output.
+          const existing = parseExistingCheck(outText)
+          if (existing) {
+            await log({
+              kind: "workflow.existing-check.declared",
+              session: input.sessionID,
+              author: sub,
+              mechanisms: existing.mechanisms,
+              rejections: existing.rejections,
+            })
+          }
+
           // v0.20 — Phase E: clear pending rebuild after frame completes. The
           // next workflow steps will see the new frame entry; rebuild count
           // increments so the cap is enforceable.
@@ -616,6 +866,89 @@ export function buildHooks(client: Client): Hooks {
             layers_na: counts.na,
             contradictions: counts.contradictions,
           })
+
+          // v0.21 — Predict-observe-compare reconciliation. Compute against
+          // the memory's prediction + observation notes; emit reconciled log.
+          // If contradicted >=1 AND cap not exhausted AND not env-declined
+          // AND user hasn't declined this workflow, auto-mark frame as
+          // superseded so the orchestrator's existing v0.20 re-frame path
+          // takes over for the next subagent invocation.
+          const memoryNow = s.workflowMemory
+          if (memoryNow) {
+            try {
+              const recon = predictionReconciliation(memoryNow)
+              await log({
+                kind: "workflow.prediction.reconciled",
+                session: input.sessionID,
+                confirmed: recon.confirmed.length,
+                contradicted: recon.contradicted.length,
+                inconclusive: recon.inconclusive.length,
+                unobserved: recon.unobserved.length,
+              })
+
+              if (recon.contradicted.length > 0) {
+                const rebuildCount = s.frameRebuildCount ?? 0
+                const capExhausted = rebuildCount >= 1
+                const userDeclined = s.reframeOfferDeclined === true
+                const contradictedTopics = recon.contradicted.map((c) => c.topic)
+
+                let outcome: string
+                if (REFRAME_AUTO_DECLINE) {
+                  outcome = "auto-declined-via-env"
+                } else if (userDeclined) {
+                  outcome = "user-declined-prior"
+                } else if (capExhausted) {
+                  outcome = "cap-exhausted"
+                } else if (s.frameRebuildPending) {
+                  outcome = "rebuild-already-pending"
+                } else {
+                  const frame = latestFrame(memoryNow)
+                  if (!frame) {
+                    outcome = "no-frame-to-supersede"
+                  } else {
+                    const reason = `synthesis surfaced ${recon.contradicted.length} contradicted prediction(s): ${contradictedTopics.join(", ")}`
+                    const pivot =
+                      recon.contradicted[0]!.evidence ??
+                      recon.contradicted[0]!.predictionContent.slice(0, 200)
+                    const triggeredBy = "synthesis prediction reconciliation"
+                    markFrameSuperseded(s, frame.id, reason, pivot, triggeredBy)
+                    await log({
+                      kind: "workflow.reframe.triggered",
+                      session: input.sessionID,
+                      reason_excerpt: reason.slice(0, 200),
+                      pivot_excerpt: pivot.slice(0, 200),
+                      triggered_by: triggeredBy,
+                    })
+                    outcome = "accepted-auto"
+                  }
+                }
+
+                await log({
+                  kind: "workflow.reframe.offered",
+                  session: input.sessionID,
+                  contradicted: recon.contradicted.length,
+                  predictions: contradictedTopics.slice(0, 16),
+                  outcome,
+                })
+
+                if (outcome !== "accepted-auto" && outcome !== "rebuild-already-pending") {
+                  await log({
+                    kind: "workflow.reframe.suppressed",
+                    session: input.sessionID,
+                    reason: outcome,
+                  })
+                }
+              }
+            } catch (err) {
+              await log({
+                kind: "error",
+                session: input.sessionID,
+                hook: "tool.execute.after.predict-observe",
+                subagent: sub,
+                error: (err as Error).message,
+              })
+            }
+          }
           // Fall through to the generic open-questions extraction below
         }
 
@@ -703,6 +1036,38 @@ export function buildHooks(client: Client): Hooks {
             missingSections = checkRequiredSections(outText, required)
             if (missingSections.length > 0) {
               annotatedPlan = buildSectionMarkers(missingSections) + outText
+            }
+          }
+
+          // v0.21 — Existing Solutions Check (re-affirmed) counts from plan.
+          const planExisting = parseExistingCheck(outText)
+          if (planExisting) {
+            await log({
+              kind: "workflow.existing-check.declared",
+              session: input.sessionID,
+              author: sub,
+              mechanisms: planExisting.mechanisms,
+              rejections: planExisting.rejections,
+            })
+          }
+
+          // v0.21 — Failure Chain detection. Only meaningful for fix +
+          // investigate task types (templates require the section there).
+          // Reports presence of each subsection and the corroboration count;
+          // the required-section check (above) handles the strict structural
+          // enforcement.
+          if (s.taskType === "fix" || s.taskType === "investigate") {
+            const chain = parseFailureChain(outText)
+            if (chain) {
+              await log({
+                kind: "workflow.failure-chain.declared",
+                session: input.sessionID,
+                has_timeline: chain.hasTimeline,
+                has_classification: chain.hasClassification,
+                has_root_cause: chain.hasRootCause,
+                confirmations: chain.confirmations,
+                has_attribution: chain.hasAttribution,
+              })
             }
           }
 

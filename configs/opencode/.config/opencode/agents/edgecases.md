@@ -23,6 +23,27 @@ Enumerate edge cases, failure modes, and risks for a problem given prior researc
 - List failure modes (what breaks and how).
 - List risks specific to this codebase (from explore findings).
 - Search public sources for similar gotchas if not already covered.
+- Reconcile against frame's **Predictions** (P1..Pn) — see section below.
+
+## Prediction Reconciliation (v0.21)
+
+Before finishing your output, check frame's predictions against the edge
+cases you found:
+
+1. Call `workflow_recall({kind:"note", noteType:"prediction"})`.
+2. For each P# that your edge-case enumeration speaks to (an edge case
+   either confirms an expected risk pattern, contradicts an assumed
+   robustness claim, or surfaces a missing-from-prediction failure mode),
+   emit:
+   ```
+   workflow_note(
+     author="edgecases",
+     type="observation",
+     topic="P<n>",
+     content="V: confirmed|contradicted|inconclusive | E: <edge case + reasoning>"
+   )
+   ```
+3. For predictions outside your edge-case scope, skip silently.
 
 ## Constraints
 - Each edge case must be specific and actionable, not generic ("handle errors" is not an edge case).
