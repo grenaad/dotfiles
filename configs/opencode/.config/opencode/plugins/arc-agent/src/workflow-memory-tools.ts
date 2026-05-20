@@ -8,9 +8,36 @@
  * Both are best-effort: failures return empty/rejected payloads, never throw.
  * Memory is suppressed on ultra/trivial triviality (workflowMemory will be
  * missing or trivial); the tools degrade gracefully in that case.
+ *
+ * v0.22 — Tools are now exported as FACTORIES (`makeWorkflow*Tool(client)`)
+ * rather than static constants. The factory closes over the OpenCode SDK
+ * `client` so each tool can resolve `context.sessionID` (a child session,
+ * when the tool is invoked from inside a subagent) up to its ROOT session
+ * (the orchestrator's main session, where workflow memory actually lives).
+ *
+ * Background — the bug this fixes:
+ * Before v0.22, the tools read `getState(context.sessionID)` directly. When
+ * a subagent (frame, librarian, ...) called the tool from its child session,
+ * `getState` returned a fresh empty ArcState for the CHILD sessionID — not
+ * the orchestrator's populated ArcState. Every workflow_note write silently
+ * failed with "memory not initialized"; every workflow_recall returned
+ * empty. The v0.21 predict-observe-compare loop was non-functional as a
+ * result.
+ *
+ * Fix: each tool's `execute()` now calls `resolveRootSessionID(client,
+ * context.sessionID)` which walks `session.parentID` to the top-level
+ * session, caches the (child -> root) mapping per-process, and passes the
+ * root id to `getState`. State landing is now correct regardless of which
+ * subagent's child session originated the call.
+ *
+ * Cache invalidation: `evictParentCache(sessionID)` is called from
+ * `state.ts:clearState` when a session is deleted (via the SDK's
+ * session.deleted event), so long-running OpenCode processes don't leak
+ * cache entries.
  */
 
 import { tool } from "@opencode-ai/plugin"
+import type { createOpencodeClient } from "@opencode-ai/sdk"
 
 import { getState } from "./state"
 import { log } from "./log"
@@ -32,7 +59,92 @@ import {
   type SubagentType,
 } from "./types"
 
+type Client = ReturnType<typeof createOpencodeClient>
+
 const z = tool.schema
+
+/**
+ * v0.22 — Per-process cache of resolved child→root session mappings.
+ *
+ * The orchestrator → subagent relationship is stable within a workflow:
+ * once we've resolved a child session's parent chain to the root, that
+ * mapping doesn't change. Caching it avoids one SDK call per workflow_*
+ * tool invocation (which can fire dozens of times per workflow).
+ *
+ * `evictParentCache(sessionID)` is wired into `state.ts:clearState` so a
+ * long-running OpenCode process doesn't leak entries on session.deleted.
+ */
+const parentResolutionCache = new Map<string, string>()
+
+export function evictParentCache(sessionID: string): void {
+  parentResolutionCache.delete(sessionID)
+}
+
+/**
+ * v0.22 — Maximum depth for the parent walk. In practice depth ≤ 1
+ * (orchestrator → subagent), but we recurse defensively with cycle
+ * detection in case OpenCode introduces deeper nesting in future.
+ */
+const PARENT_WALK_MAX_DEPTH = 8
+
+interface SessionGetData {
+  data?: { id?: string; parentID?: string }
+}
+
+/**
+ * v0.22 — Resolve any sessionID (child or root) to its root sessionID by
+ * walking `client.session.get → parentID` until parentID is absent.
+ *
+ * - Cached: subsequent calls for the same sessionID return the cached root
+ *   without any SDK calls.
+ * - Cycle-safe: tracks visited ids; bails to the last non-cyclic id if a
+ *   cycle is detected.
+ * - Best-effort: any SDK failure (network, 404, malformed response) falls
+ *   back to the original sessionID. The caller's tool then reads
+ *   `getState(sessionID)` directly — same behavior as v0.21, but with the
+ *   resolution-failed flag set in the log so regressions surface.
+ *
+ * Returns: { rootSessionID, resolutionFailed }
+ */
+async function resolveRootSessionID(
+  client: Client,
+  sessionID: string,
+): Promise<{ rootSessionID: string; resolutionFailed: boolean }> {
+  const cached = parentResolutionCache.get(sessionID)
+  if (cached) return { rootSessionID: cached, resolutionFailed: false }
+
+  let current = sessionID
+  const visited = new Set<string>([current])
+
+  for (let depth = 0; depth < PARENT_WALK_MAX_DEPTH; depth++) {
+    let session: { id?: string; parentID?: string } | undefined
+    try {
+      const result = (await client.session.get({ path: { id: current } })) as SessionGetData
+      session = result.data
+    } catch {
+      // SDK failure (network, 404, malformed) — bail with what we have.
+      // If we got at least one hop in, use that; otherwise use the original.
+      parentResolutionCache.set(sessionID, current)
+      return { rootSessionID: current, resolutionFailed: true }
+    }
+    if (!session || !session.parentID) {
+      // Reached a session without a parent → root.
+      parentResolutionCache.set(sessionID, current)
+      return { rootSessionID: current, resolutionFailed: false }
+    }
+    if (visited.has(session.parentID)) {
+      // Cycle — bail with current.
+      parentResolutionCache.set(sessionID, current)
+      return { rootSessionID: current, resolutionFailed: false }
+    }
+    current = session.parentID
+    visited.add(current)
+  }
+
+  // Hit the depth ceiling — cache what we have and proceed.
+  parentResolutionCache.set(sessionID, current)
+  return { rootSessionID: current, resolutionFailed: false }
+}
 
 /**
  * Format a recall hit for the model. Keep it tight — recall output is
@@ -68,7 +180,8 @@ function formatRecallHits(
   return lines.join("\n")
 }
 
-export const workflowRecallTool = tool({
+export function makeWorkflowRecallTool(client: Client) {
+  return tool({
   description:
     "Query the workflow-memory store for prior subagent outputs and analysis-specialist " +
     "notes WITHIN the current planning workflow. Use this when you need context from an " +
@@ -121,12 +234,16 @@ export const workflowRecallTool = tool({
   },
   async execute(args, context) {
     try {
-      const s = getState(context.sessionID)
+      // v0.22 — resolve to root session before reading state. The tool may be
+      // invoked from a child session (a subagent's prompt); workflow memory
+      // lives on the root (orchestrator) session.
+      const { rootSessionID } = await resolveRootSessionID(client, context.sessionID)
+      const s = getState(rootSessionID)
       const memory = s.workflowMemory
       if (!memory) {
         await log({
           kind: "workflow.recall",
-          session: context.sessionID,
+          session: rootSessionID,
           query_keys: Object.keys(args).filter((k) => (args as Record<string, unknown>)[k] !== undefined),
           result_count: 0,
           empty: true,
@@ -153,7 +270,7 @@ export const workflowRecallTool = tool({
 
       await log({
         kind: "workflow.recall",
-        session: context.sessionID,
+        session: rootSessionID,
         query_keys: Object.keys(args).filter((k) => (args as Record<string, unknown>)[k] !== undefined),
         result_count: hits.length,
         empty: false,
@@ -180,9 +297,11 @@ export const workflowRecallTool = tool({
       }
     }
   },
-})
+  })
+}
 
-export const workflowRecallFullTool = tool({
+export function makeWorkflowRecallFullTool(client: Client) {
+  return tool({
   description:
     "Fetch the verbatim body of a workflow-memory entry or note by its id (as returned " +
     "by `workflow_recall`). Use sparingly — only when the excerpt isn't sufficient.",
@@ -191,7 +310,9 @@ export const workflowRecallFullTool = tool({
   },
   async execute(args, context) {
     try {
-      const s = getState(context.sessionID)
+      // v0.22 — resolve to root session (see resolveRootSessionID docs).
+      const { rootSessionID } = await resolveRootSessionID(client, context.sessionID)
+      const s = getState(rootSessionID)
       const memory = s.workflowMemory
       if (!memory) {
         return { title: "workflow_recall_full: empty", output: "Workflow memory is not initialized." }
@@ -225,9 +346,11 @@ export const workflowRecallFullTool = tool({
       return { title: "workflow_recall_full: error", output: "Lookup failed." }
     }
   },
-})
+  })
+}
 
-export const workflowNoteTool = tool({
+export function makeWorkflowNoteTool(client: Client) {
+  return tool({
   description:
     "Write a structured note into workflow memory. Only analysis specialists may call " +
     "this (skeptic, expectation-keeper, assumption-ledger, confidence-auditor, " +
@@ -271,9 +394,30 @@ export const workflowNoteTool = tool({
   },
   async execute(args, context) {
     try {
-      const s = getState(context.sessionID)
+      // v0.22 — resolve to root session BEFORE the memory check so a child-
+      // session caller lands in the orchestrator's ArcState (the fix for the
+      // v0.21 silent-drop bug; see module header).
+      const { rootSessionID, resolutionFailed } = await resolveRootSessionID(
+        client,
+        context.sessionID,
+      )
+      const s = getState(rootSessionID)
       const memory = s.workflowMemory
       if (!memory) {
+        // v0.22 — Previously silent: rejection returned to caller but no log
+        // emission, so v0.21 note drops were invisible in JSONL. Now we emit
+        // a structured log entry so memory-uninitialized rejections are
+        // observable. Distinct kind from `workflow.note` (which is reserved
+        // for the legacy author/type validation rejection path).
+        await log({
+          kind: "workflow.note.memory-uninitialized",
+          session: context.sessionID,
+          root_session: rootSessionID,
+          resolution_failed: resolutionFailed || undefined,
+          author: args.author,
+          type: args.type,
+          topic: args.topic,
+        })
         return {
           title: "workflow_note: memory not initialized",
           output:
@@ -286,7 +430,7 @@ export const workflowNoteTool = tool({
       if (!isSubagent(authorArg)) {
         await log({
           kind: "workflow.note",
-          session: context.sessionID,
+          session: rootSessionID,
           author: authorArg,
           note_id: "<rejected>",
           type: args.type,
@@ -310,7 +454,7 @@ export const workflowNoteTool = tool({
       if (!result.ok) {
         await log({
           kind: "workflow.note",
-          session: context.sessionID,
+          session: rootSessionID,
           author: authorArg,
           note_id: "<rejected>",
           type: args.type,
@@ -325,7 +469,7 @@ export const workflowNoteTool = tool({
 
       await log({
         kind: "workflow.note",
-        session: context.sessionID,
+        session: rootSessionID,
         author: authorArg,
         note_id: result.note.id,
         type: result.note.type,
@@ -335,13 +479,15 @@ export const workflowNoteTool = tool({
       // v0.20 — Phase F: unknowns-ledger observability. Emit a structured log
       // for declared / resolved / deferred unknowns so we can iterate on
       // ledger behaviour empirically.
+      // v0.22: log session now reflects rootSessionID — observability ties to
+      // the orchestrator's workflow, not the child sub-session.
       if (result.note.type === NOTE_TYPES.unknown) {
         const parsed = parseUnknownNote(result.note.content)
         const status = parsed.status
         if (status === UNKNOWN_STATUSES.open) {
           await log({
             kind: "workflow.unknown.declared",
-            session: context.sessionID,
+            session: rootSessionID,
             author: authorArg,
             topic: result.note.topic,
             question_excerpt: (parsed.question ?? result.note.content).slice(0, 160),
@@ -349,7 +495,7 @@ export const workflowNoteTool = tool({
         } else if (status === UNKNOWN_STATUSES.resolved) {
           await log({
             kind: "workflow.unknown.resolved",
-            session: context.sessionID,
+            session: rootSessionID,
             author: authorArg,
             topic: result.note.topic,
             note_id: result.note.id,
@@ -358,7 +504,7 @@ export const workflowNoteTool = tool({
         } else if (status === UNKNOWN_STATUSES.deferred) {
           await log({
             kind: "workflow.unknown.deferred",
-            session: context.sessionID,
+            session: rootSessionID,
             author: authorArg,
             topic: result.note.topic,
             reason_excerpt: (parsed.evidence ?? parsed.investigation ?? "").slice(0, 160),
@@ -370,7 +516,7 @@ export const workflowNoteTool = tool({
       if (result.note.type === NOTE_TYPES.prediction) {
         await log({
           kind: "workflow.prediction.declared",
-          session: context.sessionID,
+          session: rootSessionID,
           topic: result.note.topic,
           claim_excerpt: result.note.content.slice(0, 160),
         })
@@ -384,7 +530,7 @@ export const workflowNoteTool = tool({
           const parsedObs = parsePredictionObservation(result.note.content)
           await log({
             kind: "workflow.prediction.observed",
-            session: context.sessionID,
+            session: rootSessionID,
             author: authorArg,
             topic: result.note.topic,
             verdict: parsedObs.verdict ?? "unparseable",
@@ -402,7 +548,7 @@ export const workflowNoteTool = tool({
         const parsedIns = parseInsufficiency(result.note.content)
         await log({
           kind: "workflow.existing-check.declared",
-          session: context.sessionID,
+          session: rootSessionID,
           author: authorArg,
           mechanisms: parsedIns.mechanism ? 1 : 0,
           rejections: parsedIns.insufficiencyReason ? 1 : 0,
@@ -424,7 +570,8 @@ export const workflowNoteTool = tool({
       return { title: "workflow_note: error", output: "Note write failed (best-effort; continue)." }
     }
   },
-})
+  })
+}
 
 /**
  * v0.20 — Tool that reports the status of all unknowns in the ledger.
@@ -432,8 +579,11 @@ export const workflowNoteTool = tool({
  * Used primarily by `unknowns-auditor` to gate the workflow before plan, but
  * any subagent may call it. Returns grouped buckets (open / resolved /
  * deferred / unparseable) with latest-per-topic semantics.
+ *
+ * v0.22 — Factoryized + parent-resolved like the other workflow_* tools.
  */
-export const workflowUnknownsStatusTool = tool({
+export function makeWorkflowUnknownsStatusTool(client: Client) {
+  return tool({
   description:
     "Report the status of all unknowns in the workflow-memory ledger. Returns " +
     "grouped lists (open / resolved / deferred / unparseable). Each entry shows " +
@@ -443,7 +593,9 @@ export const workflowUnknownsStatusTool = tool({
   args: {},
   async execute(_args, context) {
     try {
-      const s = getState(context.sessionID)
+      // v0.22 — resolve to root session (see resolveRootSessionID docs).
+      const { rootSessionID } = await resolveRootSessionID(client, context.sessionID)
+      const s = getState(rootSessionID)
       const memory = s.workflowMemory
       if (!memory) {
         return {
@@ -525,4 +677,5 @@ export const workflowUnknownsStatusTool = tool({
       }
     }
   },
-})
+  })
+}

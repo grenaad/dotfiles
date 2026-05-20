@@ -530,7 +530,52 @@ export const RECALL_DEFAULT_LIMIT = 5
 export const RECALL_MAX_LIMIT = 20
 export const RECALL_EXCERPT_CHARS = 300
 
-export type TrivialityTier = "ultra" | "trivial" | "full"
+/**
+ * Triviality tier — derived from frame's task type + raw user prompt by
+ * `classifyTriviality`. Three values:
+ *
+ *   - `ultra`   — one-liner clarifications, single-grep questions. Skip
+ *                 everything except restater+frame.
+ *   - `trivial` — small features/fixes (one file, no architectural choice).
+ *                 Skip research and analysis specialist passes; workflow
+ *                 memory is suppressed.
+ *   - `full`    — non-trivial planning. Run the full pipeline.
+ *
+ * `ultra` and `trivial` both suppress workflow memory; use
+ * `suppressesWorkflowMemory(tier)` rather than inline string comparisons.
+ */
+export const TRIVIALITY_TIERS = {
+  ultra: "ultra",
+  trivial: "trivial",
+  full: "full",
+} as const
+
+export type TrivialityTier = (typeof TRIVIALITY_TIERS)[keyof typeof TRIVIALITY_TIERS]
+
+export const TRIVIALITY_TIER_VALUES = [
+  TRIVIALITY_TIERS.ultra,
+  TRIVIALITY_TIERS.trivial,
+  TRIVIALITY_TIERS.full,
+] as const satisfies ReadonlyArray<TrivialityTier>
+
+/**
+ * Tiers that SUPPRESS workflow memory and the v0.21 cognitive-loop machinery
+ * (predict-observe-compare, unknowns ledger, existing-solutions check). The
+ * full pipeline only runs on `full`.
+ *
+ * Single source of truth — every callsite that gates on memory suppression
+ * imports `suppressesWorkflowMemory` rather than comparing tier strings
+ * inline. Adding a new tier (e.g. `micro` between trivial and full) requires
+ * editing exactly one place.
+ */
+export const MEMORY_SUPPRESSING_TIERS: ReadonlySet<TrivialityTier> = new Set([
+  TRIVIALITY_TIERS.ultra,
+  TRIVIALITY_TIERS.trivial,
+])
+
+export function suppressesWorkflowMemory(tier: TrivialityTier | undefined): boolean {
+  return tier !== undefined && MEMORY_SUPPRESSING_TIERS.has(tier)
+}
 
 export type NormalizedVerdict = "proceed" | "needs-revision" | "reject"
 
@@ -768,6 +813,49 @@ export interface WorkflowFailureChainDeclaredLog extends LogBase {
   has_attribution: boolean
 }
 
+/**
+ * v0.22 — Observability for the workflow_note memory-uninitialized rejection
+ * path. Previously this failure was silent: the tool returned the "not
+ * initialized" message to the caller but emitted no log entry, so subagent
+ * note writes that landed in a fresh child-session ArcState (because the
+ * tool was reading `context.sessionID` directly instead of resolving to the
+ * parent) were invisible in the JSONL log. This variant makes those drops
+ * observable so future regressions surface immediately.
+ *
+ * `root_session` is the resolved parent (after the child→parent walk) — if
+ * resolution failed and we fell back to `context.sessionID`, the two values
+ * will match.
+ */
+export interface WorkflowNoteMemoryUninitializedLog extends LogBase {
+  kind: "workflow.note.memory-uninitialized"
+  /** The session id we resolved to via the parent walk (may equal `session`). */
+  root_session: string
+  /** True when the parent walk failed and we fell back to the original sessionID. */
+  resolution_failed?: boolean
+  author?: string
+  type?: string
+  topic?: string
+}
+
+/**
+ * v0.22 — Belt-and-suspenders: emitted from the parent's tool.execute.after
+ * hook when frame's structured markdown sections (Predictions / Unknowns /
+ * Existing Solutions Check) contain more items than the workflow_note tool
+ * actually recorded into memory. The hook synthesizes the missing notes
+ * from the parsed markdown so v0.21's predict-observe-compare loop still
+ * has the predictions/unknowns/insufficiencies it expects, even when the
+ * subagent's tool calls dropped them (e.g. due to a regression in the
+ * parent-session resolution path).
+ */
+export interface WorkflowNoteFallbackParsedLog extends LogBase {
+  kind: "workflow.note.fallback-parsed"
+  note_kind: "prediction" | "unknown" | "insufficiency"
+  /** How many notes were synthesized from the parsed markdown. */
+  count: number
+  /** Author the synthesized notes were attributed to. */
+  author: SubagentType
+}
+
 export type LogLine =
   | StartupLog
   | ToolBeforeLog
@@ -795,3 +883,5 @@ export type LogLine =
   | WorkflowTaskShapeDeclaredLog
   | WorkflowExistingCheckDeclaredLog
   | WorkflowFailureChainDeclaredLog
+  | WorkflowNoteMemoryUninitializedLog
+  | WorkflowNoteFallbackParsedLog

@@ -19,8 +19,16 @@ type Client = ReturnType<typeof createOpencodeClient>
  *  COMPRESS_TIMEOUT_MS raised 90s → 300s in v0.16: real ~21k-char plans on
  *  DeepSeek require 90-180s for the helper to complete; the prior 90s cap
  *  was firing aborts even on healthy runs. 300s leaves headroom without
- *  burying a runaway helper indefinitely. */
-export const STRIP_TIMEOUT_MS = 30_000
+ *  burying a runaway helper indefinitely.
+ *
+ *  STRIP_TIMEOUT_MS raised 30s → 60s in v0.22: Opus runs on the orchestrator
+ *  produce ~18-20k-char review prompts where the helper occasionally needs
+ *  35-55s to scan-and-emit the unchanged text. Two-hit timeouts back-to-back
+ *  (60s wasted before review fires) were observed in the v0.21 smoke
+ *  test. 60s is conservative — preserves the fail-fast posture for the
+ *  common case (no Open Questions section to strip → helper returns in
+ *  <5s) while absorbing the Opus tail. */
+export const STRIP_TIMEOUT_MS = 60_000
 export const COMPRESS_TIMEOUT_MS = 300_000
 
 /**

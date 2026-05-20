@@ -49,6 +49,23 @@ markers of the form:
 force `verdict: needs-revision` if the marker block is present. You do NOT
 need to re-scan the plan for these sections — trust the marker block.
 
+**v0.22 — Marker block presence is a HARD demotion. Do not rationalize.**
+Common failure mode observed in v0.21: reviewer notes that some missing
+v0.21 sections (e.g. `## Existing Solutions Check (re-affirmed)`) are
+"N/A because frame produced no insufficiency notes" and verdicts `ready`
+anyway. This is wrong. The marker block was prepended by the plugin
+deterministically; the plugin saw the heading was absent. Either:
+
+- (a) The plan author skipped a required section. → `needs-revision`.
+- (b) The plan author wrote the section but with a different heading
+      spelling. → still `needs-revision`; plan must use the exact required
+      heading the plugin checks against.
+
+Do NOT verdict `ready` while marker entries exist. The v0.21 insufficiency-
+addressed check (below, item 2) is a SEPARATE gate operating on the body
+content of `## Existing Solutions Check (re-affirmed)` — N/A on that body
+check does not absolve the section-presence check.
+
 If the plan contains NO marker block, all required sections are present;
 focus your analysis on quality, contradictions, scope drift, and risks.
 

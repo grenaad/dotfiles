@@ -14,7 +14,13 @@
  */
 
 import { isTaskType, type TaskType } from "./templates"
-import { bucketFor, type PlanSizeBucket, type TrivialityTier, type NormalizedVerdict } from "./types"
+import {
+  bucketFor,
+  TRIVIALITY_TIERS,
+  type PlanSizeBucket,
+  type TrivialityTier,
+  type NormalizedVerdict,
+} from "./types"
 
 /** Parse the ## Task Type section emitted by frame.md. Returns null if absent or unparseable. */
 export function extractTaskType(framing: string): TaskType | null {
@@ -127,7 +133,7 @@ export function classifyTriviality(args: {
 
   // Tier 1 ULTRA: question-like investigation, no verb, short
   if (taskType === "investigate" && !hasVerb && wc <= 30 && !hasFullKeyword) {
-    return "ultra"
+    return TRIVIALITY_TIERS.ultra
   }
 
   // Tier 2 TRIVIAL: simple feature/fix, short, no architectural keywords, no resolved clarifications
@@ -137,11 +143,11 @@ export function classifyTriviality(args: {
     !hasFullKeyword &&
     !hasResolvedClarifications
   ) {
-    return "trivial"
+    return TRIVIALITY_TIERS.trivial
   }
 
   // Tier 3 FULL: everything else
-  return "full"
+  return TRIVIALITY_TIERS.full
 }
 
 /**

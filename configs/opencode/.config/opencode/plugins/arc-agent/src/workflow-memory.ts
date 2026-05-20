@@ -699,6 +699,138 @@ export function predictionReconciliation(
 }
 
 /**
+ * v0.22 — Parse a frame's `## Predictions` section into the (topic, content)
+ * tuples that the workflow_note tool would have written. Used by the
+ * tool.execute.after hook as a fallback: if the subagent's tool calls
+ * dropped its predictions (e.g. parent-resolution regression), the hook
+ * synthesizes the notes from the rendered markdown so the predict-observe-
+ * compare loop still has its comparison targets.
+ *
+ * Recognized bullet shapes (all start with `-` or `*`):
+ *   - P1: I expect X because Y. Wrong if: Z.
+ *   - **P1**: I expect X. Wrong if: Z.
+ *
+ * The synthesized note content matches frame.md's prescribed convention:
+ *   "<claim> | Wrong if: <observable falsifier>"
+ *
+ * Permissive: skips lines that don't match P<n> pattern or that lack the
+ * `Wrong if:` falsifier (incomplete predictions are not synthesized; they
+ * would fail the v0.21 contract anyway).
+ */
+export interface ParsedFramePrediction {
+  topic: string
+  content: string
+}
+
+export function parseFramePredictions(output: string): ParsedFramePrediction[] {
+  const section = /##\s*Predictions\s*\n([\s\S]*?)(?:\n##\s+|$)/i.exec(output)
+  if (!section?.[1]) return []
+  const body = section[1]
+  const out: ParsedFramePrediction[] = []
+  // Match a P-numbered bullet line and continuation lines (up to next bullet or blank line).
+  // Permissive: P<n> may appear after optional **bold** wrapping and ":" separator.
+  const lineRe = /^[\s>]*[-*]\s+(?:\*\*)?P(\d+)(?:\*\*)?\s*[:.\-—]\s*(.+?)\s*$/gm
+  for (const m of body.matchAll(lineRe)) {
+    const topic = `p${m[1]}`
+    const rest = (m[2] ?? "").trim()
+    const wrongIfMatch = /\bWrong\s+if\s*:\s*(.+?)\s*\.?\s*$/i.exec(rest)
+    if (!wrongIfMatch?.[1]) continue
+    const claim = rest.slice(0, wrongIfMatch.index).replace(/[\s.,;:|—-]+$/, "").trim()
+    const falsifier = wrongIfMatch[1].trim().replace(/\.$/, "")
+    if (claim.length === 0 || falsifier.length === 0) continue
+    const content = `${claim} | Wrong if: ${falsifier}`.slice(0, NOTE_MAX_CHARS)
+    out.push({ topic, content })
+  }
+  return out
+}
+
+/**
+ * v0.22 — Parse a frame's `## Open Questions` section into unknown-note
+ * tuples. Recognized bullet shape (per frame.md):
+ *
+ *   - U1: <question> | R: <resolvability> — why it changes the plan: <one line>
+ *
+ * The synthesized note content matches the Q/I/S/R/E convention:
+ *   "Q: <question> | I: pending | S: open | R: <resolvability> | E: "
+ *
+ * If R: is missing or unparseable, the unknown is still synthesized but
+ * without the resolvability classifier (caller falls back to unclassified).
+ */
+export interface ParsedFrameUnknown {
+  topic: string
+  content: string
+}
+
+export function parseFrameUnknowns(output: string): ParsedFrameUnknown[] {
+  const section = /##\s*Open Questions\s*\n([\s\S]*?)(?:\n##\s+|$)/i.exec(output)
+  if (!section?.[1]) return []
+  const body = section[1]
+  const out: ParsedFrameUnknown[] = []
+  const lineRe = /^[\s>]*[-*]\s+(?:\*\*)?U(\d+)(?:\*\*)?\s*[:.\-—]\s*(.+?)\s*$/gm
+  for (const m of body.matchAll(lineRe)) {
+    const topic = `u${m[1]}`
+    const rest = (m[2] ?? "").trim()
+    // Try to extract the question (text up to first `|` or `—`).
+    const sepIdx = (() => {
+      const pipe = rest.indexOf("|")
+      const emdash = rest.indexOf("—")
+      if (pipe < 0) return emdash
+      if (emdash < 0) return pipe
+      return Math.min(pipe, emdash)
+    })()
+    const question = (sepIdx >= 0 ? rest.slice(0, sepIdx) : rest).trim().replace(/[?.]$/, "")
+    if (question.length === 0) continue
+    const rMatch = /\bR\s*:\s*(pre_design|user_input|accept_risk)\b/i.exec(rest)
+    const rField = rMatch?.[1]?.toLowerCase()
+    const content = (
+      rField
+        ? `Q: ${question} | I: pending | S: open | R: ${rField} | E: `
+        : `Q: ${question} | I: pending | S: open | E: `
+    ).slice(0, NOTE_MAX_CHARS)
+    out.push({ topic, content })
+  }
+  return out
+}
+
+/**
+ * v0.22 — Parse a frame's `## Existing Solutions Check` section for
+ * Insufficient verdicts. Recognized bullet shape (per frame.md):
+ *
+ *   - **<mechanism>** — Insufficient: <named constraint>
+ *   - **<mechanism>** — Sufficient: <how to extend>  (NOT synthesized)
+ *
+ * Only Insufficient bullets become notes (Sufficient bullets are the default
+ * stance and require no note). Synthesized content matches the prescribed
+ * convention: "M: <mechanism> | I: <named constraint>".
+ */
+export interface ParsedFrameInsufficiency {
+  topic: string
+  content: string
+}
+
+export function parseFrameInsufficiencies(output: string): ParsedFrameInsufficiency[] {
+  const section = /##\s*Existing Solutions Check\s*(?:\(re-affirmed\))?\s*\n([\s\S]*?)(?:\n##\s+|$)/i.exec(
+    output,
+  )
+  if (!section?.[1]) return []
+  const body = section[1]
+  const out: ParsedFrameInsufficiency[] = []
+  // Match bullet with bolded mechanism name and Insufficient verdict.
+  // Permissive on the dash: allow `—`, `--`, or `-` between name and verdict.
+  const lineRe =
+    /^[\s>]*[-*]\s+\*\*([^*]+?)\*\*\s*(?:—|--|-)\s*Insufficient\s*:\s*(.+?)\s*$/gim
+  for (const m of body.matchAll(lineRe)) {
+    const mechanism = (m[1] ?? "").trim()
+    const reason = (m[2] ?? "").trim()
+    if (mechanism.length === 0 || reason.length === 0) continue
+    const topic = mechanism.toLowerCase().slice(0, NOTE_TOPIC_MAX_CHARS)
+    const content = `M: ${mechanism} | I: ${reason}`.slice(0, NOTE_MAX_CHARS)
+    out.push({ topic, content })
+  }
+  return out
+}
+
+/**
  * Extract tags from a subagent output for indexing. Pulls:
  *   - markdown section headings (## Foo, ### Bar)
  *   - bolded leading terms (**Key insight**, **Verdict**)

@@ -4,6 +4,7 @@
  */
 
 import { createMemory, markEntrySuperseded } from "./workflow-memory"
+import { evictParentCache } from "./workflow-memory-tools"
 import type { ArcState, WorkflowMemoryState } from "./types"
 
 const store = new Map<string, ArcState>()
@@ -19,6 +20,11 @@ export function getState(sessionID: string): ArcState {
 
 export function clearState(sessionID: string): void {
   store.delete(sessionID)
+  // v0.22 — Evict the parent-resolution cache entry for this session so a
+  // long-running OpenCode process doesn't leak entries on session.deleted
+  // events. The cache is invalidated lazily anyway (re-resolution is cheap),
+  // but explicit eviction keeps memory bounded.
+  evictParentCache(sessionID)
 }
 
 export function allStates(): Map<string, ArcState> {

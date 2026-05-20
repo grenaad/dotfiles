@@ -34,7 +34,11 @@ import {
 import { log } from "./log"
 import {
   appendEntry,
+  appendNote,
   latestFrame,
+  parseFrameInsufficiencies,
+  parseFramePredictions,
+  parseFrameUnknowns,
   predictionReconciliation,
   unknownsStatus,
 } from "./workflow-memory"
@@ -71,6 +75,8 @@ import {
   isSubagent,
   isTaskToolArgs,
   NO_OPEN_QUESTIONS_SUBAGENTS,
+  NOTE_TYPES,
+  suppressesWorkflowMemory,
   TASK_SHAPE_VALUES,
   UNKNOWN_RESOLVABILITY,
   WRITE_NOTE_SUBAGENTS,
@@ -552,7 +558,7 @@ export function buildHooks(client: Client): Hooks {
         // first call, but the memory will be empty in that case and the
         // function no-ops). Skip on `ultra`/`trivial` even when memory exists.
         const memory = s.workflowMemory
-        const trivialitySuppresses = s.trivialityTier === "ultra" || s.trivialityTier === "trivial"
+        const trivialitySuppresses = suppressesWorkflowMemory(s.trivialityTier)
         if (memory && !trivialitySuppresses) {
           working = injectWorkflowMemoryAwareness(
             working,
@@ -723,7 +729,7 @@ export function buildHooks(client: Client): Hooks {
         // are only 3-5 entries; cost not justified). Capture happens BEFORE
         // any of the existing branches so it covers every subagent uniformly.
         try {
-          const trivialitySuppresses = s.trivialityTier === "ultra" || s.trivialityTier === "trivial"
+          const trivialitySuppresses = suppressesWorkflowMemory(s.trivialityTier)
           if (!trivialitySuppresses && outText.length > 0) {
             const memory = ensureWorkflowMemory(s)
             const entry = appendEntry(memory, { subagent: sub, output: outText })
@@ -794,6 +800,117 @@ export function buildHooks(client: Client): Hooks {
               mechanisms: existing.mechanisms,
               rejections: existing.rejections,
             })
+          }
+
+          // v0.22 — Belt-and-suspenders for the v0.21 predict-observe-compare
+          // loop. The PRIMARY path is frame's own workflow_note calls; the
+          // v0.22 parent-resolution fix makes those land correctly. But if a
+          // future regression ever re-breaks the tool path (or DeepSeek skips
+          // the tool calls and only emits the markdown), the parsed-markdown
+          // fallback below ensures the loop still has its predictions,
+          // unknowns, and insufficiencies recorded as notes.
+          //
+          // Strategy: count existing frame-authored notes per kind; if the
+          // parsed markdown contains MORE items than were recorded, synthesize
+          // the difference. This is idempotent — re-running the parse never
+          // creates duplicate notes for the same items (parsed list is bounded
+          // by what's in the markdown; existing notes are subtracted).
+          //
+          // Only runs on `full` workflows; suppressed when triviality is
+          // ultra/trivial because workflow memory itself is suppressed there.
+          const frameTrivialitySuppresses = suppressesWorkflowMemory(s.trivialityTier)
+          if (!frameTrivialitySuppresses) {
+            try {
+              const memoryNow = s.workflowMemory
+              if (memoryNow) {
+                const countNotesOfType = (t: typeof NOTE_TYPES[keyof typeof NOTE_TYPES]) =>
+                  memoryNow.notes.filter((n) => n.author === "frame" && n.type === t).length
+
+                const parsedPreds = parseFramePredictions(outText)
+                const existingPreds = countNotesOfType(NOTE_TYPES.prediction)
+                if (parsedPreds.length > existingPreds) {
+                  const missing = parsedPreds.slice(existingPreds)
+                  let synthesized = 0
+                  for (const p of missing) {
+                    const r = appendNote(memoryNow, {
+                      author: "frame",
+                      type: NOTE_TYPES.prediction,
+                      topic: p.topic,
+                      content: p.content,
+                    })
+                    if (r.ok) synthesized++
+                  }
+                  if (synthesized > 0) {
+                    await log({
+                      kind: "workflow.note.fallback-parsed",
+                      session: input.sessionID,
+                      note_kind: "prediction",
+                      count: synthesized,
+                      author: "frame",
+                    })
+                  }
+                }
+
+                const parsedUnks = parseFrameUnknowns(outText)
+                const existingUnks = countNotesOfType(NOTE_TYPES.unknown)
+                if (parsedUnks.length > existingUnks) {
+                  const missing = parsedUnks.slice(existingUnks)
+                  let synthesized = 0
+                  for (const u of missing) {
+                    const r = appendNote(memoryNow, {
+                      author: "frame",
+                      type: NOTE_TYPES.unknown,
+                      topic: u.topic,
+                      content: u.content,
+                    })
+                    if (r.ok) synthesized++
+                  }
+                  if (synthesized > 0) {
+                    await log({
+                      kind: "workflow.note.fallback-parsed",
+                      session: input.sessionID,
+                      note_kind: "unknown",
+                      count: synthesized,
+                      author: "frame",
+                    })
+                  }
+                }
+
+                const parsedIns = parseFrameInsufficiencies(outText)
+                const existingIns = countNotesOfType(NOTE_TYPES.insufficiency)
+                if (parsedIns.length > existingIns) {
+                  const missing = parsedIns.slice(existingIns)
+                  let synthesized = 0
+                  for (const i of missing) {
+                    const r = appendNote(memoryNow, {
+                      author: "frame",
+                      type: NOTE_TYPES.insufficiency,
+                      topic: i.topic,
+                      content: i.content,
+                    })
+                    if (r.ok) synthesized++
+                  }
+                  if (synthesized > 0) {
+                    await log({
+                      kind: "workflow.note.fallback-parsed",
+                      session: input.sessionID,
+                      note_kind: "insufficiency",
+                      count: synthesized,
+                      author: "frame",
+                    })
+                  }
+                }
+              }
+            } catch (err) {
+              // Best-effort; parser failures must not block the workflow.
+              await log({
+                kind: "error",
+                session: input.sessionID,
+                hook: "tool.execute.after.frame-fallback-parse",
+                subagent: sub,
+                error: (err as Error).message,
+              })
+            }
           }
 
           // v0.20 — Phase E: clear pending rebuild after frame completes. The

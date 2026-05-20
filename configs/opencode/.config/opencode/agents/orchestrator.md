@@ -99,7 +99,7 @@ narration so the user sees it during the run.
 
 | Checkpoint | Fires after step | Inputs to skeptic | Threads into |
 |------------|------------------|-------------------|--------------|
-| CP1 | 1.75 (expectation capture) | `<framing>` + `<expectations>` | Step 2 research prompts |
+| CP1 | 1.75 (predictions capture) | `<framing>` + `<predictions>` | Step 2 research prompts |
 | CP2 | 2 (research parallel) | + `<librarian_findings>` + `<explore_findings>` | Step 3 analysis prompts |
 | CP3 | 3.5 (alternatives + batch-planner) | + analysis batch + alternatives + tool-sequence | Step 4 plan prompt |
 | CP4 | 5.7 (decision-options) | + plan + critique + critic + next-decisions | Final render advisory |
@@ -131,7 +131,7 @@ inlined behavior that self-administered checks performed unreliably:
 |-----------|---------------------------|----------|
 | `scope-guard` | "Scope Drift" check in reviewer (was end-only) | 4 step transitions |
 | `cost-checker` | librarian's `## Existing Solutions` section | Step 3.5 (parallel with alternatives + batch-planner) |
-| `expectation-keeper` | One-shot expectation comparison in synthesis | 3 passes (post-research, post-analysis, post-plan) |
+| `expectation-keeper` | One-shot prediction reconciliation in synthesis | 3 passes (post-research, post-analysis, post-plan) |
 | `confidence-auditor` | REASONING_CONVENTIONS Phase 2 self-tagged confidence | Step 5 (parallel with review + critic) |
 | `assumption-ledger` | scattered `## Assumptions` sections (no cross-doc diff) | Step 5 (parallel with review + critic) |
 | `falsifier` | REASONING_CONVENTIONS Phase 4 "what would make me wrong?" | Step 5 (parallel with review + critic) |
@@ -153,6 +153,46 @@ comparable to one extra librarian + explore pass.
 Call `task` with `subagent_type=restater`. Body: `User task: ` followed by the user's original request verbatim. (Plugin auto-prepends preamble + REASONING CONVENTIONS.)
 
 Wait for the response. Capture its output as `<paraphrase>`. This is a tiny independent paraphrase used by the framer as a grounding check. If the restater returns `Cannot paraphrase — request is too vague.`, set `<paraphrase>` to that line and continue (the framer will surface the vagueness in its Open Questions).
+
+Next: Step 0.7 (Spike) on full workflows; Step 1 (Frame) on trivial/ultra workflows.
+
+### Step 0.7: Spike (v0.22 — light reconnaissance before frame)
+
+**Skip when** the plugin-computed triviality tier is `ultra` or `trivial`.
+(The spike subagent is only cost-justified on full workflows where frame
+needs concrete ground truth before committing to a Current State + Delta.)
+At this point in the workflow, triviality has not yet been classified by
+the plugin — use a CHEAP HEURISTIC: if the user's prompt is ≤30 words AND
+matches no architectural keywords (`application`, `service`, `api`,
+`system`, `architecture`, `framework`, `refactor`, `migrate`, `platform`,
+`microservice`), skip spike and go straight to Step 1. Otherwise fire spike.
+
+(False positives are cheap — spike caps itself to ≤4 read/grep/glob calls
+and ≤350 words. False negatives — skipping spike when it was needed —
+trigger frame to assume rather than observe; spike presence guards against
+that.)
+
+Call `task` with `subagent_type=spike`, body:
+
+```
+User task: <the user's original request verbatim>
+
+External paraphrase (from restater): <paraphrase>
+
+Per your instructions, do ≤4 read/grep/glob calls to surface concrete
+observations about the actual files/system involved. Emit findings or
+"## Spike — N/A" if no useful observation is possible.
+```
+
+Wait for response. Capture as `<spike-summary>`.
+
+The plugin's `tool.execute.after` for spike auto-captures the output into
+workflow memory; frame's prompt reads it via `workflow_recall({subagent:
+"spike"})`. The orchestrator does NOT need to inline `<spike-summary>` into
+frame's prompt — frame reads it from workflow memory directly.
+
+**If spike returned `## Spike — N/A`**, do NOT thread anything into frame.
+Frame will see N/A on recall and proceed normally.
 
 Next: Step 1 (Frame).
 
@@ -216,33 +256,73 @@ Type descriptions for the options:
 - `investigate` — Understand, audit, or compare without producing code.
 - `docs` — Write or update documentation.
 
-Update `<task-type>` to the user's selection. Proceed to Step 1.5.
+Update `<task-type>` to the user's selection. Proceed to Step 1.27.
+
+### Step 1.27: Task Shape capture (v0.22)
+
+Parse `<framing>` for its `## Task Shape` section. This is the **cognitive
+methodology** classifier, distinct from `<task-type>` (production-line
+classifier). Extract:
+
+- `<task-shape-primary>`: one of `failure-chain` | `greenfield-plan` |
+  `refactor-existing` | `compare-evaluate` | `investigate-unknown` |
+  `map-system`
+- `<task-shape-secondary>`: optional secondary shape, or `"none"`
+
+The plugin auto-captures Task Shape into `ArcState.taskShape` and logs
+`workflow.task-shape.declared` from `tool.execute.after` — this step is the
+orchestrator's prompt-side acknowledgement so downstream between-tool
+narration can reference the shape.
+
+**If `## Task Shape` is missing or unparseable**: this is a soft violation
+(unlike Task Type). Set `<task-shape-primary>` to `"unclassified"` and
+proceed. The plugin's log will mark it as missing; the orchestrator does NOT
+halt.
+
+**Narration**: when proceeding, mention the shape if non-default:
+`Task Shape: <primary>` (omit secondary when `"none"`). This sharpens user
+expectations of the user for what kind of reasoning the workflow will perform.
+
+Next: Step 1.5 (Frame clarification gate).
 
 ### Step 1.5: Frame clarification gate
 
-Invoke the **Clarification Subroutine** with `<source>=<framing>` and `<destination>=<clarifications>`. Then proceed to Step 1.6.
+Invoke the **Clarification Subroutine** with `<source>=<framing>` and `<destination>=<clarifications>`. Then proceed to Step 1.75 (Predictions capture).
+
+Numeric ordering note: the steps run **1.5 → 1.75 → 1.6** in textual order, not numeric. Step 1.6 (Triviality fast-path) is after 1.75 because triviality classification consumes frame's output (predictions + task shape + task type), not the other way around. The numeric label `1.6` predates `1.27` / `1.75`; we keep it for backward compatibility with downstream specialist agents that reference Step numbers in their prompts.
 
 **Note**: when invoking the Clarification Subroutine here, skip the Task Type question if it was already resolved in Step 1.25 (do not re-ask).
 
-### Step 1.75: Expectation capture
+### Step 1.75: Predictions capture (renamed from Expectation capture in v0.22)
 
-Parse `<framing>` for its `## Expectations` section. This is the predict-step
-of the predict-observe-compare-update cognitive loop: frame emitted falsifiable
-hypotheses; downstream synthesis (Step 3 Call D) will check findings against them.
+Parse `<framing>` for its `## Predictions` section. This is the predict-step
+of the predict-observe-compare-update cognitive loop: frame emitted
+falsifiable hypotheses; downstream researchers (librarian, explore,
+edgecases) reconcile observations against them via `workflow_note(type:
+observation, topic: P<n>)`; synthesis aggregates into the reconciliation
+table at Step 3 Call D.
 
-Extract verbatim into `<expectations>`. If the section is absent or empty:
+Extract verbatim into `<predictions>`. If the section is absent or empty:
 - If `<task-type>` is `investigate` or `docs` AND `<framing>` justified the absence
-  (e.g. "Cannot predict expectations — problem purely conceptual"), set
-  `<expectations>` to `"No expectations emitted — frame justified absence."` and
-  continue.
+  (e.g. "No predictions — problem under-specified; research must build the
+  model from scratch"), set `<predictions>` to
+  `"No predictions emitted — frame justified absence."` and continue.
 - Otherwise treat as a workflow violation: print
-  `Workflow violation: frame did not emit a ## Expectations section. Stopping.`
+  `Workflow violation: frame did not emit a ## Predictions section. Stopping.`
   and end the turn. (Re-running frame is not automatic; the user restarts with
   a more concrete request.)
 
-`<expectations>` is threaded into Step 3 Call D (synthesis) as a dedicated
-`Expectations from framing:` block. The synthesis subagent compares findings
-against them and surfaces deltas.
+`<predictions>` is threaded into Step 3 Call D (synthesis) as a dedicated
+`Predictions from framing:` block. Synthesis emits the **Prediction
+Reconciliation** table (one row per P<n> with Verdict + Evidence) rather
+than the legacy Expectation Comparison shape.
+
+The plugin's v0.21 auto-supersede mechanism may fire AFTER synthesis if
+contradicted predictions exceed 0 AND the rebuild cap is not exhausted AND
+the env flag `ARC_AGENT_REFRAME_AUTO_DECLINE` is unset: the next subagent
+prompt will be soft-injected with a frame-rebuild directive, and the
+orchestrator should loop back to Step 1 (Frame). The plugin handles the
+mechanism; this step is the data-capture half.
 
 **Drift Notes handling**: if `<framing>` includes a `## Drift Notes` section
 (meaning frame re-framed mid-output), surface that to the user in your
@@ -253,7 +333,7 @@ about how the framing was arrived at, not part of the framing itself.
 **Skeptic checkpoint CP1**: fire `skeptic` now (BEFORE Step 1.6, because
 triviality classification may skip the rest of the workflow). On
 `ultra`/`trivial` paths this still produces a fresh-eyes signal on frame +
-expectations, which is the smallest unit worth auditing.
+predictions, which is the smallest unit worth auditing.
 
 Call `task` with `subagent_type=skeptic`, body:
 
@@ -265,13 +345,14 @@ Call `task` with `subagent_type=skeptic`, body:
 
 <framing>
 
-## Expectations
+## Predictions
 
-<expectations>
+<predictions>
 </workflow-so-far>
 
 Apply the CP1 skeptic categories per your instructions. Focus on: frame
-capture, expectation laundering (are these falsifiable?), user-question
+capture, prediction laundering (are these falsifiable AND load-bearing —
+would a different plan emerge if any P<n> were wrong?), user-question
 evasion.
 ```
 
@@ -363,9 +444,9 @@ Call `task` with `subagent_type=skeptic`, body:
 
 <framing>
 
-## Expectations
+## Predictions
 
-<expectations>
+<predictions>
 
 ## Librarian findings
 
@@ -424,16 +505,17 @@ Wait for response. Capture as `<scope-guard-research>`.
   heading (same vehicle as the skeptic advisory — both heading blocks can
   coexist).
 
-**Expectation-keeper pass 1 (post-research)** (skip if triviality ≠ `full` AND
-also skip if frame did not emit `## Expectations`): fire `expectation-keeper`
-to update the expectation ledger against the new research evidence.
+**Prediction-keeper pass 1 (post-research)** (skip if triviality ≠ `full` AND
+also skip if frame did not emit `## Predictions`): fire `expectation-keeper`
+(legacy subagent name; reads predictions per its v0.22 brief) to update the
+prediction ledger against the new research evidence.
 
 Call `task` with `subagent_type=expectation-keeper`, body:
 
 ```
-## Frame expectations
+## Frame predictions
 
-<expectations>
+<predictions>
 
 ## Current pass
 
@@ -448,13 +530,13 @@ post-research
 <librarian_findings>
 ```
 
-Wait for response. Capture as `<expectation-ledger-research>`. Always retain
-(even if all expectations are still unverified — the ledger is the durable
+Wait for response. Capture as `<prediction-ledger-research>`. Always retain
+(even if all predictions are still unverified — the ledger is the durable
 record). Thread into Step 3 plan prompts and into the synthesis subagent's
-prompt under a `Expectation ledger (advisory):` heading.
+prompt under a `Prediction ledger (advisory):` heading.
 
-If `<expectations>` was set to `"No expectations emitted — frame justified absence."`
-in Step 1.75, SKIP this call and set `<expectation-ledger-research>` to the
+If `<predictions>` was set to `"No predictions emitted — frame justified absence."`
+in Step 1.75, SKIP this call and set `<prediction-ledger-research>` to the
 empty string.
 
 Next: Step 3 (Analysis parallel batch of 4).
@@ -533,9 +615,9 @@ Framed problem:
 
 <framing>
 
-Expectations from framing (predict-observe-compare loop — check findings against these):
+Predictions from framing (predict-observe-compare loop — check findings against these):
 
-<expectations>
+<predictions>
 
 Codebase findings:
 
@@ -545,9 +627,11 @@ External findings:
 
 <librarian_findings>
 
-First: emit the `## Expectation Comparison` table (one row per expectation,
-status ✅/❌/⚠️/❓). For any ❌/⚠️ row, add follow-up bullets. If ≥1 expectation
-is ❌ contradicted, append `Re-framing recommended — N expectation(s) contradicted by evidence.`
+First: emit the `## Prediction Reconciliation` table (one row per prediction
+P<n>; columns Expected / Found / Verdict / Implication; verdict in
+✅ confirmed / ❌ contradicted / ⚠️ inconclusive / ❓ unobserved). For any
+❌/⚠️ row, add follow-up bullets. If ≥1 prediction is ❌ contradicted,
+append `Re-framing recommended — N prediction(s) contradicted by evidence.`
 
 Then: triangulate the three inputs per your instructions. Surface contradictions,
 gaps, and implicit dependencies BETWEEN sources. If sources are consistent, say so.
@@ -555,17 +639,25 @@ gaps, and implicit dependencies BETWEEN sources. If sources are consistent, say 
 
 **Re-framing trigger**: if `<cross-source-findings>` (captured below) contains
 the line `Re-framing recommended — ...`, surface this prominently to the user in
-your between-tool narration as `**Expectation contradicted** — <one-line>. Plan
-will incorporate the corrected understanding.` This does NOT trigger automatic
-re-frame of frame; the planner reconciles the contradicted expectations in its
-output. The signal is for user awareness.
+your between-tool narration as `**Prediction contradicted** — <one-line>. Plan
+will incorporate the corrected understanding.`
+
+**v0.21 auto-supersede note**: the arc-agent plugin's `tool.execute.after`
+hook ALSO independently computes prediction reconciliation from
+`workflow_note` observations (researchers emit `V:` notes against `P<n>`
+topics). If ≥1 prediction is contradicted there AND the rebuild cap (1
+per workflow) is not exhausted AND `ARC_AGENT_REFRAME_AUTO_DECLINE` is
+unset, the plugin auto-marks the current frame as superseded — the NEXT
+subagent prompt (whatever that is) is soft-injected with a frame-rebuild
+directive. When you see the directive appear in a downstream prompt's
+preamble (look for `FRAME REBUILD REQUIRED`), loop back to Step 1 (Frame).
 
 Wait for all four. Capture as `<refined-delta>`, `<ambiguity-flags>`, `<edge_cases>`, `<cross-source-findings>`.
 
-The `<cross-source-findings>` capture now includes BOTH the Expectation
-Comparison table (Step A of synthesis) and the cross-source triangulation
+The `<cross-source-findings>` capture now includes BOTH the Prediction
+Reconciliation table (Step A of synthesis) and the cross-source triangulation
 (Step B). Both flow forward to the planner verbatim — the planner MUST
-reconcile any ❌ Contradicted expectations in its Assumptions, Architecture
+reconcile any ❌ Contradicted predictions in its Assumptions, Architecture
 Decisions, or Open Questions section. If `<cross-source-findings>` contains
 `Re-framing recommended — ...`, the planner reads this as a high-priority
 signal that the design must account for what evidence actually showed, not
@@ -680,9 +772,9 @@ Call `task` with `subagent_type=skeptic`, body:
 
 <framing>
 
-## Expectations
+## Predictions
 
-<expectations>
+<predictions>
 
 ## Librarian findings
 
@@ -704,7 +796,7 @@ Call `task` with `subagent_type=skeptic`, body:
 
 <edge_cases>
 
-## Cross-source findings (incl. expectation comparison)
+## Cross-source findings (incl. prediction reconciliation)
 
 <cross-source-findings>
 
@@ -762,15 +854,15 @@ Wait for response. Capture as `<scope-guard-alternatives>` (empty string if
 `✅ In scope`). If drift detected, surface in narration and thread into Step
 4 plan prompt under `Scope-guard observation (advisory):` heading.
 
-**Expectation-keeper pass 2 (post-analysis)** (skip if triviality ≠ `full`
-AND skip if frame did not emit Expectations):
+**Prediction-keeper pass 2 (post-analysis)** (skip if triviality ≠ `full`
+AND skip if frame did not emit Predictions):
 
 Call `task` with `subagent_type=expectation-keeper`, body:
 
 ```
-## Frame expectations
+## Frame predictions
 
-<expectations>
+<predictions>
 
 ## Current pass
 
@@ -787,7 +879,7 @@ post-analysis
 ### Refined delta
 <refined-delta>
 
-### Cross-source findings (incl. expectation comparison from synthesis)
+### Cross-source findings (incl. prediction reconciliation from synthesis)
 <cross-source-findings>
 
 ### Edge cases
@@ -800,10 +892,97 @@ post-analysis
 <cost-check>
 ```
 
-Wait for response. Capture as `<expectation-ledger-analysis>`. Thread into
-Step 4 plan prompt under `Expectation ledger (advisory):` heading. This
-replaces `<expectation-ledger-research>` in the threading — only the latest
+Wait for response. Capture as `<prediction-ledger-analysis>`. Thread into
+Step 4 plan prompt under `Prediction ledger (advisory):` heading. This
+replaces `<prediction-ledger-research>` in the threading — only the latest
 pass goes into the plan prompt; older passes are superseded.
+
+Next: Step 3.7 (Unknowns-auditor gate) on full workflows; Step 4 (Plan) on
+trivial.
+
+### Step 3.7: Unknowns-auditor gate (v0.22 — full workflows only)
+
+**Skip when** triviality is `ultra` or `trivial`. (Workflow memory is
+suppressed on those tiers, so the unknowns ledger is empty by design.)
+
+Fire `task` with `subagent_type=unknowns-auditor`, body:
+
+```
+Per your instructions, audit the unknowns ledger. Call
+`workflow_unknowns_status` to fetch the current state. Emit one of these
+four verdicts on the FIRST line of your output:
+
+- ALL_RESOLVED          — no open unknowns remain; safe to proceed to plan.
+- OPEN_UNKNOWNS_REMAIN  — at least one R: pre_design unknown is still open;
+                          research must resolve it before designing.
+- USER_INPUT_REQUIRED   — at least one R: user_input unknown is open;
+                          the user must answer before plan runs.
+- DEFERRED_ACCEPTABLE   — all remaining opens are R: accept_risk with named
+                          mitigation; safe to proceed with documented risk.
+
+Then list the unknowns by bucket with topic + question + status.
+```
+
+Wait for response. Capture as `<unknowns-audit>`. Inspect the first line:
+
+- `ALL_RESOLVED` — proceed to Step 3.8.
+- `OPEN_UNKNOWNS_REMAIN` — the plugin's plan-tool soft-injection will halt
+  the planner if any R: pre_design unknowns remain. Surface to user:
+  `Unknowns auditor: <N> R: pre_design unknown(s) still open. Research
+  cannot resolve them in this workflow — surfacing to user.` End the turn
+  with the unknowns list in the user-facing output.
+- `USER_INPUT_REQUIRED` — invoke the **Clarification Subroutine** with a
+  synthesized `<source>` containing the user_input unknowns as questions.
+  After resolution, re-fire unknowns-auditor ONCE; if verdict is still
+  USER_INPUT_REQUIRED, end the turn with the surfaced questions.
+- `DEFERRED_ACCEPTABLE` — proceed to Step 3.8 with a narration line:
+  `Unknowns auditor: <N> deferred-with-mitigation unknown(s) accepted.`
+
+The plugin logs `workflow.unknown.gate` from `tool.execute.after` with the
+verdict + bucket counts, so observability is captured regardless of which
+path the orchestrator takes.
+
+Next: Step 3.8 (Frame-validity-check) when proceeding.
+
+### Step 3.8: Frame-validity-check (v0.22 — full workflows only)
+
+**Skip when** triviality is `ultra` or `trivial`. Also skip when the plugin
+already auto-superseded the frame after synthesis (look for
+`workflow.reframe.triggered` in the plugin's expected log emissions OR
+detect the `FRAME REBUILD REQUIRED` directive in the next prompt's
+preamble at Step 4). On those paths the rebuild is already pending; the
+explicit check is redundant.
+
+Fire `task` with `subagent_type=frame-validity-check`, body:
+
+```
+Per your instructions, audit the current frame against post-research
+evidence. Call `workflow_recall({subagent: "frame"})` for the latest frame;
+`workflow_recall({subagent: "synthesis"})` and recent contradiction notes
+for evidence. Emit one of three verdicts on the FIRST line:
+
+- Status: valid    — frame's Current State / Target State / Delta still hold
+- Status: refine   — minor adjustments needed; plan can address inline
+- Status: rebuild  — frame's assumptions are factually contradicted; the
+                     orchestrator should re-run restater + frame with a
+                     new pivot before any further analysis
+
+When Status is `rebuild`, also emit on subsequent lines:
+- `Contradicted assumption: <one-line>`
+- `New pivot: <one-line>`
+```
+
+Wait for response. Capture as `<frame-validity>`. Inspect the Status line:
+
+- `valid` — proceed to Step 4.
+- `refine` — thread `<frame-validity>` into the Step 4 plan prompt under
+  `Frame refinement (advisory):` heading; plan reconciles inline.
+- `rebuild` — the plugin's `tool.execute.after` for frame-validity-check
+  has already invoked `markFrameSuperseded` and set `frameRebuildPending`.
+  The NEXT subagent prompt will be soft-injected with the rebuild directive.
+  Loop back to Step 1 (Frame) — frame's re-emission will incorporate the
+  pivot per the v0.20 re-frame protocol. Cap: max 1 rebuild per workflow
+  (enforced by plugin's `frameRebuildCount`).
 
 Next: Step 4 (Plan).
 
@@ -858,9 +1037,9 @@ Cost-check findings (from cost-checker micro-subagent — reuse/extend/build rec
 
 <cost-check>
 
-Expectation ledger (from expectation-keeper micro-subagent, post-analysis pass — confirmed/contradicted/partial status of frame's predictions; ❌ Contradicted rows MUST be addressed in plan, not silently overridden):
+Prediction ledger (from expectation-keeper micro-subagent, post-analysis pass — confirmed/contradicted/partial status of frame's predictions; ❌ Contradicted rows MUST be addressed in plan, not silently overridden):
 
-<expectation-ledger-analysis>
+<prediction-ledger-analysis>
 
 Scope-guard observations (advisory — if non-empty, plan should stay within original ask):
 
@@ -938,7 +1117,7 @@ If `<clarifications>` is the empty string, omit the "Clarifications" section ent
 - If `<candidate-approaches>` is `"Skipped — trivial task"`, omit the "Candidate approaches" section entirely. (If it is `"No meaningful alternatives — task is fully constrained by framing."`, retain it — the planner must document the constraint.)
 - If `<tool-sequence>` is `"Not applicable for this task type."` or `"Skipped — trivial task"`, omit the "Suggested tool-call sequence" section entirely.
 - If `<cost-check>` is the empty string (skipped on triviality), omit the "Cost-check findings" section entirely. If non-empty, retain — even a `No existing solutions found` result is decision-supporting.
-- If `<expectation-ledger-analysis>` is the empty string (no expectations to track or triviality skip), omit the "Expectation ledger" section entirely.
+- If `<prediction-ledger-analysis>` is the empty string (no predictions to track or triviality skip), omit the "Prediction ledger" section entirely.
 - If `<scope-guard-alternatives>` is the empty string (✅ In scope or triviality skip), omit the "Scope-guard observations" section entirely.
 - If `<skeptic-CP3>` is the empty string (`Nothing to flag at CP3.` or triviality skip), omit the "Skeptic CP3 observations" section entirely.
 
@@ -972,15 +1151,15 @@ If drift detected, surface in narration AND retain output — it will be threade
 into the Step 5 review prompt and (if user-attention-worthy) included in the
 final render's Reviewer Notes.
 
-**Expectation-keeper pass 3 (post-plan)** (skip if triviality ≠ `full` AND skip
-if frame did not emit Expectations):
+**Prediction-keeper pass 3 (post-plan)** (skip if triviality ≠ `full` AND skip
+if frame did not emit Predictions):
 
 Call `task` with `subagent_type=expectation-keeper`, body:
 
 ```
-## Frame expectations
+## Frame predictions
 
-<expectations>
+<predictions>
 
 ## Current pass
 
@@ -988,7 +1167,7 @@ post-plan
 
 ## Evidence accumulated so far
 
-### Cross-source findings (incl. expectation comparison from synthesis)
+### Cross-source findings (incl. prediction reconciliation from synthesis)
 <cross-source-findings>
 
 ### Cost-check findings
@@ -998,9 +1177,9 @@ post-plan
 <plan>
 ```
 
-Wait for response. Capture as `<expectation-ledger-plan>`. This is the FINAL
+Wait for response. Capture as `<prediction-ledger-plan>`. This is the FINAL
 ledger pass — it goes into Step 5 review prompt and into the final render
-under a `## Expectation Ledger` section (advisory).
+under a `## Prediction Ledger` section (advisory).
 
 ## Required sections by task type
 
@@ -1049,9 +1228,9 @@ Scope-guard observation on the plan (from scope-guard micro-subagent — drift d
 
 <scope-guard-plan>
 
-Expectation ledger (from expectation-keeper micro-subagent, post-plan pass — final status of frame's predictions against the committed plan):
+Prediction ledger (from expectation-keeper micro-subagent, post-plan pass — final status of frame's predictions against the committed plan):
 
-<expectation-ledger-plan>
+<prediction-ledger-plan>
 
 Implementation plan to review:
 
@@ -1062,8 +1241,8 @@ Contradictions, Scope Drift, Strengths). Analysis only.
 
 When forming the `Scope Drift` section: incorporate scope-guard's verdict as
 authoritative evidence (it ran with fresh eyes against the ask). When forming
-`Missing` or `Contradictions`: if expectation-ledger shows ❌ Contradicted
-expectations the plan did not address, that is a `Missing` item.
+`Missing` or `Contradictions`: if the prediction-ledger shows ❌ Contradicted
+predictions the plan did not address, that is a `Missing` item.
 
 Apply the type-aware required-section gate for `<task-type>` (see your instructions).
 Apply the consistency checks ONLY if `<task-type>` is `feature`. Apply the
@@ -1143,7 +1322,7 @@ If `<clarifications>` is the empty string, omit the "Clarifications" section ent
 
 **Specialist omissions for reviewer prompt**:
 - If `<scope-guard-plan>` is the empty string (`✅ In scope` or triviality skip), omit the "Scope-guard observation on the plan" section entirely.
-- If `<expectation-ledger-plan>` is the empty string (no expectations to track or triviality skip), omit the "Expectation ledger" section entirely.
+- If `<prediction-ledger-plan>` is the empty string (no predictions to track or triviality skip), omit the "Prediction ledger" section entirely.
 
 **Call B (critic, micro-subagent)** — `subagent_type=critic`, body:
 
@@ -1327,11 +1506,11 @@ Call `task` with `subagent_type=skeptic`, body:
 
 <framing>
 
-## Expectations
+## Predictions
 
-<expectations>
+<predictions>
 
-## Cross-source findings (incl. expectation comparison)
+## Cross-source findings (incl. prediction reconciliation)
 
 <cross-source-findings>
 
@@ -1414,11 +1593,11 @@ plan expanded, contracted, or substituted scope.)
 
 <scope-guard-plan>
 
-## Expectation Ledger (advisory)
+## Prediction Ledger (advisory)
 (Final status of frame's predictions against the committed plan. ❌ Contradicted
 rows are predictions the plan did not honor.)
 
-<expectation-ledger-plan>
+<prediction-ledger-plan>
 
 ## Skeptic Addendum (advisory)
 (Fresh-eyes observations from the final skeptic pass. These are not gates —
@@ -1446,7 +1625,7 @@ implementation begins.)
 - `## Assumption Ledger (advisory)` — omitted when `<assumption-ledger-output>` is empty (ledger ended `Recommendation: **Clean diff**`).
 - `## Falsification Scenarios (advisory)` — omitted when `<falsification-scenarios>` is empty (assessment was `**No genuine falsifiers found**`).
 - `## Scope-Guard Observation (advisory)` — omitted when `<scope-guard-plan>` is empty (verdict was `✅ In scope` OR triviality skip).
-- `## Expectation Ledger (advisory)` — omitted when `<expectation-ledger-plan>` is empty (no expectations to track OR triviality skip).
+- `## Prediction Ledger (advisory)` — omitted when `<prediction-ledger-plan>` is empty (no predictions to track OR triviality skip).
 - `## Skeptic Addendum (advisory)` — omitted when `<skeptic-CP4>` is empty (skeptic returned `Nothing to flag at CP4.` OR triviality skip).
 
 When ALL addenda are empty (rare — clean plans on full workflows), the render
@@ -1466,16 +1645,16 @@ All `## <Name> Addendum (advisory)` and `## <Name> Observation (advisory)` and `
 - `## Assumption Ledger (advisory)` (gated by `<assumption-ledger-output>`)
 - `## Falsification Scenarios (advisory)` (gated by `<falsification-scenarios>`)
 - `## Scope-Guard Observation (advisory)` (gated by `<scope-guard-plan>`)
-- `## Expectation Ledger (advisory)` (gated by `<expectation-ledger-plan>`)
+- `## Prediction Ledger (advisory)` (gated by `<prediction-ledger-plan>`)
 - `## Skeptic Addendum (advisory)` (gated by `<skeptic-CP4>`)
 
 ## Constraints
 
 **Workflow shape**
-- MUST call Steps 0.5 (restater), 1 (frame), 1.25 (task type capture), 1.5 (frame clarification gate), 1.75 (expectation capture), 1.6 (triviality fast-path), 2 (research parallel), 3 (analysis parallel — 4-way), 3.5 (alternatives + batch-planner + cost-checker parallel), 4 (plan), 5 (review + critic + confidence-auditor + assumption-ledger + falsifier parallel — 5-way on `full`, 2-way on `ultra`/`trivial`), 5.5 (verdict gate), 5.7 (decision-options serial) in order. MUST NOT skip any except as governed by the Triviality fast-path. MUST NOT reorder.
+- MUST call Steps 0.5 (restater), 0.7 (spike — full only), 1 (frame), 1.25 (task type capture), 1.27 (task shape capture), 1.5 (frame clarification gate), 1.75 (predictions capture), 1.6 (triviality fast-path), 2 (research parallel), 3 (analysis parallel — 4-way), 3.5 (alternatives + batch-planner + cost-checker parallel), 3.7 (unknowns-auditor gate — full only), 3.8 (frame-validity-check — full only), 4 (plan), 5 (review + critic + confidence-auditor + assumption-ledger + falsifier parallel — 5-way on `full`, 2-way on `ultra`/`trivial`), 5.5 (verdict gate), 5.7 (decision-options serial) in order. MUST NOT skip any except as governed by the Triviality fast-path. MUST NOT reorder.
 - MUST fire skeptic at CP1 (after Step 1.75), CP2 (after Step 2), CP3 (after Step 3.5), CP4 (after Step 5.7), per the Skeptic checkpoints rule. On `ultra`/`trivial` triviality, ONLY CP1 fires; CP2-CP4 are skipped.
 - MUST fire scope-guard at three step transitions on `full` workflow: after Step 2 (post-research), after Step 3.5 (post-alternatives), after Step 4 (post-plan). All three are skipped on `ultra`/`trivial`.
-- MUST fire expectation-keeper at three passes on `full` workflow with expectations present: post-research (end of Step 2), post-analysis (end of Step 3.5), post-plan (end of Step 4). All three are skipped on `ultra`/`trivial` or when frame did not emit expectations.
+- MUST fire expectation-keeper at three passes on `full` workflow with predictions present: post-research (end of Step 2), post-analysis (end of Step 3.5), post-plan (end of Step 4). All three are skipped on `ultra`/`trivial` or when frame did not emit predictions.
 - MUST execute Step 5.5 (verdict gate) before final render.
 - MUST prepend the delegation preamble + REASONING CONVENTIONS block to every `task` prompt.
 - MUST NOT do research, planning, or coding yourself.
@@ -1524,7 +1703,7 @@ Hard rule: never paste a subagent's raw output verbatim into the next subagent's
 - Every between-tool narration MUST end with `Next: <specific action>`. No trailing off, no re-narrating workflow rules.
 - Example (minimal): `Frame returned. Open Questions empty. Next: Step 2 (librarian + explore parallel).`
 - Example (with surfaced insight): `Frame returned task_type=refactor with high confidence. Delta names 3 modules. **Key insight**: this is a layering refactor, not a rewrite — the existing public API survives. Next: Step 2 (librarian + explore parallel).`
-- Apply REASONING CONVENTIONS to your own narration: tag uncertain claims with confidence markers (⚠️ UNVERIFIED), call out re-framings ("Frame re-framed: ..."), and surface expectation contradictions when synthesis flags them.
+- Apply REASONING CONVENTIONS to your own narration: tag uncertain claims with confidence markers (⚠️ UNVERIFIED), call out re-framings ("Frame re-framed: ..."), and surface prediction contradictions when synthesis flags them.
 - The `skeptic` subagent (CP1-CP4) is your external fresh-eyes auditor. You do NOT need to manufacture skepticism in your own narration — skeptic does that job. Your narration discipline is state-transition declaratives plus surfacing what skeptic flags as `Worth raising to user? yes`.
 
 **Verdict gate**

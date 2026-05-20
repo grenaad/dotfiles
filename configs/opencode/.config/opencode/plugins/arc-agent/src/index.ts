@@ -51,6 +51,34 @@
  *     workflow.reframe.offered, workflow.unknowns.blocking,
  *     workflow.task-shape.declared, workflow.existing-check.declared,
  *     workflow.failure-chain.declared log lines.
+ *
+ * v0.22 additions (v0.21 finally functional):
+ *   - Fix P0 workflow_note child-session bug: tools are now factories closing
+ *     over the SDK client. Each tool call resolves context.sessionID up the
+ *     parent chain to the orchestrator's root session before reading state,
+ *     so subagent note writes (predictions, unknowns, insufficiencies) land
+ *     in the orchestrator's ArcState instead of a fresh empty child ArcState.
+ *     Reproduced + verified end-to-end: 0/0 lost notes post-fix vs 100% lost
+ *     pre-fix on both deepseek-v4-flash and opus-4-7 smoke runs.
+ *   - Belt-and-suspenders: frame's tool.execute.after parses
+ *     ## Predictions / ## Open Questions / ## Existing Solutions Check
+ *     directly from the markdown output and synthesizes any missing notes.
+ *     If a regression ever re-breaks the tool path, the v0.21 loop still
+ *     operates from parsed markdown.
+ *   - Observability: workflow.note.memory-uninitialized log (previously
+ *     silent rejection path), workflow.note.fallback-parsed log.
+ *   - Frame prompt quality: replicability-vs-insufficiency, load-bearing
+ *     predictions, rare-secondary task shapes, assumption-vs-unknown
+ *     contradiction discipline.
+ *   - Review prompt: strengthens the v0.21 section-presence gate so missing
+ *     required sections demote the verdict.
+ *   - Orchestrator drift: renamed Expectations -> Predictions throughout;
+ *     added Spike (Step 0.7), Task Shape capture (Step 1.27),
+ *     Unknowns-auditor gate (Step 3.7), Frame-validity-check (Step 3.8) so
+ *     the agent prompt aligns with the v0.20/v0.21 infrastructure it never
+ *     integrated.
+ *   - Helper resilience: strip_open_questions timeout 30s -> 60s
+ *     (Opus's 20k-char review prompts time out at 30s).
  */
 
 import type { Plugin, PluginModule } from "@opencode-ai/plugin"
@@ -58,10 +86,10 @@ import type { Plugin, PluginModule } from "@opencode-ai/plugin"
 import { buildHooks } from "./hooks"
 import { log } from "./log"
 import {
-  workflowNoteTool,
-  workflowRecallFullTool,
-  workflowRecallTool,
-  workflowUnknownsStatusTool,
+  makeWorkflowNoteTool,
+  makeWorkflowRecallFullTool,
+  makeWorkflowRecallTool,
+  makeWorkflowUnknownsStatusTool,
 } from "./workflow-memory-tools"
 
 const ENV_DISABLE = "ARC_AGENT_DISABLED" as const
@@ -77,10 +105,14 @@ const server: Plugin = async ({ client }) => {
     ...hooks,
     tool: {
       ...(hooks.tool ?? {}),
-      workflow_recall: workflowRecallTool,
-      workflow_recall_full: workflowRecallFullTool,
-      workflow_note: workflowNoteTool,
-      workflow_unknowns_status: workflowUnknownsStatusTool,
+      // v0.22 — Tools are factories that close over `client` so each tool
+      // call can resolve `context.sessionID` (often a child sub-session) to
+      // the orchestrator's root session via client.session.get(parentID).
+      // See workflow-memory-tools.ts module header for the full bug fix.
+      workflow_recall: makeWorkflowRecallTool(client),
+      workflow_recall_full: makeWorkflowRecallFullTool(client),
+      workflow_note: makeWorkflowNoteTool(client),
+      workflow_unknowns_status: makeWorkflowUnknownsStatusTool(client),
     },
   }
 }

@@ -93,6 +93,24 @@ before writing):
 These three are NOT interchangeable. A question with a hunch attached is
 still an Unknown. A belief without a stated falsifier is not a Prediction.
 
+**Assumption vs Unknown — contradiction discipline.** Assumptions are
+claims you are willing to **act on without verification**; Unknowns are
+claims that need verification before designing. If you find your Open
+Questions list asks a question your Assumptions list asserts an answer to,
+the assumption is a self-contradiction — the frame is simultaneously
+asserting AND questioning the same fact.
+
+When you detect this, move the item to Unknowns with `R: user_input` (if
+only the user can resolve it) or `R: pre_design` (if research can). Do NOT
+keep both the assumption and the unknown — pick one. Common example:
+
+- ❌ Assumptions: "User intends this in workspace X." + Open Questions:
+  "Which workspace does the user mean?" — these contradict.
+- ✅ Open Questions: "U1: Which workspace? | R: user_input — different
+  workspaces have different conventions."
+
+A self-questioned assumption is an Unknown wearing the wrong label.
+
 Each unknown must be numbered U1, U2, U3, … and emitted in two places:
 
 1. **In your output** under `## Open Questions`, formatted as:
@@ -177,6 +195,30 @@ workflow_note(
 )
 ```
 
+**Predictions must be load-bearing.** Each prediction should name a belief
+whose wrongness would **materially change the plan**. The test: if you
+substituted "Wrong" for "Right" in the prediction, would a different plan
+emerge? If no, the prediction is a micro-detail; collapse or drop it.
+
+Concrete contrast:
+
+- ❌ Surface-level: "I expect APIRouter to be at module level. Wrong if: it's
+  in a factory function." (Either way, the plan creates a router; placement
+  is mechanical.)
+- ✅ Load-bearing: "I expect the existing routers all mount under `/api/v1`
+  and the new health route must skip the prefix. Wrong if: routers mount
+  without a prefix." (Wrongness reshapes the plan's registration step.)
+
+- ❌ Surface-level: "I expect Python 3.10+. Wrong if: 3.8."
+- ✅ Load-bearing: "I expect the project uses async route handlers
+  throughout. Wrong if: handlers are sync." (Wrongness changes the new
+  handler's signature and test setup.)
+
+Aim for predictions about architectural choices, interface contracts,
+mounting conventions, scope of existing patterns, or domain-organization
+shape. Falsifying micro-details does not help the planner — it consumes a
+prediction slot without informing a decision.
+
 Soft cap: ≤5 predictions per frame. Opus emits 2-5 typically. More than 5
 suggests padding; collapse near-duplicates.
 
@@ -232,6 +274,26 @@ If you can't name the constraint that makes existing insufficient, you
 don't need new code. The reviewer will flag plans that introduce new code
 without addressing a corresponding insufficiency note.
 
+**Replicability ≠ Insufficiency.** A mechanism you can **copy structurally**
+— e.g. replicating an `APIRouter` pattern from one domain for an endpoint in
+another, or reusing a queue-consumer scaffold across two job types — is
+**Sufficient**. The fact that the existing mechanism is "for a different
+feature" or "domain-scoped" is NOT a named insufficiency.
+
+Insufficient means: "I cannot reuse this even structurally because of a
+named constraint X." Concrete examples of valid Insufficient justifications:
+
+- "Synchronous-only; our requirement is streaming."
+- "Hardcoded to a single tenant; multi-tenant needs per-request scoping."
+- "Coupled to PostgreSQL; the new path runs on SQLite/in-memory."
+- "Uses request-scoped DI; this needs background-job scope."
+
+Mirroring conventions across domains, copying a router skeleton, or
+templating a CRUD pattern for a new entity is **sufficiency** — declare it
+as such and cite the existing pattern in your plan's Choice Justification.
+Do not over-declare Insufficient: it generates noise the reviewer must
+address and dilutes the signal of a genuine rejection.
+
 If nothing relevant exists (true greenfield), write "No existing mechanisms
 — greenfield" and skip the workflow_note calls.
 
@@ -269,6 +331,28 @@ Pick exactly ONE primary shape. Optionally name a secondary if the task
 genuinely spans two. The downstream orchestrator captures this and uses it
 for log emission and (future) prompt-shaping; it is NOT the same as Task
 Type.
+
+**Secondary is optional and rare.** Only assign a secondary shape when the
+task **genuinely spans two distinct shapes** that demand different reasoning
+moves. Examples that earn a secondary:
+
+- `greenfield-plan + map-system` — new integration connecting unfamiliar
+  services (must design AND understand existing systems first)
+- `failure-chain + refactor-existing` — a bug fix that requires also
+  restructuring the affected module to prevent recurrence
+- `compare-evaluate + investigate-unknown` — comparing options where the
+  options themselves aren't fully understood yet
+
+Examples that DO NOT earn a secondary:
+
+- Mirroring an existing convention to add one new endpoint →
+  `greenfield-plan` only. Copying a template is not a separate shape.
+- A small fix that touches one helper function → `failure-chain` only.
+- Renaming + minor refactor → `refactor-existing` only.
+
+When in doubt, omit secondary. DeepSeek tends to over-assign secondaries
+whenever two shapes are adjacent; resist that pattern. Write
+`Secondary: none` rather than reach for a label.
 
 | Shape | When it applies |
 |---|---|
