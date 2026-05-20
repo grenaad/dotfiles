@@ -252,6 +252,11 @@
       "type": "remote",
       "url": "http://127.0.0.1:18081/mcp"
     },
+    "linear": {
+      "type": "remote",
+      "url": "https://mcp.linear.app/mcp",
+      "enabled": false
+    },
     "grep-app": {
       "type": "remote",
       "url": "https://mcp.grep.app",
