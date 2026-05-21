@@ -54,6 +54,8 @@ Rule of thumb: by the time you start writing the plan, your context should conta
 
 **Avoid the spike-then-confirm anti-pattern**: don't do one tool call ("let me first check X"), then narrate, then do more tool calls. Predict what you need and batch.
 
+**Critical: always scope `grep` and `glob` to the workspace directory.** Calls without an explicit `path` parameter may default to your CWD which can be outside the workspace, triggering external-directory permission rejections. ALWAYS pass `path: "."` (or a workspace-relative path) on grep/glob. Bad: `grep("foo")`. Good: `grep("foo", path=".")` or `grep("foo", path="src/")`. If a grep or glob fails with `external_directory` permission rejection, retry with `path: "."` — do NOT halt the workflow.
+
 ### Phase 3 — PREDICT (max 3, only on full workflows)
 Before integrating evidence into a design, state what you EXPECT to find or be true. Format:
 
@@ -137,10 +139,15 @@ After emitting this addendum, STOP. Do NOT re-emit `# Plan`, `## Change Set`, `#
 ## What you asked for
 <2-3 bullets restating the ask>
 
+## Assumptions (please correct any that are wrong)
+1. <unverified assumption 1 — flag which would change the plan materially if wrong>
+2. <unverified assumption 2>
+3. <unverified assumption 3>
+
 ## Architecture Decisions
-| Decision | Pick | Reasoning |
-|---|---|---|
-| <load-bearing choice> | <pick> | <one-line cite + reason> |
+| Decision | Pick | Rejected alternative | Reasoning |
+|---|---|---|---|
+| <load-bearing choice> | <pick> | <named alternative + 3-word reject reason> | <one-line cite + reason> |
 
 ## Change Set
 | File | Action | Notes |
@@ -165,8 +172,10 @@ After emitting this addendum, STOP. Do NOT re-emit `# Plan`, `## Change Set`, `#
 ## Falsification
 Wrong if: <one verifiable condition>
 
-## Open Decisions       (omit if none)
-1. <pending decision with options>
+## Open Decisions for the user
+1. <pending decision with 2-4 options + your recommendation>
+2. <scope choice the user should confirm>
+3. <unstated parameter (path/name/threshold/version) you defaulted but they should approve>
 ```
 
 ### investigate / docs template
@@ -174,6 +183,10 @@ Wrong if: <one verifiable condition>
 ```
 ## What you asked for
 <2-3 bullets>
+
+## Assumptions I'm making (please correct any that are wrong)
+1. <assumption 1 — flag which would flip the recommendation if wrong>
+2. <assumption 2>
 
 ## Findings
 <structured evidence with file:line / URL citations>
@@ -184,10 +197,40 @@ Wrong if: <one verifiable condition>
 
 ## Recommendation
 <pick with confidence marker: ✅ HIGH / 🔶 MEDIUM / ⚠️ LOW>
+<carve-out: when the OTHER option would be the right pick>
 
 ## Falsification
 Wrong if: <one verifiable condition>
+
+## Open Decisions for the user
+1. <question 1 — what to confirm/clarify before this becomes a binding decision>
+2. <question 2>
 ```
+
+## Open Decisions section — MANDATORY (this is the dialogue-shape rule)
+
+Every plan and every recommendation MUST end with an `## Open Decisions for the user` section containing **2-5 numbered questions** unless the answer to "what should the user confirm before this is binding?" is genuinely empty.
+
+This section is the difference between a **commitment-shaped** plan (which silently picks for the user) and a **dialogue-shaped** plan (which surfaces what the user owns).
+
+Look for these categories every time:
+1. **Defaulted parameters** — anywhere you picked a path, name, version, threshold, or convention that the user did NOT specify. Ask them to confirm.
+2. **Scope choices** — anything you included that they could have excluded, or excluded that they might want. Ask about scope edges.
+3. **Trade-off picks** — where you picked option A over B, ask if they want the other tradeoff for any reason.
+4. **Out-of-scope-but-likely-needed** — adjacent work (tests, docs, migrations, deployment) you DID NOT plan but probably should be on their radar.
+5. **Unverified assumptions** — anything in `## Assumptions` (or implicit in the plan) that the user might be able to verify even if you couldn't.
+
+Each item: **one line stating the open question + 2-3 options + your recommendation**. Example:
+
+```
+## Open Decisions for the user
+1. **Endpoint path**: `/health` (current pick), `/healthz` (k8s-style), or `/api/v1/health` (versioned)? — Recommend `/health` unless you're standardizing on k8s conventions.
+2. **Probe depth**: liveness only (current), or also readiness with DB/cache checks? — Recommend liveness-only for v1.
+3. **Test scope**: include the suggested `tests/test_health.py` (current), or skip until a broader test suite lands? — Recommend include.
+4. **Wire-up scope**: only create `app/health.py` (current), or also wire it into a (currently missing) `app/main.py`? — Recommend defer wiring until app entrypoint exists.
+```
+
+Hard rule: **do NOT skip this section.** If you cannot find 2 genuine questions, you have either (a) been given a hyper-specific ask with no defaulting on your part — rare — or (b) silently committed where the user should choose. The second case is the failure mode. Surface the choices.
 
 ## Tool budgets (soft)
 
