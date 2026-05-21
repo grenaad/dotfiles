@@ -1,48 +1,24 @@
 /**
- * v0.19 — Workflow-memory store: intra-workflow cross-turn memory.
+ * Workflow-memory store: intra-workflow cross-turn memory.
  *
- * Purpose
- * -------
- * Solves Sub-problem A: a subagent fired at Step 5 may need to know what
- * happened at Step 2 — not just the captured artifact, but the meta-context
- * (which subagent produced it, what tags it carried, what structured notes
- * other specialists left).
+ * v0.25.1: simplified for the integrated orchestrator. The orchestrator does
+ * the investigation and writes summary notes; the 5 surviving advisory
+ * subagents (review, critic, confidence-auditor, cost-checker, falsifier)
+ * read notes for fresh-eyes context.
  *
- * Design
- * ------
- * - Append-only. Entries are subagent outputs (auto-captured). Notes are
- *   structured cross-turn signals (authored by analysis specialists).
- * - Per-workflow scope. State lives in ArcState.workflowMemory and is cleared
- *   when a new workflow starts (detected via restater after existing entries).
- * - In-memory only. No disk, no network. Reset on session end.
- * - Pure data + pure functions; no model calls, no async I/O.
- *
- * Indexing strategy: linear scan. With workflow sizes ≤ ~30 entries, the
- * complexity of a real index (inverted, trie, etc.) is unjustified.
+ * Append-only. In-memory only. Cleared between workflows.
  */
 
 import {
-  DEFERRAL_AUTHORIZED_AUTHORS,
   ENTRY_MAX_CHARS,
   NOTE_MAX_CHARS,
   NOTE_TOPIC_MAX_CHARS,
   NOTE_TYPE_AUTHORIZATION,
-  NOTE_TYPES,
-  PREDICTION_VERDICTS,
-  PREDICTION_VERDICT_VALUES,
   RECALL_DEFAULT_LIMIT,
   RECALL_EXCERPT_CHARS,
   RECALL_MAX_LIMIT,
-  UNKNOWN_RESOLVABILITY,
-  UNKNOWN_RESOLVABILITY_VALUES,
-  UNKNOWN_STATUSES,
-  UNKNOWN_STATUS_VALUES,
   WRITE_NOTE_SUBAGENTS,
-  type PredictionVerdict,
   type SubagentType,
-  type TrivialityTier,
-  type UnknownResolvability,
-  type UnknownStatus,
   type WorkflowEntry,
   type WorkflowMemoryState,
   type WorkflowNote,
@@ -50,29 +26,31 @@ import {
 
 // --- Construction -----------------------------------------------------------
 
-export function createMemory(triviality?: TrivialityTier): WorkflowMemoryState {
+export function createMemory(): WorkflowMemoryState {
   return {
     startedAtMs: Date.now(),
     entries: [],
     notes: [],
     nextEntrySeq: 1,
     nextNoteSeqByAuthor: {},
-    trivialityAtCreation: triviality,
   }
 }
 
 // --- Writes -----------------------------------------------------------------
 
 export interface AppendEntryInput {
-  subagent: SubagentType
+  subagent: SubagentType | "orchestrator"
   output: string
 }
 
 /**
  * Append an entry. Truncates output to ENTRY_MAX_CHARS at a paragraph boundary
- * when possible. Returns the appended entry (with stable id assigned).
+ * when possible.
  */
-export function appendEntry(state: WorkflowMemoryState, input: AppendEntryInput): WorkflowEntry {
+export function appendEntry(
+  state: WorkflowMemoryState,
+  input: AppendEntryInput,
+): WorkflowEntry {
   const seq = state.nextEntrySeq++
   const id = `${input.subagent}-${String(seq).padStart(3, "0")}`
   const originalSize = input.output.length
@@ -81,7 +59,9 @@ export function appendEntry(state: WorkflowMemoryState, input: AppendEntryInput)
   let truncated = false
   if (body.length > ENTRY_MAX_CHARS) {
     const cut = bestCutAt(body, ENTRY_MAX_CHARS)
-    body = body.slice(0, cut).trimEnd() + "\n\n[arc-agent: workflow-memory truncated this entry]"
+    body =
+      body.slice(0, cut).trimEnd() +
+      "\n\n[arc-agent: workflow-memory truncated this entry]"
     truncated = true
   }
 
@@ -99,46 +79,37 @@ export function appendEntry(state: WorkflowMemoryState, input: AppendEntryInput)
   return entry
 }
 
-export type AppendNoteInput =
-  | {
-      kind: "ok"
-      author: SubagentType
-      type: WorkflowNote["type"]
-      topic: string
-      content: string
-      refs: string[]
-    }
-  | {
-      kind: "rejected"
-      reason: string
-    }
-
 /**
- * Append a note. Validates the author is in WRITE_NOTE_SUBAGENTS and that the
- * content / topic fit the size caps. Returns either the appended note or a
- * structured rejection (so callers can log it).
+ * Append a note. Validates the author is in WRITE_NOTE_SUBAGENTS (or is the
+ * orchestrator) and that the per-author type authorization permits the type.
  */
 export function appendNote(
   state: WorkflowMemoryState,
   input: {
-    author: SubagentType
+    author: SubagentType | "orchestrator"
     type: WorkflowNote["type"]
     topic: string
     content: string
     refs?: string[]
   },
 ): { ok: true; note: WorkflowNote } | { ok: false; reason: string } {
-  if (!WRITE_NOTE_SUBAGENTS.has(input.author)) {
-    return { ok: false, reason: `subagent "${input.author}" is not authorized to write notes` }
-  }
-  // v0.20 — per-author type authorization
-  const allowedTypes = NOTE_TYPE_AUTHORIZATION[input.author]
-  if (!allowedTypes || !allowedTypes.includes(input.type)) {
-    return {
-      ok: false,
-      reason: `subagent "${input.author}" is not authorized to write notes of type "${input.type}" (allowed: ${(allowedTypes ?? []).join(", ") || "none"})`,
+  // Orchestrator can write any note type.
+  if (input.author !== "orchestrator") {
+    if (!WRITE_NOTE_SUBAGENTS.has(input.author)) {
+      return {
+        ok: false,
+        reason: `subagent "${input.author}" is not authorized to write notes`,
+      }
+    }
+    const allowedTypes = NOTE_TYPE_AUTHORIZATION[input.author]
+    if (!allowedTypes || !allowedTypes.includes(input.type)) {
+      return {
+        ok: false,
+        reason: `subagent "${input.author}" is not authorized to write notes of type "${input.type}" (allowed: ${(allowedTypes ?? []).join(", ") || "none"})`,
+      }
     }
   }
+
   if (input.topic.length === 0) {
     return { ok: false, reason: "topic is required" }
   }
@@ -148,20 +119,6 @@ export function appendNote(
 
   const topic = input.topic.slice(0, NOTE_TOPIC_MAX_CHARS).toLowerCase().trim()
   const content = input.content.slice(0, NOTE_MAX_CHARS).trim()
-
-  // v0.20 — deferral authorization for unknowns ledger.
-  // If this is an unknown note with S: deferred status, the author must be in
-  // DEFERRAL_AUTHORIZED_AUTHORS (plan + analysts). Researchers can only emit
-  // S: open or S: resolved.
-  if (input.type === NOTE_TYPES.unknown) {
-    const status = parseUnknownStatus(content)
-    if (status === UNKNOWN_STATUSES.deferred && !DEFERRAL_AUTHORIZED_AUTHORS.has(input.author)) {
-      return {
-        ok: false,
-        reason: `subagent "${input.author}" is not authorized to mark unknowns as deferred (only plan + analysts can defer)`,
-      }
-    }
-  }
 
   const seq = (state.nextNoteSeqByAuthor[input.author] ?? 0) + 1
   state.nextNoteSeqByAuthor[input.author] = seq
@@ -184,44 +141,33 @@ export function appendNote(
 // --- Reads / Recall ---------------------------------------------------------
 
 export interface RecallQuery {
-  /** Free-text keyword query. Lowercase substring across output + tags + topic. */
   query?: string
-  /** Filter by author subagent. */
-  subagent?: SubagentType
-  /** Filter by note topic (substring match, case-insensitive). */
+  subagent?: SubagentType | "orchestrator"
   topic?: string
-  /** Filter by note type. */
   noteType?: WorkflowNote["type"]
-  /** Which store to read: entries-only, notes-only, or both. Default: "both". */
   kind?: "entry" | "note" | "both"
-  /** Result cap (default RECALL_DEFAULT_LIMIT, max RECALL_MAX_LIMIT). */
   limit?: number
 }
 
 export interface RecallHit {
   kind: "entry" | "note"
   id: string
-  /** Sequence number for ordering. */
   seq: number
-  /** Author/source subagent. */
-  subagent: SubagentType
-  /** ms since workflow start. */
+  subagent: SubagentType | "orchestrator"
   tMs: number
-  /** Compact excerpt of the body. */
   excerpt: string
-  /** Original full size (chars) of the underlying body. */
   size: number
-  /** Note-only: topic anchor. */
   topic?: string
-  /** Note-only: type. */
   noteType?: WorkflowNote["type"]
-  /** Entry-only: extracted tags. */
   tags?: string[]
 }
 
 export function recall(state: WorkflowMemoryState, q: RecallQuery): RecallHit[] {
   const kind = q.kind ?? "both"
-  const limit = Math.min(Math.max(1, q.limit ?? RECALL_DEFAULT_LIMIT), RECALL_MAX_LIMIT)
+  const limit = Math.min(
+    Math.max(1, q.limit ?? RECALL_DEFAULT_LIMIT),
+    RECALL_MAX_LIMIT,
+  )
   const needle = q.query?.toLowerCase().trim() ?? ""
   const topicNeedle = q.topic?.toLowerCase().trim() ?? ""
 
@@ -231,7 +177,6 @@ export function recall(state: WorkflowMemoryState, q: RecallQuery): RecallHit[] 
     for (const e of state.entries) {
       if (q.subagent && e.subagent !== q.subagent) continue
       if (needle.length > 0 && !entryMatches(e, needle)) continue
-      // topic filter doesn't apply to entries; skip if topic was the only filter
       if (q.topic && needle.length === 0 && !q.subagent) continue
       hits.push({
         kind: "entry",
@@ -266,48 +211,12 @@ export function recall(state: WorkflowMemoryState, q: RecallQuery): RecallHit[] 
     }
   }
 
-  // Sort by time (newest first) — recency is usually more relevant for recall.
   hits.sort((a, b) => b.tMs - a.tMs)
   return hits.slice(0, limit)
 }
 
 /**
- * v0.20 — Mark an entry as superseded by a later re-frame. History is
- * preserved (entries remain in the log); the marker tells downstream consumers
- * the entry no longer represents current understanding.
- *
- * Returns true if the entry was found and marked, false if no such id.
- */
-export function markEntrySuperseded(
-  state: WorkflowMemoryState,
-  id: string,
-  reason: string,
-  byId?: string,
-): boolean {
-  for (const e of state.entries) {
-    if (e.id === id) {
-      e.superseded = byId ? { byId, reason } : { reason }
-      return true
-    }
-  }
-  return false
-}
-
-/**
- * v0.20 — Find the latest non-superseded frame entry. Used by
- * frame-validity-check and the re-frame mechanism.
- */
-export function latestFrame(state: WorkflowMemoryState): WorkflowEntry | undefined {
-  for (let i = state.entries.length - 1; i >= 0; i--) {
-    const e = state.entries[i]!
-    if (e.subagent === "frame" && !e.superseded) return e
-  }
-  return undefined
-}
-
-/**
- * Fetch the full body of an entry or note by id. Used for follow-up reads
- * after the excerpt-based recall surfaces a candidate.
+ * Fetch the full body of an entry or note by id.
  */
 export function getFull(
   state: WorkflowMemoryState,
@@ -343,10 +252,6 @@ function noteMatches(n: WorkflowNote, needle: string): boolean {
   return false
 }
 
-/**
- * Produce a short excerpt of body for recall results. Centers around the
- * match when needle is present; otherwise returns the head.
- */
 function makeExcerpt(body: string, needle: string): string {
   if (body.length <= RECALL_EXCERPT_CHARS) return body
   if (needle.length === 0) {
@@ -364,10 +269,6 @@ function makeExcerpt(body: string, needle: string): string {
   return prefix + body.slice(start, end).trim() + suffix
 }
 
-/**
- * Best-effort cut point for entry truncation: prefer paragraph boundary, then
- * line boundary, then word boundary, falling back to hard cut.
- */
 function bestCutAt(text: string, max: number): number {
   if (text.length <= max) return text.length
   const slice = text.slice(0, max)
@@ -380,484 +281,23 @@ function bestCutAt(text: string, max: number): number {
   return max
 }
 
-/**
- * v0.20 — Parse the unknown-note content convention:
- *   "Q: <question> | I: <investigation> | S: open|resolved|deferred | E: <evidence>"
- *
- * v0.21 — Extended with optional resolvability classification:
- *   "Q: ... | I: ... | S: open | R: pre_design|user_input|accept_risk | E: ..."
- *
- * Permissive: returns `undefined` for status/resolvability when the content
- * doesn't follow the convention. Callers that need strict parsing should
- * check for `undefined`.
- */
-export interface ParsedUnknown {
-  question?: string
-  investigation?: string
-  status?: UnknownStatus
-  resolvability?: UnknownResolvability
-  evidence?: string
-}
-
-/** Built from UNKNOWN_STATUS_VALUES so adding a new status updates the regex automatically. */
-const UNKNOWN_STATUS_RE = new RegExp(`\\bS:\\s*(${UNKNOWN_STATUS_VALUES.join("|")})\\b`, "i")
-
-/** Built from UNKNOWN_RESOLVABILITY_VALUES so adding a new resolvability updates the regex automatically. */
-const UNKNOWN_RESOLVABILITY_RE = new RegExp(
-  `\\bR:\\s*(${UNKNOWN_RESOLVABILITY_VALUES.join("|")})\\b`,
-  "i",
-)
-
-export function parseUnknownStatus(content: string): UnknownStatus | undefined {
-  const m = UNKNOWN_STATUS_RE.exec(content)
-  if (!m) return undefined
-  const raw = m[1]!.toLowerCase()
-  // Type-safe narrowing — verify the parsed string is actually a known status.
-  for (const s of UNKNOWN_STATUS_VALUES) {
-    if (s === raw) return s
-  }
-  return undefined
-}
-
-export function parseUnknownResolvability(
-  content: string,
-): UnknownResolvability | undefined {
-  const m = UNKNOWN_RESOLVABILITY_RE.exec(content)
-  if (!m) return undefined
-  const raw = m[1]!.toLowerCase()
-  for (const r of UNKNOWN_RESOLVABILITY_VALUES) {
-    if (r === raw) return r
-  }
-  return undefined
-}
-
-export function parseUnknownNote(content: string): ParsedUnknown {
-  const out: ParsedUnknown = {}
-  const qMatch = /\bQ:\s*([^|]+?)(?:\s*\||$)/.exec(content)
-  if (qMatch?.[1]) out.question = qMatch[1].trim()
-  const iMatch = /\bI:\s*([^|]+?)(?:\s*\||$)/.exec(content)
-  if (iMatch?.[1]) out.investigation = iMatch[1].trim()
-  const status = parseUnknownStatus(content)
-  if (status) out.status = status
-  const resolvability = parseUnknownResolvability(content)
-  if (resolvability) out.resolvability = resolvability
-  const eMatch = /\bE:\s*([^|]+?)(?:\s*\||$)/.exec(content)
-  if (eMatch?.[1]) out.evidence = eMatch[1].trim()
-  return out
-}
-
-/**
- * v0.21 — Parse a prediction-observation note content:
- *   "V: confirmed|contradicted|inconclusive | E: <evidence>"
- *
- * Researchers (librarian/explore/edgecases/synthesis) emit these against
- * a topic that matches a prediction's topic (P1, P2, ...). The verdict
- * drives the reconciliation table at synthesis time.
- */
-export interface ParsedPredictionObservation {
-  verdict?: PredictionVerdict
-  evidence?: string
-}
-
-const PREDICTION_VERDICT_RE = new RegExp(
-  `\\bV:\\s*(${PREDICTION_VERDICT_VALUES.join("|")})\\b`,
-  "i",
-)
-
-export function parsePredictionObservation(content: string): ParsedPredictionObservation {
-  const out: ParsedPredictionObservation = {}
-  const vMatch = PREDICTION_VERDICT_RE.exec(content)
-  if (vMatch?.[1]) {
-    const raw = vMatch[1].toLowerCase()
-    for (const v of PREDICTION_VERDICT_VALUES) {
-      if (v === raw) {
-        out.verdict = v
-        break
-      }
-    }
-  }
-  const eMatch = /\bE:\s*([^|]+?)(?:\s*\||$)/.exec(content)
-  if (eMatch?.[1]) out.evidence = eMatch[1].trim()
-  return out
-}
-
-/**
- * v0.21 — Parse an insufficiency-note content:
- *   "M: <mechanism> | I: <named insufficiency reason>"
- *
- * Frame and plan emit these to document rejected existing mechanisms with
- * the specific constraint that makes each one insufficient. The reviewer
- * checks that every insufficiency-noted mechanism is addressed in the plan.
- */
-export interface ParsedInsufficiency {
-  mechanism?: string
-  insufficiencyReason?: string
-}
-
-export function parseInsufficiency(content: string): ParsedInsufficiency {
-  const out: ParsedInsufficiency = {}
-  const mMatch = /\bM:\s*([^|]+?)(?:\s*\||$)/.exec(content)
-  if (mMatch?.[1]) out.mechanism = mMatch[1].trim()
-  const iMatch = /\bI:\s*([^|]+?)(?:\s*\||$)/.exec(content)
-  if (iMatch?.[1]) out.insufficiencyReason = iMatch[1].trim()
-  return out
-}
-
-/**
- * v0.20 — Group all unknown notes by topic. For each topic, take the latest
- * note (max tMs) and report its status. Returns grouped buckets.
- *
- * v0.21 — Added `byResolvability` secondary grouping (only includes entries
- * with a parseable resolvability). Drives orchestrator gating: open +
- * pre_design unknowns block plan; open + user_input unknowns trigger
- * question() gate at unknowns-auditor.
- */
-export interface UnknownsStatusReport {
-  open: UnknownsStatusEntry[]
-  resolved: UnknownsStatusEntry[]
-  deferred: UnknownsStatusEntry[]
-  unparseable: UnknownsStatusEntry[]
-  byResolvability: {
-    pre_design: UnknownsStatusEntry[]
-    user_input: UnknownsStatusEntry[]
-    accept_risk: UnknownsStatusEntry[]
-    unclassified: UnknownsStatusEntry[]
-  }
-}
-
-export interface UnknownsStatusEntry {
-  topic: string
-  latestNoteId: string
-  author: SubagentType
-  question?: string
-  investigation?: string
-  evidence?: string
-  status?: UnknownStatus
-  resolvability?: UnknownResolvability
-  rawContent: string
-}
-
-export function unknownsStatus(state: WorkflowMemoryState): UnknownsStatusReport {
-  // Group notes by topic, keep latest per topic. Latest = highest tMs, with
-  // append order (state.notes array order) as the tiebreaker — within the
-  // same millisecond, later writes win.
-  const latestByTopic = new Map<string, WorkflowNote>()
-  for (const n of state.notes) {
-    if (n.type !== NOTE_TYPES.unknown) continue
-    const prev = latestByTopic.get(n.topic)
-    // Newer (n.tMs >= prev.tMs) — using >= ensures append-order tiebreak
-    if (!prev || n.tMs >= prev.tMs) latestByTopic.set(n.topic, n)
-  }
-
-  const report: UnknownsStatusReport = {
-    open: [],
-    resolved: [],
-    deferred: [],
-    unparseable: [],
-    byResolvability: {
-      pre_design: [],
-      user_input: [],
-      accept_risk: [],
-      unclassified: [],
-    },
-  }
-
-  for (const n of latestByTopic.values()) {
-    const parsed = parseUnknownNote(n.content)
-    const entry: UnknownsStatusEntry = {
-      topic: n.topic,
-      latestNoteId: n.id,
-      author: n.author,
-      question: parsed.question,
-      investigation: parsed.investigation,
-      evidence: parsed.evidence,
-      status: parsed.status,
-      resolvability: parsed.resolvability,
-      rawContent: n.content,
-    }
-    switch (parsed.status) {
-      case UNKNOWN_STATUSES.open:
-        report.open.push(entry)
-        break
-      case UNKNOWN_STATUSES.resolved:
-        report.resolved.push(entry)
-        break
-      case UNKNOWN_STATUSES.deferred:
-        report.deferred.push(entry)
-        break
-      default:
-        report.unparseable.push(entry)
-    }
-    switch (parsed.resolvability) {
-      case UNKNOWN_RESOLVABILITY.pre_design:
-        report.byResolvability.pre_design.push(entry)
-        break
-      case UNKNOWN_RESOLVABILITY.user_input:
-        report.byResolvability.user_input.push(entry)
-        break
-      case UNKNOWN_RESOLVABILITY.accept_risk:
-        report.byResolvability.accept_risk.push(entry)
-        break
-      default:
-        report.byResolvability.unclassified.push(entry)
-    }
-  }
-
-  return report
-}
-
-/**
- * v0.21 — Reconcile predictions against researcher observations.
- *
- * For each prediction note (frame writes type=prediction with topic=P<n>),
- * scan observation notes with the same topic. Latest observation per topic
- * wins (max tMs, append-order tiebreak via `>=`). Predictions with no
- * observation are reported under `unobserved` (treated as inconclusive by
- * the orchestrator and synthesis prompt).
- */
-export interface PredictionReconciliationReport {
-  confirmed: PredictionReconciliationEntry[]
-  contradicted: PredictionReconciliationEntry[]
-  inconclusive: PredictionReconciliationEntry[]
-  unobserved: PredictionReconciliationEntry[]
-}
-
-export interface PredictionReconciliationEntry {
-  topic: string
-  predictionNoteId: string
-  predictionContent: string
-  observationNoteId?: string
-  observationAuthor?: SubagentType
-  verdict?: PredictionVerdict
-  evidence?: string
-}
-
-export function predictionReconciliation(
-  state: WorkflowMemoryState,
-): PredictionReconciliationReport {
-  // Index latest observation per topic (only observation notes with V: field).
-  const latestObsByTopic = new Map<string, WorkflowNote>()
-  for (const n of state.notes) {
-    if (n.type !== NOTE_TYPES.observation) continue
-    const prev = latestObsByTopic.get(n.topic)
-    if (!prev || n.tMs >= prev.tMs) latestObsByTopic.set(n.topic, n)
-  }
-
-  // For each prediction (latest per topic), look up observation.
-  const latestPredByTopic = new Map<string, WorkflowNote>()
-  for (const n of state.notes) {
-    if (n.type !== NOTE_TYPES.prediction) continue
-    const prev = latestPredByTopic.get(n.topic)
-    if (!prev || n.tMs >= prev.tMs) latestPredByTopic.set(n.topic, n)
-  }
-
-  const report: PredictionReconciliationReport = {
-    confirmed: [],
-    contradicted: [],
-    inconclusive: [],
-    unobserved: [],
-  }
-
-  for (const pred of latestPredByTopic.values()) {
-    const obs = latestObsByTopic.get(pred.topic)
-    if (!obs) {
-      report.unobserved.push({
-        topic: pred.topic,
-        predictionNoteId: pred.id,
-        predictionContent: pred.content,
-      })
-      continue
-    }
-    const parsed = parsePredictionObservation(obs.content)
-    const entry: PredictionReconciliationEntry = {
-      topic: pred.topic,
-      predictionNoteId: pred.id,
-      predictionContent: pred.content,
-      observationNoteId: obs.id,
-      observationAuthor: obs.author,
-      verdict: parsed.verdict,
-      evidence: parsed.evidence,
-    }
-    switch (parsed.verdict) {
-      case PREDICTION_VERDICTS.confirmed:
-        report.confirmed.push(entry)
-        break
-      case PREDICTION_VERDICTS.contradicted:
-        report.contradicted.push(entry)
-        break
-      case PREDICTION_VERDICTS.inconclusive:
-        report.inconclusive.push(entry)
-        break
-      default:
-        // Parseable observation note exists but verdict is missing/invalid.
-        // Treat as inconclusive (signal exists, conclusion is absent).
-        report.inconclusive.push(entry)
-    }
-  }
-
-  return report
-}
-
-/**
- * v0.22 — Parse a frame's `## Predictions` section into the (topic, content)
- * tuples that the workflow_note tool would have written. Used by the
- * tool.execute.after hook as a fallback: if the subagent's tool calls
- * dropped its predictions (e.g. parent-resolution regression), the hook
- * synthesizes the notes from the rendered markdown so the predict-observe-
- * compare loop still has its comparison targets.
- *
- * Recognized bullet shapes (all start with `-` or `*`):
- *   - P1: I expect X because Y. Wrong if: Z.
- *   - **P1**: I expect X. Wrong if: Z.
- *
- * The synthesized note content matches frame.md's prescribed convention:
- *   "<claim> | Wrong if: <observable falsifier>"
- *
- * Permissive: skips lines that don't match P<n> pattern or that lack the
- * `Wrong if:` falsifier (incomplete predictions are not synthesized; they
- * would fail the v0.21 contract anyway).
- */
-export interface ParsedFramePrediction {
-  topic: string
-  content: string
-}
-
-export function parseFramePredictions(output: string): ParsedFramePrediction[] {
-  const section = /##\s*Predictions\s*\n([\s\S]*?)(?:\n##\s+|$)/i.exec(output)
-  if (!section?.[1]) return []
-  const body = section[1]
-  const out: ParsedFramePrediction[] = []
-  // Match a P-numbered bullet line and continuation lines (up to next bullet or blank line).
-  // Permissive: P<n> may appear after optional **bold** wrapping and ":" separator.
-  const lineRe = /^[\s>]*[-*]\s+(?:\*\*)?P(\d+)(?:\*\*)?\s*[:.\-—]\s*(.+?)\s*$/gm
-  for (const m of body.matchAll(lineRe)) {
-    const topic = `p${m[1]}`
-    const rest = (m[2] ?? "").trim()
-    const wrongIfMatch = /\bWrong\s+if\s*:\s*(.+?)\s*\.?\s*$/i.exec(rest)
-    if (!wrongIfMatch?.[1]) continue
-    const claim = rest.slice(0, wrongIfMatch.index).replace(/[\s.,;:|—-]+$/, "").trim()
-    const falsifier = wrongIfMatch[1].trim().replace(/\.$/, "")
-    if (claim.length === 0 || falsifier.length === 0) continue
-    const content = `${claim} | Wrong if: ${falsifier}`.slice(0, NOTE_MAX_CHARS)
-    out.push({ topic, content })
-  }
-  return out
-}
-
-/**
- * v0.22 — Parse a frame's `## Open Questions` section into unknown-note
- * tuples. Recognized bullet shape (per frame.md):
- *
- *   - U1: <question> | R: <resolvability> — why it changes the plan: <one line>
- *
- * The synthesized note content matches the Q/I/S/R/E convention:
- *   "Q: <question> | I: pending | S: open | R: <resolvability> | E: "
- *
- * If R: is missing or unparseable, the unknown is still synthesized but
- * without the resolvability classifier (caller falls back to unclassified).
- */
-export interface ParsedFrameUnknown {
-  topic: string
-  content: string
-}
-
-export function parseFrameUnknowns(output: string): ParsedFrameUnknown[] {
-  const section = /##\s*Open Questions\s*\n([\s\S]*?)(?:\n##\s+|$)/i.exec(output)
-  if (!section?.[1]) return []
-  const body = section[1]
-  const out: ParsedFrameUnknown[] = []
-  const lineRe = /^[\s>]*[-*]\s+(?:\*\*)?U(\d+)(?:\*\*)?\s*[:.\-—]\s*(.+?)\s*$/gm
-  for (const m of body.matchAll(lineRe)) {
-    const topic = `u${m[1]}`
-    const rest = (m[2] ?? "").trim()
-    // Try to extract the question (text up to first `|` or `—`).
-    const sepIdx = (() => {
-      const pipe = rest.indexOf("|")
-      const emdash = rest.indexOf("—")
-      if (pipe < 0) return emdash
-      if (emdash < 0) return pipe
-      return Math.min(pipe, emdash)
-    })()
-    const question = (sepIdx >= 0 ? rest.slice(0, sepIdx) : rest).trim().replace(/[?.]$/, "")
-    if (question.length === 0) continue
-    const rMatch = /\bR\s*:\s*(pre_design|user_input|accept_risk)\b/i.exec(rest)
-    const rField = rMatch?.[1]?.toLowerCase()
-    const content = (
-      rField
-        ? `Q: ${question} | I: pending | S: open | R: ${rField} | E: `
-        : `Q: ${question} | I: pending | S: open | E: `
-    ).slice(0, NOTE_MAX_CHARS)
-    out.push({ topic, content })
-  }
-  return out
-}
-
-/**
- * v0.22 — Parse a frame's `## Existing Solutions Check` section for
- * Insufficient verdicts. Recognized bullet shape (per frame.md):
- *
- *   - **<mechanism>** — Insufficient: <named constraint>
- *   - **<mechanism>** — Sufficient: <how to extend>  (NOT synthesized)
- *
- * Only Insufficient bullets become notes (Sufficient bullets are the default
- * stance and require no note). Synthesized content matches the prescribed
- * convention: "M: <mechanism> | I: <named constraint>".
- */
-export interface ParsedFrameInsufficiency {
-  topic: string
-  content: string
-}
-
-export function parseFrameInsufficiencies(output: string): ParsedFrameInsufficiency[] {
-  const section = /##\s*Existing Solutions Check\s*(?:\(re-affirmed\))?\s*\n([\s\S]*?)(?:\n##\s+|$)/i.exec(
-    output,
-  )
-  if (!section?.[1]) return []
-  const body = section[1]
-  const out: ParsedFrameInsufficiency[] = []
-  // Match bullet with bolded mechanism name and Insufficient verdict.
-  // Permissive on the dash: allow `—`, `--`, or `-` between name and verdict.
-  const lineRe =
-    /^[\s>]*[-*]\s+\*\*([^*]+?)\*\*\s*(?:—|--|-)\s*Insufficient\s*:\s*(.+?)\s*$/gim
-  for (const m of body.matchAll(lineRe)) {
-    const mechanism = (m[1] ?? "").trim()
-    const reason = (m[2] ?? "").trim()
-    if (mechanism.length === 0 || reason.length === 0) continue
-    const topic = mechanism.toLowerCase().slice(0, NOTE_TOPIC_MAX_CHARS)
-    const content = `M: ${mechanism} | I: ${reason}`.slice(0, NOTE_MAX_CHARS)
-    out.push({ topic, content })
-  }
-  return out
-}
-
-/**
- * Extract tags from a subagent output for indexing. Pulls:
- *   - markdown section headings (## Foo, ### Bar)
- *   - bolded leading terms (**Key insight**, **Verdict**)
- *   - inline-code identifiers (`<file:line>` shapes — limited)
- *
- * Lowercased, deduped, capped at MAX_TAGS.
- */
 const MAX_TAGS = 25
 function extractTags(text: string): string[] {
   const tags = new Set<string>()
 
-  // Headings: ## foo or ### bar
   const headingRe = /^#{2,6}\s+(.+?)\s*$/gm
   for (const m of text.matchAll(headingRe)) {
     const raw = (m[1] ?? "").trim().toLowerCase()
     if (raw.length > 0 && raw.length <= 80) tags.add(raw)
   }
 
-  // Bold leading terms: **Foo:** or **Foo**
   const boldLeadRe = /\*\*([^*]+?)\*\*\s*:/g
   for (const m of text.matchAll(boldLeadRe)) {
     const raw = (m[1] ?? "").trim().toLowerCase()
     if (raw.length > 0 && raw.length <= 60) tags.add(raw)
   }
 
-  // Specific verdict words that drive workflow routing.
-  const verdictRe = /\b(verdict|picked|delta unchanged|sources are consistent|key insight)\b/gi
+  const verdictRe = /\b(verdict|picked|key insight)\b/gi
   for (const m of text.matchAll(verdictRe)) {
     const w = (m[1] ?? "").toLowerCase()
     if (w) tags.add(w)
