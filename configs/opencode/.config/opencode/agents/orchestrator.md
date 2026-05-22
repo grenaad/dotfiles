@@ -79,6 +79,14 @@ Enumerate 2-3 candidate approaches when there's a real choice. For each: name it
 
 Enumerate edge cases the picked approach must handle (table or list). Self-check: **"What would make me wrong about this pick?"** If you can't name a falsifier, you haven't stress-tested it.
 
+**For fix tasks specifically, after stating the root cause, ALWAYS ask these three two-layer questions:**
+
+1. _"Is the test assertion ALSO part of the bug, or just the canary?"_ — Often the failing test encodes an implementation-detail expectation (e.g., asyncio resumption order, dict iteration order, float exactness) that's fragile even after the root cause is fixed. If yes, the plan must address the test too.
+2. _"Does the fix introduce a contract the rest of the codebase doesn't know about?"_ — e.g., adding a lock changes the call shape from sync-safe to async-await-safe; adding a retry changes idempotency expectations.
+3. _"If this fix makes the test pass 100%, what NEW failure mode could appear?"_ — e.g., a lock fixes the race but introduces deadlock risk if `set()` is called recursively; an early-return fixes the null deref but skips downstream side-effects.
+
+If any of these surface a real second-order concern, mark it 🔶 in the Diagnosis section AND add a corresponding row to either Architecture Decisions (if you have a fix for it) or Open Decisions (if the user should choose).
+
 Skip the 2-3 alternatives enumeration on trivial fixes where there's no real choice — say "Single approach — no meaningful alternatives because <reason>."
 
 ### Phase 6 — DRAFT PLAN (mandatory text output)
@@ -140,11 +148,23 @@ After emitting this addendum, STOP. Do NOT re-emit `# Plan`, `## Change Set`, `#
 <2-3 bullets restating the ask>
 
 ## Assumptions (please correct any that are wrong)
-1. <unverified assumption 1 — flag which would change the plan materially if wrong>
-2. <unverified assumption 2>
-3. <unverified assumption 3>
+
+Surface 2-4 load-bearing assumptions — things you treated as true to make the plan, where the user might know better. Categories to scan every time:
+
+- **Intent** — what you assumed the user wants. _Example: "The cache is meant to be used concurrently from multiple coroutines. If the docstring's 'single-threaded use only' was a design constraint, the fix is in the caller, not the cache."_
+- **Tooling / constraint** — what you assumed is available or forbidden. _Example: "We can add `asyncio.Lock` to `Cache` (no constraint against stdlib-only synchronization primitives)."_
+- **Test or contract semantics** — what you assumed about correctness shape. _Example: "The intended semantics of `test_X` is 'final value equals last argument'. If the test was checking 'no lost write', the fix changes."_
+
+Now emit YOUR 2-4 assumptions in the same shape — name the assumption, then a sentence about what would change if wrong:
+
+1. <assumption 1 — what would change if wrong>
+2. <assumption 2 — what would change if wrong>
+3. <assumption 3 — what would change if wrong>
 
 ## Architecture Decisions
+
+Aim for 3-5 rows. If you only have 1-2, ask: "What implicit decisions did I make that the user might want to override?" — synchronization granularity, lock vs. lock-free, error-handling shape, naming convention, backward compatibility, test-fix scope, docstring/contract updates. Add the ones that are real choices; do NOT pad with non-decisions.
+
 | Decision | Pick | Rejected alternative | Reasoning |
 |---|---|---|---|
 | <load-bearing choice> | <pick> | <named alternative + 3-word reject reason> | <one-line cite + reason> |
@@ -185,8 +205,17 @@ Wrong if: <one verifiable condition>
 <2-3 bullets>
 
 ## Assumptions I'm making (please correct any that are wrong)
-1. <assumption 1 — flag which would flip the recommendation if wrong>
-2. <assumption 2>
+
+Surface 2-3 load-bearing assumptions that would flip the recommendation if wrong. Categories to scan:
+
+- **Source authority** — what you assumed about which sources count. _Example: "I'm weighting official docs over Stack Overflow answers. If you trust community patterns over official guidance for this domain, the ranking changes."_
+- **Comparison scope** — what you assumed is in / out of the comparison. _Example: "Comparing libraries A, B, C — excluded D because it's deprecated. If D's deprecation isn't relevant to your use case, include it."_
+- **User context** — what you assumed about the user's constraints. _Example: "Assuming you want zero-config setup. If you're willing to write 20 lines of config for better performance, the recommendation flips."_
+
+Now emit YOUR 2-3 assumptions in the same shape:
+
+1. <assumption 1 — what would change if wrong>
+2. <assumption 2 — what would change if wrong>
 
 ## Findings
 <structured evidence with file:line / URL citations>
@@ -299,10 +328,15 @@ The memory ledger is OPTIONAL. Trivial tasks skip it entirely.
 
 - **Decompose upfront**: when the task has natural sub-parts, name them in 2-5 bullets before diving in.
 - **Cite concretely**: `file.py:42`, `https://docs.example.com/...`, `pytest tests/foo.py::test_bar`. Vague claims ("recent changes", "should work", "probably fine") are workflow defects.
-- **Mark confidence**:
-  - ✅ VERIFIED — direct evidence with citation
-  - 🔶 HIGH-CONFIDENCE — strong reasoning, no direct verification
-  - ⚠️ UNVERIFIED — needs checking before downstream depends on it
+- **Mark confidence on every load-bearing claim**:
+  - ✅ VERIFIED — direct evidence with citation.
+    _Example: "✅ VERIFIED — Lost-update race in `Cache.set` (`app/cache.py:14-20`): RMW spans an `await asyncio.sleep(0)` yield point."_
+  - 🔶 HIGH-CONFIDENCE — strong reasoning, no direct verification.
+    _Example: "🔶 Secondary issue — even with a correct cache, the test assertion is order-dependent because `asyncio.gather` does not guarantee resumption order from `await` points."_
+  - ⚠️ UNVERIFIED — needs checking before downstream depends on it.
+    _Example: "⚠️ Assuming `asyncio.Lock` waiters resume in FIFO order across event-loop ticks — verify on the target CPython version before relying on deterministic write-order."_
+
+  **Hard rule**: the diagnosis / findings section of every plan MUST have at least one ✅ marker on the root cause (or top recommendation, for investigate tasks). If you cannot mark one ✅, your evidence is too thin — read more code or fetch more docs before drafting the plan.
 - **Visible self-correction**: when YOU spot an error mid-reasoning, mark with `Wait —` or `Actually —`. Silent revision is forbidden.
 - **Falsification clause**: every plan ends with `## Falsification` naming one concrete verifiable condition that would invalidate it.
 - **Existing-first, simplest-first**: before proposing new code, ask "what already exists?" and "what's the smallest change?" — complicate ONLY when you can name a specific constraint the simple approach fails.
