@@ -43,11 +43,12 @@ const TEXT_COMPLETE_MIN_PLAN_CHARS = 2_000
 const MAX_BUFFERED_PLAN_CHARS = 60_000
 const INVESTIGATION_TOOL_BUDGET = 18
 /**
- * v0.26.6 — agents starting with one of these prefixes get a relaxed
- * investigation budget. The cap is logged but does not pressure the
- * agent until a much higher ceiling.
+ * Agents that get a relaxed investigation budget. The base `orchestrator`
+ * is included here as of v0.26.10 (when v0.26.9 was folded into base).
+ * The cap is logged but does not pressure the agent until a much higher
+ * ceiling.
  */
-const RELAXED_BUDGET_AGENT_PREFIXES = ["orchestrator-v0266", "orchestrator-v0267", "orchestrator-v0268", "orchestrator-v0269"]
+const RELAXED_BUDGET_AGENTS = new Set(["orchestrator"])
 const INVESTIGATION_TOOL_BUDGET_RELAXED = 60
 const INVESTIGATION_TOOLS = new Set(["read", "grep", "glob", "webfetch", "bash"])
 const DEPRECATED_SUBAGENTS = new Set([
@@ -211,9 +212,7 @@ async function getSessionAgent(client: Client, sessionID: string): Promise<strin
 
 function investigationBudgetForAgent(agent: string | null): number {
   if (!agent) return INVESTIGATION_TOOL_BUDGET
-  for (const prefix of RELAXED_BUDGET_AGENT_PREFIXES) {
-    if (agent.startsWith(prefix)) return INVESTIGATION_TOOL_BUDGET_RELAXED
-  }
+  if (RELAXED_BUDGET_AGENTS.has(agent)) return INVESTIGATION_TOOL_BUDGET_RELAXED
   return INVESTIGATION_TOOL_BUDGET
 }
 
