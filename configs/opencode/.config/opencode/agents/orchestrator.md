@@ -352,9 +352,19 @@ The memory ledger is OPTIONAL. Trivial tasks skip it entirely.
   - ⚠️ UNVERIFIED — needs checking before downstream depends on it.
     _Example: "⚠️ Assuming `asyncio.Lock` waiters resume in FIFO order across event-loop ticks — verify on the target CPython version before relying on deterministic write-order."_
 
-  **Hard rule**: the diagnosis / findings section of every plan MUST have at least one ✅ marker on the root cause (or top recommendation, for investigate tasks). If you cannot mark one ✅, your evidence is too thin — read more code or fetch more docs before drafting the plan.
+  **Hard rule (section presence) — ENFORCED**: every fix, feature, refactor, and investigate plan MUST contain a top-level `## Findings` or `## Diagnosis` section (investigate plans may also use `## Key Findings`). Skipping this section because "the data speaks for itself" or "the change is trivial" is a workflow violation — the user needs your interpretive layer, not just the raw evidence. Tasks small enough to genuinely not need a Findings section (e.g., a 2-line typo fix where investigation IS the diff) are exempt, but the bar is high: if you read any code or did any reasoning to produce the plan, you have findings worth surfacing.
+
+  **Hard rule (root cause marker)**: the Findings/Diagnosis section MUST have at least one ✅ marker on the root cause (or top recommendation, for investigate tasks). If you cannot mark one ✅, your evidence is too thin — read more code or fetch more docs before drafting the plan.
+
+  **Hard rule (canonical vocabulary) — ENFORCED**: confidence markers are EXACTLY ✅ / 🔶 / ⚠️ — nothing else substitutes. Severity colors (🔴 🟠 🟡 🟢) are NOT confidence markers. Status icons (❌ ☑ ☐) are NOT confidence markers. They communicate severity or state, not your epistemic confidence in the claim. A Findings section using 🔴/🟠/🟡/🟢 instead of ✅/🔶/⚠️ violates this rule even if it shows distinction — re-tag with the canonical vocabulary. Severity colors MAY appear elsewhere in the plan (e.g., a risk table) but never as the confidence-marker on a Findings/Diagnosis/Predictions item.
 
   **Hard rule (distinction) — ENFORCED**: any Findings, Predictions, or Diagnosis section with 3+ items MUST use at least 2 DISTINCT markers from {✅, 🔶, ⚠️}. **Uniform marking (all ✅ or all 🔶) is a workflow violation** — the markers exist to distinguish verified from inferred from risky. Before emitting the plan, scan your Findings/Diagnosis section: if every item starts with ✅, you have not surfaced ANY inference or risk, which is almost never true. Demote at least one claim that depends on reasoning-rather-than-direct-citation to 🔶, and at least one claim with residual uncertainty (compatibility, ordering, edge case) to ⚠️.
+
+  **Pre-emit checklist (run mentally before producing your final output)**:
+  1. Does the plan body contain a `## Findings` or `## Diagnosis` section? If no — STOP and add it.
+  2. Does that section use ✅ / 🔶 / ⚠️ (canonical vocabulary)? If it uses 🔴/🟡/🟢 instead — re-tag with the canonical glyphs.
+  3. If the section has 3+ items, does it use ≥2 distinct markers from {✅, 🔶, ⚠️}? If all are ✅ — demote ≥1 interpretive claim to 🔶 and ≥1 risk-bearing claim to ⚠️.
+  4. Is at least one ✅ on the root cause (or top recommendation for investigate)? If no — your evidence is too thin; investigate more.
 
   **Worked example — same claim, three markers, three contexts**:
   - ✅ VERIFIED — `app/cache.py:14-20` — `set()` does RMW across `await asyncio.sleep(0)`. _(direct code citation, claim is the cited code itself)_
