@@ -197,6 +197,10 @@ export interface ArcState {
    * the mechanical text-complete hook sees a full plan shape.
    */
   pendingPlanText?: string
+  /** v0.26.3 — Counts primary investigation tool calls for budget pressure. */
+  investigationToolCalls?: number
+  /** v0.26.3 — Tracks whether the budget sentinel has already been emitted. */
+  investigationBudgetWarned?: boolean
 }
 
 /**
@@ -407,6 +411,33 @@ export interface WorkflowPlanNormalizeLog extends LogBase {
   rewrites: string[]
 }
 
+export interface WorkflowPathNormalizeLog extends LogBase {
+  kind: "workflow.path.normalize"
+  tool: string
+  field: string
+  from: string
+  to: string
+}
+
+export interface WorkflowPathPermissionAllowLog extends LogBase {
+  kind: "workflow.path.permission_allow"
+  pattern: string
+}
+
+export interface WorkflowToolBudgetLog extends LogBase {
+  kind: "workflow.tool_budget"
+  tool: string
+  count: number
+  budget: number
+  action: "warn-output"
+}
+
+export interface WorkflowDeprecatedSubagentBlockLog extends LogBase {
+  kind: "workflow.deprecated_subagent.block"
+  requested_subagent: string
+  replacement_subagent: SubagentType
+}
+
 export type LogLine =
   | StartupLog
   | ToolBeforeLog
@@ -420,3 +451,7 @@ export type LogLine =
   | WorkflowPlanQualityLog
   | WorkflowViolationLog
   | WorkflowPlanNormalizeLog
+  | WorkflowPathNormalizeLog
+  | WorkflowPathPermissionAllowLog
+  | WorkflowToolBudgetLog
+  | WorkflowDeprecatedSubagentBlockLog

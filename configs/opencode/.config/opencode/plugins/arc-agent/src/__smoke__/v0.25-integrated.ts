@@ -39,6 +39,7 @@ import {
 } from "../types"
 import { detectViolations, __internals as detectorInternals } from "../violation-detector"
 import type { createOpencodeClient } from "@opencode-ai/sdk"
+import { mkdirSync, rmSync } from "node:fs"
 
 type AssertionResult = { name: string; ok: boolean; detail?: string }
 const results: AssertionResult[] = []
@@ -516,6 +517,120 @@ assert("text-complete hook promotes Falsification heading mechanically",
 assert("text-complete hook maps Coverage Analysis to Findings mechanically",
   /^## Findings\b/m.test(normalizeOutput.text),
   normalizeOutput.text)
+
+const pathClient = {
+  session: {
+    get: async ({ path }: { path: { id: string } }) => ({
+      data: {
+        id: path.id,
+        directory: "/var/folders/tg/dtfhp7h93fz_8yg2h94tb0p40000gn/T/opencode/fixture",
+      },
+    }),
+  },
+} as unknown as ReturnType<typeof createOpencodeClient>
+const pathHooks = buildHooks(pathClient)
+const readArgs = {
+  args: {
+    filePath: "/private/var/folders/tg/dtfhp7h93fz_8yg2h94tb0p40000gn/T/opencode/fixture/packages/chart/src/index.ts",
+  },
+}
+await pathHooks["tool.execute.before"]?.(
+  { sessionID: "smoke-v0263-path-normalize", tool: "read", callID: "c1" },
+  readArgs,
+)
+assert("tool hook rewrites /private workspace read path to relative",
+  readArgs.args.filePath === "packages/chart/src/index.ts",
+  `filePath=${readArgs.args.filePath}`)
+const grepArgs = {
+  args: {
+    pattern: "foo",
+    path: "/private/var/folders/tg/dtfhp7h93fz_8yg2h94tb0p40000gn/T/opencode/fixture/packages/chart",
+  },
+}
+await pathHooks["tool.execute.before"]?.(
+  { sessionID: "smoke-v0263-path-normalize", tool: "grep", callID: "c2" },
+  grepArgs,
+)
+assert("tool hook rewrites /private workspace grep path to relative",
+  grepArgs.args.path === "packages/chart",
+  `path=${grepArgs.args.path}`)
+
+const siblingRoot = "/tmp/arc-agent-smoke-sibling-root"
+rmSync(siblingRoot, { recursive: true, force: true })
+mkdirSync(`${siblingRoot}/workspace/fd-core-responses`, { recursive: true })
+const siblingClient = {
+  session: {
+    get: async ({ path }: { path: { id: string } }) => ({
+      data: {
+        id: path.id,
+        directory: `${siblingRoot}/workspace`,
+      },
+    }),
+  },
+} as unknown as ReturnType<typeof createOpencodeClient>
+const siblingHooks = buildHooks(siblingClient)
+const siblingReadArgs = {
+  args: {
+    filePath: `${siblingRoot}/fd-core-responses/src/api/routes.py`,
+  },
+}
+await siblingHooks["tool.execute.before"]?.(
+  { sessionID: "smoke-v0263-sibling-path-normalize", tool: "read", callID: "s1" },
+  siblingReadArgs,
+)
+assert("tool hook rewrites sibling fixture path to workspace relative",
+  siblingReadArgs.args.filePath === "fd-core-responses/src/api/routes.py",
+  `filePath=${siblingReadArgs.args.filePath}`)
+const siblingPermission = { status: "deny" as "ask" | "deny" | "allow" }
+await siblingHooks["permission.ask"]?.(
+  {
+    id: "p1",
+    type: "external_directory",
+    pattern: `${siblingRoot}/fd-core-responses/src/api/*`,
+    sessionID: "smoke-v0263-sibling-path-normalize",
+    messageID: "m1",
+    title: "external",
+    metadata: {},
+    time: { created: Date.now() },
+  },
+  siblingPermission,
+)
+assert("permission hook allows sibling path that maps into workspace",
+  siblingPermission.status === "allow",
+  `status=${siblingPermission.status}`)
+rmSync(siblingRoot, { recursive: true, force: true })
+
+clearState("smoke-v0263-tool-budget")
+const budgetHooks = buildHooks(fakeClient)
+let budgetOutput = { title: "ok", output: "normal", metadata: {} }
+for (let i = 0; i < 19; i++) {
+  budgetOutput = { title: "ok", output: "normal", metadata: {} }
+  await budgetHooks["tool.execute.after"]?.(
+    { sessionID: "smoke-v0263-tool-budget", tool: "read", callID: `b${i}`, args: {} },
+    budgetOutput,
+  )
+}
+assert("tool hook replaces over-budget investigation output with sentinel",
+  budgetOutput.output.includes("TOOL BUDGET EXCEEDED"),
+  budgetOutput.output)
+assert("tool hook tracks investigation tool count",
+  getState("smoke-v0263-tool-budget").investigationToolCalls === 19,
+  `count=${getState("smoke-v0263-tool-budget").investigationToolCalls}`)
+
+const deprecatedTask = {
+  args: {
+    subagent_type: "explore",
+    prompt: "Search the whole repo for data table fields",
+    description: "Explore deprecated path",
+  },
+}
+await budgetHooks["tool.execute.before"]?.(
+  { sessionID: "smoke-v0263-deprecated-subagent", tool: "task", callID: "d1" },
+  deprecatedTask,
+)
+assert("tool hook rewrites deprecated explore subagent to critic no-op",
+  deprecatedTask.args.subagent_type === "critic" && deprecatedTask.args.prompt.includes("Deprecated subagent dispatch blocked: explore"),
+  JSON.stringify(deprecatedTask.args))
 
 clearState("smoke-v0261-text-hook-split")
 const splitHooks = buildHooks(fakeClient)
