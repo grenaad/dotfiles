@@ -201,6 +201,10 @@ export interface ArcState {
   investigationToolCalls?: number
   /** v0.26.3 — Tracks whether the budget sentinel has already been emitted. */
   investigationBudgetWarned?: boolean
+  /** v0.26.7 — File paths the orchestrator has read in this session (basename-normalized). */
+  readFiles?: Set<string>
+  /** v0.26.7 — Grep patterns the orchestrator has searched in this session. */
+  greppedPatterns?: Set<string>
 }
 
 /**
@@ -382,6 +386,7 @@ export type ViolationKind =
   | "uniform-marker-no-escape-note"
   | "compound-causes-no-notes-section"
   | "turn-budget-exceeded"
+  | "falsifier-references-unread-file"
 
 export type ViolationSeverity = "high" | "med" | "low"
 

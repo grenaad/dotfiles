@@ -670,6 +670,57 @@ const childState = getState("smoke-v0261-child")
 assert("text-complete hook skips child/subagent sessions",
   childState.violationsDetected !== true && childState.workflowMemory === undefined)
 
+// --- v0.26.7 falsifier-unread-files detector -----------------------------
+
+{
+  const { detectFalsifierUnreadFiles } = await import("../violation-detector")
+
+  // Plan with falsifier referencing an unread file → violation
+  const planUnread = `
+## Findings
+✅ VERIFIED — Something in app/cache.py:14-20
+
+## Falsification
+Wrong if: \`app/missing.py:42\` shows X, or \`other/unread.ts\` does Y.
+`
+  const readSet1 = new Set(["app/cache.py", "cache.py"])
+  const v1 = detectFalsifierUnreadFiles(planUnread, readSet1)
+  assert("falsifier-unread: flags references to unread files",
+    v1 !== null && v1.kind === "falsifier-references-unread-file",
+    `got ${JSON.stringify(v1)}`)
+
+  // Plan with falsifier referencing a read file → no violation
+  const planRead = `
+## Falsification
+Wrong if: \`app/cache.py:14\` shows no lock.
+`
+  const v2 = detectFalsifierUnreadFiles(planRead, readSet1)
+  assert("falsifier-unread: no violation when all refs were read",
+    v2 === null,
+    `got ${JSON.stringify(v2)}`)
+
+  // Plan with no file refs in falsifier (behavior-only) → no violation
+  const planNoFiles = `
+## Falsification
+Wrong if: the test passes on first run with default config.
+`
+  const v3 = detectFalsifierUnreadFiles(planNoFiles, readSet1)
+  assert("falsifier-unread: no violation when no file refs in section",
+    v3 === null)
+
+  // Empty readFiles → no violation (we can't tell what was read)
+  const v4 = detectFalsifierUnreadFiles(planUnread, undefined)
+  assert("falsifier-unread: no violation when readFiles undefined",
+    v4 === null)
+
+  // Basename match works
+  const readBasenameOnly = new Set(["missing.py"])
+  const v5 = detectFalsifierUnreadFiles(planUnread, readBasenameOnly)
+  assert("falsifier-unread: basename match counts as read",
+    v5 !== null && v5.evidence.includes("other/unread.ts") && !v5.evidence.includes("missing.py"),
+    `got ${v5?.evidence}`)
+}
+
 // --- Summary ---------------------------------------------------------------
 
 const total = results.length

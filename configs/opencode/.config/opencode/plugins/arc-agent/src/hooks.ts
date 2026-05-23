@@ -42,7 +42,14 @@ const DISABLED = process.env[ENV_DISABLE] === "1"
 const TEXT_COMPLETE_MIN_PLAN_CHARS = 2_000
 const MAX_BUFFERED_PLAN_CHARS = 60_000
 const INVESTIGATION_TOOL_BUDGET = 18
-const INVESTIGATION_TOOLS = new Set(["read", "grep", "glob", "webfetch"])
+/**
+ * v0.26.6 — agents starting with one of these prefixes get a relaxed
+ * investigation budget. The cap is logged but does not pressure the
+ * agent until a much higher ceiling.
+ */
+const RELAXED_BUDGET_AGENT_PREFIXES = ["orchestrator-v0266", "orchestrator-v0267", "orchestrator-v0268", "orchestrator-v0269"]
+const INVESTIGATION_TOOL_BUDGET_RELAXED = 60
+const INVESTIGATION_TOOLS = new Set(["read", "grep", "glob", "webfetch", "bash"])
 const DEPRECATED_SUBAGENTS = new Set([
   "frame",
   "librarian",
@@ -182,6 +189,34 @@ async function getSessionDirectory(client: Client, sessionID: string): Promise<s
   }
 }
 
+/**
+ * v0.26.6 — cached lookup of the session's agent slug. Used to pick per-agent
+ * investigation budgets. Returns null if lookup fails.
+ */
+const sessionAgentCache = new Map<string, string | null>()
+
+async function getSessionAgent(client: Client, sessionID: string): Promise<string | null> {
+  const cached = sessionAgentCache.get(sessionID)
+  if (cached !== undefined) return cached
+  try {
+    const result = (await client.session.get({ path: { id: sessionID } })) as SessionGetData
+    const agent = (result.data as { agent?: string } | undefined)?.agent ?? null
+    sessionAgentCache.set(sessionID, agent)
+    return agent
+  } catch {
+    sessionAgentCache.set(sessionID, null)
+    return null
+  }
+}
+
+function investigationBudgetForAgent(agent: string | null): number {
+  if (!agent) return INVESTIGATION_TOOL_BUDGET
+  for (const prefix of RELAXED_BUDGET_AGENT_PREFIXES) {
+    if (agent.startsWith(prefix)) return INVESTIGATION_TOOL_BUDGET_RELAXED
+  }
+  return INVESTIGATION_TOOL_BUDGET
+}
+
 function normalizeWorkspacePath(raw: string, directory: string): string | null {
   const value = privateAlias(raw)
   const root = privateAlias(directory)
@@ -219,9 +254,9 @@ function isPathToolArgs(x: unknown): x is PathToolArgs {
   return typeof x === "object" && x !== null
 }
 
-function budgetSentinel(count: number): string {
+function budgetSentinel(count: number, budget: number = INVESTIGATION_TOOL_BUDGET): string {
   return [
-    `TOOL BUDGET EXCEEDED: ${count}/${INVESTIGATION_TOOL_BUDGET} read/search/fetch calls have completed.`,
+    `TOOL BUDGET EXCEEDED: ${count}/${budget} read/search/fetch calls have completed.`,
     "Stop investigating now. Synthesize the plan with the evidence already gathered.",
     "If uncertainty remains, mark it as ⚠️ in Findings and include it in ## Falsification.",
   ].join("\n")
@@ -453,8 +488,10 @@ export function buildHooks(client: Client): Hooks {
           const s = getState(input.sessionID)
           const count = (s.investigationToolCalls ?? 0) + 1
           s.investigationToolCalls = count
-          if (count > INVESTIGATION_TOOL_BUDGET) {
-            output.output = budgetSentinel(count)
+          const agent = await getSessionAgent(client, input.sessionID)
+          const budget = investigationBudgetForAgent(agent)
+          if (count > budget) {
+            output.output = budgetSentinel(count, budget)
             output.title = "tool budget exceeded"
             if (!s.investigationBudgetWarned) {
               s.investigationBudgetWarned = true
@@ -463,9 +500,27 @@ export function buildHooks(client: Client): Hooks {
                 session: input.sessionID,
                 tool: input.tool,
                 count,
-                budget: INVESTIGATION_TOOL_BUDGET,
+                budget,
                 action: "warn-output",
               })
+            }
+          }
+          // v0.26.7 — track read files and grep patterns for falsifier audit.
+          if (input.tool === "read" && isPathToolArgs(input.args)) {
+            const fp = input.args.filePath
+            if (typeof fp === "string") {
+              if (!s.readFiles) s.readFiles = new Set()
+              s.readFiles.add(fp)
+              // also add basename so falsifier text can match either form
+              const base = fp.split("/").pop()
+              if (base) s.readFiles.add(base)
+            }
+          }
+          if (input.tool === "grep" && isPathToolArgs(input.args)) {
+            const pat = (input.args as { pattern?: unknown }).pattern
+            if (typeof pat === "string") {
+              if (!s.greppedPatterns) s.greppedPatterns = new Set()
+              s.greppedPatterns.add(pat)
             }
           }
         }
@@ -551,6 +606,7 @@ export function buildHooks(client: Client): Hooks {
               resetWorkflowMemory(s)
             }
             childSessionCache.delete(props.sessionID)
+            sessionAgentCache.delete(props.sessionID)
             clearState(props.sessionID)
           }
         }

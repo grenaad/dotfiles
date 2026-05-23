@@ -9,7 +9,7 @@
 import { ensureWorkflowMemory } from "./state"
 import { log } from "./log"
 import { appendNote } from "./workflow-memory"
-import { detectViolations } from "./violation-detector"
+import { detectViolations, detectFalsifierUnreadFiles } from "./violation-detector"
 import type { ArcState, SubagentType, TaskType, Violation } from "./types"
 
 /** v0.26: per-workflow cap on violation notes. */
@@ -31,6 +31,10 @@ export async function detectAndPersistViolations(input: {
   source: ViolationDetectionSource
 }): Promise<ViolationPipelineResult> {
   const violations = detectViolations(input.plan, input.taskType)
+  // v0.26.7 — falsifier-references-unread-file detector. Needs ArcState's
+  // readFiles set, so it lives outside the pure detector list.
+  const falsifierViolation = detectFalsifierUnreadFiles(input.plan, input.state.readFiles)
+  if (falsifierViolation) violations.push(falsifierViolation)
   const dispatched: SubagentType[] = []
   let capHit = false
 

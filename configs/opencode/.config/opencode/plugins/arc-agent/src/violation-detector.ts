@@ -262,6 +262,51 @@ export function detectViolations(plan: string, _taskType: TaskType): Violation[]
   return violations
 }
 
+/**
+ * v0.26.7 — detect Falsification bullets referencing files the orchestrator
+ * never opened. Soft-mode: returns a violation; the pipeline writes a note
+ * but does not rewrite the plan.
+ *
+ * Algorithm:
+ *   1. Extract `## Falsification` section body (case-sensitive).
+ *   2. Regex out file-like tokens: `<word>.<ext>` with optional `:<line>` suffix.
+ *   3. For each token, check whether it (or its basename) appears in
+ *      `readFiles`. If none of the falsifier file refs were read, the
+ *      falsifier is vestigial.
+ *   4. Skip if Falsification section is empty or contains no file refs
+ *      (a non-file-shaped falsifier like "wrong if behavior X" is fine).
+ */
+const FALSIFIER_FILE_RE = /\b[\w./-]+\.(?:ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cpp|cc|h|hpp|md|toml|yaml|yml|json|sh|sql|graphql|proto|css|scss|html|vue|svelte)(?::\d+(?:-\d+)?)?\b/g
+
+export function detectFalsifierUnreadFiles(plan: string, readFiles: Set<string> | undefined): Violation | null {
+  if (!readFiles || readFiles.size === 0) return null
+  const body = sectionBody(plan, "Falsification")
+  if (!body) return null
+  const refs = new Set<string>()
+  let m: RegExpExecArray | null
+  FALSIFIER_FILE_RE.lastIndex = 0
+  while ((m = FALSIFIER_FILE_RE.exec(body)) !== null) {
+    const raw = m[0].split(":")[0]!
+    refs.add(raw)
+  }
+  if (refs.size === 0) return null
+  // Resolve each ref: it's "read" if either the full path or basename appears
+  // in readFiles.
+  const unread: string[] = []
+  for (const ref of refs) {
+    const base = ref.split("/").pop() ?? ref
+    if (!readFiles.has(ref) && !readFiles.has(base)) {
+      unread.push(ref)
+    }
+  }
+  if (unread.length === 0) return null
+  return {
+    kind: "falsifier-references-unread-file",
+    severity: "med",
+    evidence: `Falsification references unread files: ${unread.slice(0, 5).join(", ")}${unread.length > 5 ? ` (+${unread.length - 5} more)` : ""}`,
+  }
+}
+
 // Re-exports for unit tests.
 export const __internals = {
   stripFencedBlocks,
