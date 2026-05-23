@@ -28,6 +28,9 @@ export const CEILINGS = {
   "confidence-auditor": 18_000,
   "cost-checker": 12_000,
   falsifier: 10_000,
+  // v0.26: new violation-driven auditors. Ceilings tuned to plan-body size.
+  "unverified-auditor": 18_000,
+  "compound-cause-auditor": 18_000,
 } as const
 
 export type SubagentType = keyof typeof CEILINGS
@@ -93,6 +96,9 @@ export const NOTE_TYPE_AUTHORIZATION: Record<string, ReadonlyArray<NoteType>> = 
   "confidence-auditor": [NOTE_TYPES.observation, NOTE_TYPES.concern],
   "cost-checker": [NOTE_TYPES.observation, NOTE_TYPES.concern],
   falsifier: [NOTE_TYPES.concern],
+  // v0.26: violation-driven auditors emit concerns (corrections) only.
+  "unverified-auditor": [NOTE_TYPES.concern],
+  "compound-cause-auditor": [NOTE_TYPES.concern],
 }
 
 /**
@@ -180,6 +186,17 @@ export interface ArcState {
    * workflow (idempotency for the orchestrator-turn heuristic detection).
    */
   planQualityMeasured?: boolean
+  /**
+   * v0.26.1 — Tracks whether mechanical violation detection already ran for
+   * this workflow. Prevents duplicate notes if the plan is split across
+   * multiple completed text parts.
+   */
+  violationsDetected?: boolean
+  /**
+   * v0.26.1 — Accumulates plan text across split assistant text parts until
+   * the mechanical text-complete hook sees a full plan shape.
+   */
+  pendingPlanText?: string
 }
 
 /**
@@ -345,6 +362,51 @@ export interface WorkflowPlanQualityLog extends LogBase {
   oversized_sections: string[]
 }
 
+/**
+ * v0.26 — Mechanical violation detection.
+ *
+ * The plan emitted by the orchestrator is scanned (deterministic regex) for
+ * adoption gaps where the prompt MUST has historically had low adoption on
+ * Flash (e.g., omitted `## What I couldn't verify`, missing uniform-✅ escape
+ * note). Each detected violation is recorded as telemetry and as a workflow
+ * note for post-hoc analysis; it does not enqueue another model turn.
+ *
+ * Detection is observation-only — the plan ships unchanged.
+ */
+export type ViolationKind =
+  | "missing-unverified-section"
+  | "uniform-marker-no-escape-note"
+  | "compound-causes-no-notes-section"
+  | "turn-budget-exceeded"
+
+export type ViolationSeverity = "high" | "med" | "low"
+
+export interface Violation {
+  kind: ViolationKind
+  evidence: string                       // Quoted plan excerpt
+  suggestedSubagent?: SubagentType       // Auditor recommendation recorded in telemetry.
+  severity: ViolationSeverity
+}
+
+export interface WorkflowViolationLog extends LogBase {
+  kind: "workflow.violation"
+  task_type: TaskType
+  source?: string
+  violations: Array<{
+    kind: ViolationKind
+    severity: ViolationSeverity
+    suggested_subagent?: SubagentType
+  }>
+  dispatched_subagents: SubagentType[]    // Auditor recommendations recorded as workflow notes.
+  total_count: number
+  cap_hit: boolean
+}
+
+export interface WorkflowPlanNormalizeLog extends LogBase {
+  kind: "workflow.plan.normalize"
+  rewrites: string[]
+}
+
 export type LogLine =
   | StartupLog
   | ToolBeforeLog
@@ -356,3 +418,5 @@ export type LogLine =
   | WorkflowResetLog
   | WorkflowNoteMemoryUninitializedLog
   | WorkflowPlanQualityLog
+  | WorkflowViolationLog
+  | WorkflowPlanNormalizeLog

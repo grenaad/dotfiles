@@ -7,8 +7,8 @@
  *     orchestrator's own cross-turn recall and for the 5 surviving subagents'
  *     fresh-eyes context.
  *   - Tools: workflow_recall, workflow_recall_full, workflow_note.
- *   - Hooks: prompt-preamble injection for the 5 surviving subagents; plan-
- *     quality measurement on the orchestrator's plan-draft turn (heuristic).
+ *   - Hooks: mechanical plan-violation detection on completed text parts,
+ *     prompt-preamble injection for subagents, and review-plan quality logs.
  *
  * Surviving subagents (5): review, critic, confidence-auditor, cost-checker,
  * falsifier. All other subagents were removed in v0.25 — the orchestrator

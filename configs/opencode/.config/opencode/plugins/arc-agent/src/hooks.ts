@@ -2,13 +2,15 @@
  * v0.25.1 hook implementations for the integrated orchestrator.
  *
  * Orchestrator does its own investigation/drafting; plugin's only job:
- *   1. tool.execute.before — inject slim preamble + enforce ceilings on the
+ *   1. experimental.text.complete — mechanically scan completed plan text for
+ *      v0.26 adoption-gap violations and write workflow notes.
+ *   2. tool.execute.before — inject slim preamble + enforce ceilings on the
  *      5 surviving subagent dispatches (review, critic, confidence-auditor,
  *      cost-checker, falsifier).
- *   2. tool.execute.after — capture review verdict; capture entry into
+ *   3. tool.execute.after — capture review verdict; capture entry into
  *      workflow memory; fire plan-quality measurement when the orchestrator
  *      dispatches `review` (the prompt-to-review contains the drafted plan).
- *   3. event — session cleanup.
+ *   4. event — session cleanup.
  *
  * Every hook is wrapped in a top-level try/catch so plugin errors are logged
  * and the workflow continues unchanged.
@@ -28,12 +30,21 @@ import {
   REASONING_CONVENTIONS,
 } from "./constants"
 import { measurePlanQuality } from "./plan-quality"
-import { CEILINGS, isSubagent, isTaskToolArgs, type SubagentType } from "./types"
+import { detectAndPersistViolations } from "./violation-pipeline"
+import { CEILINGS, isSubagent, isTaskToolArgs, type ArcState, type SubagentType } from "./types"
 
 type Client = ReturnType<typeof createOpencodeClient>
 
 const ENV_DISABLE = "ARC_AGENT_DISABLED" as const
 const DISABLED = process.env[ENV_DISABLE] === "1"
+const TEXT_COMPLETE_MIN_PLAN_CHARS = 2_000
+const MAX_BUFFERED_PLAN_CHARS = 60_000
+
+const childSessionCache = new Map<string, boolean>()
+
+interface SessionGetData {
+  data?: { id?: string; parentID?: string }
+}
 
 function truncateAtBoundary(text: string, max: number): string {
   if (text.length <= max) return text
@@ -62,6 +73,65 @@ function injectPreamble(prompt: string): string {
   return pieces.join("\n")
 }
 
+function hasFalsificationHeading(text: string): boolean {
+  return /^#{1,3}\s+Falsification\b/im.test(text)
+}
+
+function accumulatePlanCandidate(state: ArcState, text: string): string | null {
+  const prior = state.pendingPlanText
+  if (!prior && !hasPlanHeading(text)) return null
+
+  const combined = prior ? `${prior}\n\n${text}` : text
+  state.pendingPlanText =
+    combined.length > MAX_BUFFERED_PLAN_CHARS
+      ? combined.slice(combined.length - MAX_BUFFERED_PLAN_CHARS)
+      : combined
+  return state.pendingPlanText
+}
+
+function isCompletePlanCandidate(text: string): boolean {
+  return (
+    text.length >= TEXT_COMPLETE_MIN_PLAN_CHARS &&
+    hasPlanHeading(text) &&
+    hasFalsificationHeading(text)
+  )
+}
+
+function normalizePlanText(text: string): { text: string; rewrites: string[] } {
+  let next = text
+  const rewrites: string[] = []
+
+  if (/^###\s+Falsification\b/im.test(next)) {
+    next = next.replace(/^###\s+Falsification\b/im, "## Falsification")
+    rewrites.push("promote-falsification-heading")
+  }
+
+  if (!/^#{1,3}\s+(Findings|Diagnosis|Key Findings)\b/im.test(next)) {
+    if (/^##\s+Coverage Analysis\b/im.test(next)) {
+      next = next.replace(/^##\s+Coverage Analysis\b.*$/im, "## Findings")
+      rewrites.push("coverage-analysis-to-findings")
+    }
+  }
+
+  return { text: next, rewrites }
+}
+
+async function isChildSession(client: Client, sessionID: string): Promise<boolean> {
+  const cached = childSessionCache.get(sessionID)
+  if (cached !== undefined) return cached
+
+  try {
+    const result = (await client.session.get({ path: { id: sessionID } })) as SessionGetData
+    const isChild = Boolean(result.data?.parentID)
+    childSessionCache.set(sessionID, isChild)
+    return isChild
+  } catch {
+    // Best-effort guard. If session lookup fails, do not suppress detection.
+    childSessionCache.set(sessionID, false)
+    return false
+  }
+}
+
 /**
  * Heuristic: detect the orchestrator's plan-draft prompt inside a `review`
  * dispatch. The orchestrator typically dispatches review with a body that
@@ -75,9 +145,6 @@ function extractPlanFromReviewPrompt(prompt: string): string | null {
 }
 
 export function buildHooks(client: Client): Hooks {
-  // Reference `client` so unused-locals stays happy; reserved for future use
-  // (e.g. parent-session resolution in workflow_* tools — see workflow-memory-tools.ts).
-  void client
   if (DISABLED) {
     return {
       event: async () => {
@@ -87,6 +154,55 @@ export function buildHooks(client: Client): Hooks {
   }
 
   return {
+    "experimental.text.complete": async (input, output) => {
+      try {
+        const s = getState(input.sessionID)
+        if (s.violationsDetected) return
+        if (await isChildSession(client, input.sessionID)) return
+
+        const normalized = normalizePlanText(output.text)
+        if (normalized.rewrites.length > 0) {
+          output.text = normalized.text
+          await log({
+            kind: "workflow.plan.normalize",
+            session: input.sessionID,
+            rewrites: normalized.rewrites,
+          })
+        }
+
+        const text = output.text.trim()
+        if (text.length === 0) return
+
+        const planText = accumulatePlanCandidate(s, text)
+        if (!planText || !isCompletePlanCandidate(planText)) return
+
+        const taskType = extractTaskType(planText) ?? "fix"
+        s.taskType = taskType
+
+        await detectAndPersistViolations({
+          sessionID: input.sessionID,
+          state: s,
+          plan: planText,
+          taskType,
+          source: "experimental.text.complete",
+        })
+        s.pendingPlanText = undefined
+      } catch (err) {
+        const s = getState(input.sessionID)
+        s.hookErrors.push({
+          hook: "experimental.text.complete",
+          t: Date.now(),
+          error: (err as Error).message,
+        })
+        await log({
+          kind: "error",
+          session: input.sessionID,
+          hook: "experimental.text.complete",
+          error: (err as Error).message,
+        })
+      }
+    },
+
     "tool.execute.before": async (input, output) => {
       try {
         if (input.tool !== "task") return
@@ -240,6 +356,7 @@ export function buildHooks(client: Client): Hooks {
             if (s.workflowMemory && s.workflowMemory.entries.length > 0) {
               resetWorkflowMemory(s)
             }
+            childSessionCache.delete(props.sessionID)
             clearState(props.sessionID)
           }
         }

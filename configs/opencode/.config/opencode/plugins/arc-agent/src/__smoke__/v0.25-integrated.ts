@@ -23,8 +23,11 @@ import {
   hasPlanHeading,
   normalizeVerdict,
 } from "../analyzers"
+import { buildHooks } from "../hooks"
 import { measurePlanQuality } from "../plan-quality"
+import { clearState, getState } from "../state"
 import { appendEntry, appendNote, createMemory, getFull, recall } from "../workflow-memory"
+import { detectAndPersistViolations } from "../violation-pipeline"
 import {
   CEILINGS,
   NOTE_TYPES,
@@ -34,6 +37,8 @@ import {
   WRITE_NOTE_SUBAGENTS,
   isSubagent,
 } from "../types"
+import { detectViolations, __internals as detectorInternals } from "../violation-detector"
+import type { createOpencodeClient } from "@opencode-ai/sdk"
 
 type AssertionResult = { name: string; ok: boolean; detail?: string }
 const results: AssertionResult[] = []
@@ -60,7 +65,8 @@ const SURVIVORS = [
   "falsifier",
 ] as const
 
-assert("CEILINGS has exactly 5 keys", Object.keys(CEILINGS).length === 5,
+// v0.26: CEILINGS expanded from 5 → 7 with violation-driven auditors.
+assert("CEILINGS has at least 5 v0.25 survivor keys", Object.keys(CEILINGS).length >= 5,
   `actual: ${JSON.stringify(Object.keys(CEILINGS))}`)
 for (const s of SURVIVORS) {
   assert(`isSubagent("${s}") === true`, isSubagent(s))
@@ -94,7 +100,8 @@ for (const t of ["prediction", "insufficiency", "contradiction", "assumption", "
   assert(`NOTE_TYPES has no "${t}"`, !((t as string) in NOTE_TYPES))
 }
 
-assert("WRITE_NOTE_SUBAGENTS has 5 members", WRITE_NOTE_SUBAGENTS.size === 5)
+// v0.26: WRITE_NOTE_SUBAGENTS expanded from 5 → 7 (added unverified-auditor + compound-cause-auditor).
+assert("WRITE_NOTE_SUBAGENTS has at least 5 v0.25 survivors", WRITE_NOTE_SUBAGENTS.size >= 5)
 for (const s of SURVIVORS) {
   const allowed = NOTE_TYPE_AUTHORIZATION[s]
   assert(`${s} has note authorization`, allowed !== undefined && allowed.length > 0)
@@ -236,6 +243,317 @@ assert("recall by subagent=orchestrator", hitOrch.length === 1)
 const full = getFull(memory, "orchestrator-001")
 assert("getFull entry", full.kind === "entry")
 assert("getFull miss", getFull(memory, "missing-000").kind === "miss")
+
+// --- Stage 6: v0.26 violation detector ------------------------------------
+
+section("Stage 6: v0.26 violation-detector")
+
+// 6a. Helpers — stripFencedBlocks, hasHeading, isToolUnavailabilityPlan.
+const FENCED_PLAN = `## Foo
+\`\`\`
+## What I couldn't verify
+\`\`\`
+## Bar`
+const stripped = detectorInternals.stripFencedBlocks(FENCED_PLAN)
+assert("stripFencedBlocks removes inline heading-like content from fence",
+  !detectorInternals.hasHeading(stripped, "What I couldn't verify"),
+  `stripped: ${JSON.stringify(stripped)}`)
+
+assert("hasHeading detects ## level", detectorInternals.hasHeading("## Findings\n", "Findings"))
+assert("hasHeading detects ### level", detectorInternals.hasHeading("### Findings\n", "Findings"))
+assert("hasHeading rejects #### level",
+  !detectorInternals.hasHeading("#### Findings\n", "Findings"))
+assert("hasHeading rejects mid-line", !detectorInternals.hasHeading("some ## Findings", "Findings"))
+
+assert("isToolUnavailabilityPlan detects Tool unavailability heading",
+  detectorInternals.isToolUnavailabilityPlan("## Tool unavailability\nfoo"))
+assert("isToolUnavailabilityPlan detects Provisional findings heading",
+  detectorInternals.isToolUnavailabilityPlan("## Provisional findings (without Datadog)\nfoo"))
+assert("isToolUnavailabilityPlan rejects regular plan",
+  !detectorInternals.isToolUnavailabilityPlan("## Findings\nfoo"))
+
+// 6b. detectMissingUnverifiedSection
+const PLAN_NO_UNVERIFIED = `## What you asked for
+- foo
+
+## Assumptions
+1. foo
+
+## Findings
+✅ x app/foo.py:10
+🔶 y app/bar.py:20
+
+## Falsification
+Wrong if: bar fails.
+
+## Open Decisions for the user
+1. baz?`
+const v_no_unv = detectViolations(PLAN_NO_UNVERIFIED, "fix")
+assert("detect missing-unverified-section fires",
+  v_no_unv.some((v) => v.kind === "missing-unverified-section"))
+
+const PLAN_HAS_UNVERIFIED = PLAN_NO_UNVERIFIED + "\n\n## What I couldn't verify\n- nothing"
+const v_has_unv = detectViolations(PLAN_HAS_UNVERIFIED, "fix")
+assert("detect missing-unverified-section does NOT fire when section present",
+  !v_has_unv.some((v) => v.kind === "missing-unverified-section"))
+
+// 6c. detectUniformMarkerNoEscapeNote
+const PLAN_UNIFORM = `## Findings
+✅ a app/a.py:1
+✅ b app/b.py:2
+✅ c app/c.py:3
+
+## Falsification
+Wrong if: foo.`
+const v_unif = detectViolations(PLAN_UNIFORM, "fix")
+assert("detect uniform-marker-no-escape-note fires on 3 uniform ✅",
+  v_unif.some((v) => v.kind === "uniform-marker-no-escape-note"))
+
+const PLAN_UNIFORM_WITH_ESCAPE = PLAN_UNIFORM.replace(
+  "## Findings\n",
+  "## Findings\n*All items above are direct-evidence ✅; no inferences emerged.*\n\n",
+)
+// Note: the escape note must appear within the section body.
+const PLAN_UNIFORM_ESCAPE_INLINE = `## Findings
+✅ a app/a.py:1
+✅ b app/b.py:2
+✅ c app/c.py:3
+
+*All items above are direct-evidence ✅; no inferences emerged.*
+
+## Falsification
+Wrong if: foo.`
+const v_unif_escape = detectViolations(PLAN_UNIFORM_ESCAPE_INLINE, "fix")
+assert("detect uniform-marker-no-escape-note does NOT fire when escape note present",
+  !v_unif_escape.some((v) => v.kind === "uniform-marker-no-escape-note"))
+
+const PLAN_DISTINCT = `## Findings
+✅ a app/a.py:1
+🔶 b inferred
+⚠️ c risky
+
+## Falsification
+Wrong if: foo.`
+const v_dist = detectViolations(PLAN_DISTINCT, "fix")
+assert("detect uniform-marker does NOT fire on distinct markers",
+  !v_dist.some((v) => v.kind === "uniform-marker-no-escape-note"))
+
+// 6d. detectCompoundCausesNoNotes
+const PLAN_COMPOUND = `## Findings
+✅ Root cause 1 — **Memory exhaustion** at \`ps:36\`. The compressor is at 6.5GB.
+✅ Root cause 2 — **Stale opencode sessions** at \`ps:8-20\`. 12 processes using 3GB RSS.
+✅ Root cause 3 — **MetaTrader wine** at \`ps:5\`. 123% CPU.
+
+## Falsification
+Wrong if: x.`
+const v_comp = detectViolations(PLAN_COMPOUND, "fix")
+assert("detect compound-causes fires on multiple root-cause N",
+  v_comp.some((v) => v.kind === "compound-causes-no-notes-section"))
+
+const PLAN_COMPOUND_WITH_NOTES = PLAN_COMPOUND + "\n\n## Compound-failure notes\nfoo"
+const v_comp_with = detectViolations(PLAN_COMPOUND_WITH_NOTES, "fix")
+assert("detect compound-causes does NOT fire when notes section present",
+  !v_comp_with.some((v) => v.kind === "compound-causes-no-notes-section"))
+
+const PLAN_SINGLE_CAUSE = `## Findings
+✅ The bug is in app/foo.py:42. The function returns None when input is empty.
+🔶 Adding a guard at line 41 should fix it.
+
+## Falsification
+Wrong if: x.`
+const v_single = detectViolations(PLAN_SINGLE_CAUSE, "fix")
+assert("detect compound-causes does NOT fire on single cause",
+  !v_single.some((v) => v.kind === "compound-causes-no-notes-section"))
+
+// 6e. Tool-unavailability short plans are exempt from all detectors
+const PLAN_TOOL_UNAVAIL = `## Tool unavailability
+- You asked me to query Datadog; I don't have it.
+
+## Provisional findings (without Datadog)
+⚠️ The error is likely X based on code at app.py:10.
+
+## Falsification
+Wrong if: the actual log shows Y.
+
+## Open Decisions for the user
+1. Share the log?`
+const v_tu = detectViolations(PLAN_TOOL_UNAVAIL, "fix")
+assert("Tool-unavailability plans skip all detectors",
+  v_tu.length === 0,
+  `actual violations: ${JSON.stringify(v_tu)}`)
+
+// 6f. Severity ordering (high → med → low)
+const PLAN_ALL_VIOLATIONS = `## What you asked for
+- foo
+
+## Assumptions
+1. foo
+
+## Findings
+✅ Root cause 1 — bad config app/a.py:1
+✅ Root cause 2 — race app/b.py:2
+✅ Root cause 3 — typo app/c.py:3
+
+## Falsification
+Wrong if: x.`
+const v_all = detectViolations(PLAN_ALL_VIOLATIONS, "fix")
+assert("detect returns multiple violations sorted by severity",
+  v_all.length >= 2 && v_all[0]!.severity === "high",
+  `got: ${JSON.stringify(v_all.map((v) => v.kind))}`)
+
+// 6g. CEILINGS has the 2 new auditors
+assert("CEILINGS includes unverified-auditor",
+  "unverified-auditor" in CEILINGS)
+assert("CEILINGS includes compound-cause-auditor",
+  "compound-cause-auditor" in CEILINGS)
+assert("isSubagent accepts unverified-auditor",
+  isSubagent("unverified-auditor"))
+assert("isSubagent accepts compound-cause-auditor",
+  isSubagent("compound-cause-auditor"))
+
+// 6h. NOTE_TYPE_AUTHORIZATION includes new auditors
+assert("NOTE_TYPE_AUTHORIZATION includes unverified-auditor",
+  NOTE_TYPE_AUTHORIZATION["unverified-auditor"] !== undefined)
+assert("NOTE_TYPE_AUTHORIZATION includes compound-cause-auditor",
+  NOTE_TYPE_AUTHORIZATION["compound-cause-auditor"] !== undefined)
+
+// 6i. CEILINGS now has 7 entries (was 5)
+assert("CEILINGS has 7 entries after v0.26", Object.keys(CEILINGS).length === 7,
+  `actual: ${JSON.stringify(Object.keys(CEILINGS))}`)
+
+// --- Stage 7: v0.26.1 violation pipeline + text-complete hook ---------------
+
+section("Stage 7: v0.26.1 violation pipeline")
+
+const LONG_PLAN_ALL_VIOLATIONS = `# Plan
+
+## What you asked for
+- Diagnose why the service is slow and propose a fix.
+
+## Assumptions
+1. The captured process list represents steady-state load.
+   - If wrong, the CPU/RSS attribution may change.
+2. The current failing symptom is caused by local resource pressure.
+   - If wrong, the remediation needs logs from the upstream service.
+
+## Findings
+✅ Root cause 1 — **Memory exhaustion** at \`ps:36\`. The compressor is at 6.5GB RSS and forces swapping under normal load.
+✅ Root cause 2 — **Stale opencode sessions** at \`ps:8-20\`. Twelve processes remain alive and collectively consume multiple GB of RSS.
+✅ Root cause 3 — **MetaTrader wine CPU saturation** at \`ps:5\`. The process uses 123% CPU while the editor is also generating.
+
+## Implementation Steps
+1. Kill stale sessions and verify RSS drops.
+2. Add a session-cleanup guard.
+3. Re-run the workload and confirm CPU/RSS stay under threshold.
+
+## Falsification
+Wrong if: after killing stale sessions, RSS remains above 8GB and CPU remains above 100% for 5 minutes.
+
+## Open Decisions for the user
+1. Should the cleanup guard be automatic or manual?
+
+${Array.from({ length: 80 }, (_, i) => `Detail line ${i}: extra body text keeps this above the mechanical hook threshold.`).join("\n")}`
+
+clearState("smoke-v0261-pipeline")
+const pipelineState = getState("smoke-v0261-pipeline")
+const pipelineResult = await detectAndPersistViolations({
+  sessionID: "smoke-v0261-pipeline",
+  state: pipelineState,
+  plan: LONG_PLAN_ALL_VIOLATIONS,
+  taskType: "fix",
+  source: "experimental.text.complete",
+})
+const pipelineTopics = pipelineState.workflowMemory?.notes.map((n) => n.topic) ?? []
+assert("violation pipeline detects all three violations",
+  pipelineResult.violations.length === 3,
+  `actual: ${JSON.stringify(pipelineResult.violations.map((v) => v.kind))}`)
+assert("violation pipeline caps telemetry notes at 2",
+  pipelineResult.dispatched.length === 2 && pipelineState.workflowMemory?.notes.length === 2,
+  `dispatched=${JSON.stringify(pipelineResult.dispatched)} notes=${pipelineState.workflowMemory?.notes.length}`)
+assert("violation pipeline writes high+med violation topics",
+  pipelineTopics.includes("violation:compound-causes-no-notes-section") &&
+    pipelineTopics.includes("violation:missing-unverified-section"),
+  `topics=${JSON.stringify(pipelineTopics)}`)
+assert("violation pipeline marks workflow as detected", pipelineState.violationsDetected === true)
+
+const fakeClient = {
+  session: {
+    get: async ({ path }: { path: { id: string } }) => ({ data: { id: path.id } }),
+  },
+} as unknown as ReturnType<typeof createOpencodeClient>
+const hooks = buildHooks(fakeClient)
+
+clearState("smoke-v0261-text-hook")
+await hooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v0261-text-hook", messageID: "m1", partID: "p1" },
+  { text: LONG_PLAN_ALL_VIOLATIONS },
+)
+const textHookState = getState("smoke-v0261-text-hook")
+assert("text-complete hook runs mechanical detection",
+  textHookState.violationsDetected === true)
+assert("text-complete hook writes capped violation notes",
+  textHookState.workflowMemory?.notes.length === 2,
+  `notes=${textHookState.workflowMemory?.notes.length}`)
+
+const normalizeOutput = {
+  text: `## Coverage Analysis: Upstream API → Data-Tables Requirements
+
+### Field Coverage Matrix
+
+✅ Direct match.
+
+### Falsification
+
+Wrong if: schema changed.`,
+}
+await hooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v0262-normalize", messageID: "m1", partID: "p1" },
+  normalizeOutput,
+)
+assert("text-complete hook promotes Falsification heading mechanically",
+  /^## Falsification\b/m.test(normalizeOutput.text),
+  normalizeOutput.text)
+assert("text-complete hook maps Coverage Analysis to Findings mechanically",
+  /^## Findings\b/m.test(normalizeOutput.text),
+  normalizeOutput.text)
+
+clearState("smoke-v0261-text-hook-split")
+const splitHooks = buildHooks(fakeClient)
+const splitAt = LONG_PLAN_ALL_VIOLATIONS.indexOf("\n## Falsification")
+await splitHooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v0261-text-hook-split", messageID: "m1", partID: "p1" },
+  { text: LONG_PLAN_ALL_VIOLATIONS.slice(0, splitAt) },
+)
+const splitStateBefore = getState("smoke-v0261-text-hook-split")
+assert("text-complete hook buffers partial plan without firing",
+  splitStateBefore.violationsDetected !== true)
+await splitHooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v0261-text-hook-split", messageID: "m1", partID: "p2" },
+  { text: LONG_PLAN_ALL_VIOLATIONS.slice(splitAt) },
+)
+const splitStateAfter = getState("smoke-v0261-text-hook-split")
+assert("text-complete hook fires after split plan completes",
+  splitStateAfter.violationsDetected === true)
+assert("text-complete hook writes notes after split plan completes",
+  splitStateAfter.workflowMemory?.notes.length === 2,
+  `notes=${splitStateAfter.workflowMemory?.notes.length}`)
+
+const fakeChildClient = {
+  session: {
+    get: async ({ path }: { path: { id: string } }) => ({
+      data: { id: path.id, parentID: "smoke-v0261-root" },
+    }),
+  },
+} as unknown as ReturnType<typeof createOpencodeClient>
+clearState("smoke-v0261-child")
+const childHooks = buildHooks(fakeChildClient)
+await childHooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v0261-child", messageID: "m1", partID: "p1" },
+  { text: LONG_PLAN_ALL_VIOLATIONS },
+)
+const childState = getState("smoke-v0261-child")
+assert("text-complete hook skips child/subagent sessions",
+  childState.violationsDetected !== true && childState.workflowMemory === undefined)
 
 // --- Summary ---------------------------------------------------------------
 

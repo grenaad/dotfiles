@@ -49,4 +49,6 @@ export function resetWorkflowMemory(state: ArcState): void {
   state.normalizedVerdict = undefined
   state.lastPlan = undefined
   state.planQualityMeasured = undefined
+  state.violationsDetected = undefined
+  state.pendingPlanText = undefined
 }
