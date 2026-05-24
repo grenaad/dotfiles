@@ -228,10 +228,11 @@ After emitting this addendum, STOP. Do NOT re-emit `# Plan`, `## Change Set`, `#
 
 Regardless of which template you pick below, these sections keep the plan checkable. In Compact Mode, keep them short and omit sections that have no real content rather than padding them:
 
-1. **`## Findings` or `## Diagnosis`** — the interpretive layer. Include confidence markers and citations for load-bearing claims.
+1. **`## Findings` or `## Diagnosis`** — the interpretive layer. Include confidence markers and citations for load-bearing claims. **Every load-bearing claim in this section (modal verbs like "must", "will", "requires", "depends on", "breaks if", "currently", "because") should be followed by a `file:line` citation in the same sentence.** A claim without a citation is a hypothesis, not a finding — either cite it or move it to `## Assumptions`.
 2. **`## Falsification`** — one concrete verifiable condition, with measurable threshold or runnable check. Format: `Wrong if: <specific condition>`. This is the sentinel that your work is complete (also see `Output discipline` below).
 3. **`## Assumptions`** — include for full plans; in Compact Mode, fold 1-2 assumptions into Findings unless they deserve their own section.
 4. **`## Open Decisions for the user`** — include only when there are real unresolved choices. If there are none, omit the section; do not invent questions to satisfy a template.
+5. **`## Tool availability`** — include ONLY when your plan requires tools or credentials you could not access in this session (e.g. vault, kubectl against a remote cluster, cloud APIs without keys, MCP servers not installed, internet when offline). For each missing tool list: (a) what you tried, (b) why it failed, (c) what concrete value would change in the plan if access were granted (e.g. "vault would supply the actual 14 secret values; current plan uses `<placeholder>` syntax"). This section signals to the user that your plan is correctly bracketed around a credentials gap — not that your plan is incomplete. Omit if you had everything you needed.
 
 **Common failure mode to avoid**: short, vague-symptom prompts (e.g., "look at this log, what's wrong") tempt the planner to skip the falsifier because "the data speaks for itself." It does not — your reading of the data is interpretive. If you find yourself drafting a plan with only Diagnosis + Recommendations sections, STOP and add `## Falsification` before emitting.
 

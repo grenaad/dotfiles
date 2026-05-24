@@ -236,6 +236,127 @@ function detectCompoundCausesNoNotes(plan: string): Violation | null {
   }
 }
 
+// --- Load-bearing-claim-without-citation detector --------------------------
+
+/**
+ * Sections where load-bearing claims live. We only scan these — claims in
+ * `## Plan`, `## Implementation Steps`, etc. are forward-looking statements
+ * about future work and should not be required to cite extant code.
+ */
+const CLAIM_SECTIONS = [
+  "Findings",
+  "Diagnosis",
+  "Key Findings",
+  "Predictions",
+  "Constraints",
+  "Risk",
+  "Risks",
+]
+
+/**
+ * Load-bearing modal verbs. A sentence containing one of these in an
+ * assertive context is making a claim about the current code/system
+ * that should be backed by a `file:line` citation.
+ */
+const LOAD_BEARING_RE =
+  /\b(?:must|will|requires?|depends on|breaks if|fails when|cannot|always|never|currently|because|since)\b/i
+
+/**
+ * Citation shape: `path/to/file.ext` with optional `:line` or `:line-line`.
+ * Same alphabet as FALSIFIER_FILE_RE but matched anywhere in the sentence.
+ */
+const CITATION_RE =
+  /\b[\w./-]+\.(?:ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cpp|cc|h|hpp|md|toml|yaml|yml|json|sh|sql|graphql|proto|css|scss|html|vue|svelte|sav|ini|env|sln|csproj|gradle)(?::\d+(?:-\d+)?)?\b/
+
+/**
+ * Split body into sentence-like units. Markdown table cells and list items
+ * count as separate units. We don't try to be perfect — false positives are
+ * OK so long as the ratio threshold is conservative.
+ */
+function splitSentences(body: string): string[] {
+  // First split on newline-bounded structure (list items, table rows, paragraphs).
+  const lines = body.split(/\n+/)
+  const out: string[] = []
+  for (const line of lines) {
+    let trimmed = line.trim()
+    if (!trimmed) continue
+    // Skip headings, fences, blockquote, separator-only lines (--- or ===)
+    if (/^(#|```|>|---+\s*$|===+\s*$)/.test(trimmed)) continue
+    // Skip pure markdown table rows (|---|---|)
+    if (/^\|[\s\-:|]+\|?\s*$/.test(trimmed)) continue
+    // Strip leading list marker (-, *, +, 1., 1)) or table-cell pipe
+    trimmed = trimmed.replace(/^([-*+]\s+|\d+[.)]\s+|\|\s*)/, "")
+    if (!trimmed) continue
+    // Then split on sentence terminators
+    const parts = trimmed.split(/(?<=[.!?])\s+(?=[A-Z✅🔶⚠️])/)
+    for (const p of parts) {
+      const t = p.trim()
+      if (t.length >= 20) out.push(t)
+    }
+  }
+  return out
+}
+
+/**
+ * Detector 4 (v0.26.11): the agent makes load-bearing claims in the
+ * Findings/Diagnosis section without grounding them in file:line citations.
+ *
+ * Rationale (from v0.26.11 gap-analysis): evidence_quality was the only
+ * judge-rubric axis with a meaningful cohort-mean gap to Opus-full
+ * (+0.50 / 10% of max). Opus tends to cite `file.py:123` for each
+ * load-bearing assertion; Flash sometimes asserts without citation.
+ *
+ * Threshold: if there are ≥3 load-bearing sentences in claim sections
+ * AND ≥50% of them lack a citation in the same sentence, emit a warning.
+ *
+ * Suppressed for: tool-unavailability short plans, or plans where
+ * Findings is purely a question list (no assertions).
+ */
+function detectLoadBearingClaimsWithoutCitation(plan: string): Violation | null {
+  if (isToolUnavailabilityPlan(plan)) return null
+  const stripped = stripFencedBlocks(plan)
+  let combined = ""
+  for (const h of CLAIM_SECTIONS) {
+    const body = sectionBody(stripped, h)
+    if (body) combined += "\n\n" + body
+  }
+  if (!combined.trim()) return null
+
+  const sentences = splitSentences(combined)
+  if (sentences.length < 3) return null
+
+  let loadBearing = 0
+  let uncited = 0
+  const uncitedSamples: string[] = []
+
+  for (const s of sentences) {
+    if (!LOAD_BEARING_RE.test(s)) continue
+    // Skip pure questions
+    if (s.trim().endsWith("?")) continue
+    // Skip sentences that explicitly mark themselves as assumption/hypothesis
+    if (/^(if |assuming |hypothesis|maybe |perhaps )/i.test(s.trim())) continue
+    loadBearing += 1
+    if (!CITATION_RE.test(s)) {
+      uncited += 1
+      if (uncitedSamples.length < 3) {
+        uncitedSamples.push(s.slice(0, 120).replace(/\s+/g, " "))
+      }
+    }
+  }
+
+  if (loadBearing < 3) return null
+  const ratio = uncited / loadBearing
+  if (ratio < 0.5) return null
+
+  return {
+    kind: "load-bearing-claim-no-citation",
+    severity: "low",
+    evidence:
+      `${uncited}/${loadBearing} load-bearing claims in Findings/Diagnosis lack file:line citations. Examples: ` +
+      uncitedSamples.map((s) => `"${s}…"`).join(" | "),
+  }
+}
+
 // --- Top-level detector ----------------------------------------------------
 
 /**
@@ -250,6 +371,7 @@ export function detectViolations(plan: string, _taskType: TaskType): Violation[]
     detectMissingUnverifiedSection,
     detectUniformMarkerNoEscapeNote,
     detectCompoundCausesNoNotes,
+    detectLoadBearingClaimsWithoutCitation,
   ]
   const violations: Violation[] = []
   for (const d of detectors) {
@@ -316,6 +438,8 @@ export const __internals = {
   countMarkers,
   looksLikeCompoundFailure,
   isToolUnavailabilityPlan,
+  detectLoadBearingClaimsWithoutCitation,
+  splitSentences,
 }
 
 export type { TaskType, Violation, ViolationKind }

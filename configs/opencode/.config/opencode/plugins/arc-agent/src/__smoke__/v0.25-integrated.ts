@@ -402,6 +402,63 @@ assert("detect returns multiple violations sorted by severity",
   v_all.length >= 2 && v_all[0]!.severity === "high",
   `got: ${JSON.stringify(v_all.map((v) => v.kind))}`)
 
+// 6f-bis. detectLoadBearingClaimsWithoutCitation (v0.26.11)
+const PLAN_UNCITED_CLAIMS = `## What you asked for
+- Fix the auth bug.
+
+## Findings
+- The session middleware currently strips the user_id cookie. This breaks single-sign-on for federated users.
+- Token refresh requires a valid refresh_token because the rotation policy depends on the previous token's iat claim.
+- The auth handler must be called before the rate limiter, since rate-limit keys are derived from the authenticated user.
+- All downstream routes will fail when the user_id is missing.
+
+## Falsification
+Wrong if: x.`
+const v_uncited = detectViolations(PLAN_UNCITED_CLAIMS, "fix")
+assert("detect load-bearing-claim-no-citation fires when claims lack citations",
+  v_uncited.some((v) => v.kind === "load-bearing-claim-no-citation"),
+  `got: ${JSON.stringify(v_uncited.map((v) => v.kind))}`)
+
+const PLAN_CITED_CLAIMS = `## What you asked for
+- Fix the auth bug.
+
+## Findings
+- The session middleware at \`auth/session.ts:42\` currently strips the user_id cookie. This breaks single-sign-on at \`auth/sso.ts:18\` for federated users.
+- Token refresh requires a valid refresh_token because the rotation policy at \`auth/refresh.ts:101\` depends on the previous token's iat claim.
+- The auth handler at \`middleware/auth.ts:7\` must be called before the rate limiter at \`middleware/rate.ts:3\`, since rate-limit keys are derived from the user.
+- All downstream routes at \`routes/index.ts:1\` will fail when the user_id is missing.
+
+## Falsification
+Wrong if: x.`
+const v_cited = detectViolations(PLAN_CITED_CLAIMS, "fix")
+assert("detect load-bearing-claim-no-citation does NOT fire when citations present",
+  !v_cited.some((v) => v.kind === "load-bearing-claim-no-citation"),
+  `got: ${JSON.stringify(v_cited.map((v) => v.kind))}`)
+
+const PLAN_FEW_CLAIMS = `## What you asked for
+- Fix the bug.
+
+## Findings
+- The bug is in foo.ts.
+
+## Falsification
+Wrong if: x.`
+const v_few = detectViolations(PLAN_FEW_CLAIMS, "fix")
+assert("detect load-bearing-claim-no-citation does NOT fire on plans with <3 load-bearing sentences",
+  !v_few.some((v) => v.kind === "load-bearing-claim-no-citation"))
+
+const PLAN_TOOL_UNAVAIL_LB = `## Tool unavailability
+- vault unreachable.
+
+## Findings
+- The token policy must rotate every 24h because the rotation schedule depends on the iat claim and breaks when the iat is stale.
+- Refresh tokens always expire after the parent token because the parent-child invariant requires it.
+- Rate limiting will fail when the user_id is missing.
+- Sessions must be sticky because cross-region failover requires it.`
+const v_tu_lb = detectViolations(PLAN_TOOL_UNAVAIL_LB, "fix")
+assert("detect load-bearing-claim-no-citation suppressed for Tool unavailability short-plan",
+  !v_tu_lb.some((v) => v.kind === "load-bearing-claim-no-citation"))
+
 // 6g. CEILINGS has the 2 new auditors
 assert("CEILINGS includes unverified-auditor",
   "unverified-auditor" in CEILINGS)
@@ -600,22 +657,50 @@ assert("permission hook allows sibling path that maps into workspace",
   `status=${siblingPermission.status}`)
 rmSync(siblingRoot, { recursive: true, force: true })
 
-clearState("smoke-v0263-tool-budget")
+// v0.26.11: budget enforcement scoped to subagent sessions only.
+// Subagent sessions are detected by parentID presence; fakeClient returns
+// no parentID, so top-level sessions should NOT be budgeted.
+clearState("smoke-v0263-tool-budget-primary")
 const budgetHooks = buildHooks(fakeClient)
-let budgetOutput = { title: "ok", output: "normal", metadata: {} }
+let primaryOutput = { title: "ok", output: "normal", metadata: {} }
 for (let i = 0; i < 19; i++) {
-  budgetOutput = { title: "ok", output: "normal", metadata: {} }
+  primaryOutput = { title: "ok", output: "normal", metadata: {} }
   await budgetHooks["tool.execute.after"]?.(
-    { sessionID: "smoke-v0263-tool-budget", tool: "read", callID: `b${i}`, args: {} },
-    budgetOutput,
+    { sessionID: "smoke-v0263-tool-budget-primary", tool: "read", callID: `b${i}`, args: {} },
+    primaryOutput,
   )
 }
-assert("tool hook replaces over-budget investigation output with sentinel",
-  budgetOutput.output.includes("TOOL BUDGET EXCEEDED"),
-  budgetOutput.output)
-assert("tool hook tracks investigation tool count",
-  getState("smoke-v0263-tool-budget").investigationToolCalls === 19,
-  `count=${getState("smoke-v0263-tool-budget").investigationToolCalls}`)
+assert("tool hook does NOT budget primary (no parentID) sessions",
+  !primaryOutput.output.includes("TOOL BUDGET EXCEEDED"),
+  `output=${primaryOutput.output.slice(0, 100)}`)
+assert("tool hook still tracks tool count on primary sessions",
+  getState("smoke-v0263-tool-budget-primary").investigationToolCalls === 19,
+  `count=${getState("smoke-v0263-tool-budget-primary").investigationToolCalls}`)
+
+// v0.26.11: when the session DOES have a parentID (subagent), the budget IS enforced.
+const subagentClient = {
+  session: {
+    get: async ({ path }: { path: { id: string } }) => ({
+      data: { id: path.id, parentID: "parent-session-id" },
+    }),
+  },
+} as unknown as ReturnType<typeof createOpencodeClient>
+clearState("smoke-v0263-tool-budget-subagent")
+const subagentBudgetHooks = buildHooks(subagentClient)
+let subagentOutput = { title: "ok", output: "normal", metadata: {} }
+for (let i = 0; i < 19; i++) {
+  subagentOutput = { title: "ok", output: "normal", metadata: {} }
+  await subagentBudgetHooks["tool.execute.after"]?.(
+    { sessionID: "smoke-v0263-tool-budget-subagent", tool: "read", callID: `s${i}`, args: {} },
+    subagentOutput,
+  )
+}
+assert("tool hook DOES budget subagent (parentID present) sessions",
+  subagentOutput.output.includes("TOOL BUDGET EXCEEDED"),
+  `output=${subagentOutput.output.slice(0, 100)}`)
+assert("tool hook tracks investigation tool count on subagent sessions",
+  getState("smoke-v0263-tool-budget-subagent").investigationToolCalls === 19,
+  `count=${getState("smoke-v0263-tool-budget-subagent").investigationToolCalls}`)
 
 const deprecatedTask = {
   args: {

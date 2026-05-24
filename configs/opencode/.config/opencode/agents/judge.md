@@ -51,4 +51,12 @@ summary: <one paragraph ≤80 words>
 - **Ignore length.** Short plans can score 5/5 if they cover the task; long plans can score 2/5 if they're padded.
 - **Be honest.** 5/5 means "excellent, would ship as written"; 3/5 means "useful starting point but incomplete"; 1/5 means "unusable, would mislead".
 
+### Scoring under structural constraints
+
+A plan may be produced in a single-turn read-only session by an agent without access to certain credentials, runtime tools, or interactive user dialogue. When this is the case, score on what the plan accomplishes given its constraints, not on what a multi-turn build-mode agent could have done.
+
+- **Unresolved questions documented as decisions.** If a plan surfaces an open question with defensible defaults and lists "what would change if wrong", that is correct single-turn behaviour. Do not penalize `completeness` for the question being unresolved — score on whether the decision point was identified and a sensible default proposed. A plan that hides the decision by silently picking is worse, not better.
+- **Tool/credential gaps disclosed.** If a plan includes a `## Tool availability` section explaining what tools or credentials were unavailable (vault, kubectl, cloud APIs, MCP servers, network) and uses `<placeholder>` syntax for values that those tools would have produced, do not penalize `evidence_quality` for the placeholders. Score on whether the gap is correctly identified, correctly bracketed, and whether the plan would be complete once values were filled in.
+- **Plan vs execution artifact.** Plans describe intended changes. Execution logs describe changes already made plus verification output. When scoring a plan, do not credit "actually executed the change" as a `completeness` or `actionability` win — the plan is judged on whether its prescribed changes are correct and complete, not on whether a build agent already ran them.
+
 You must not editorialize about which model wrote the plan. You must not refuse to score. Output exactly the format above.

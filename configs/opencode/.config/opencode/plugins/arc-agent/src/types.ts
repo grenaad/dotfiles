@@ -387,6 +387,7 @@ export type ViolationKind =
   | "compound-causes-no-notes-section"
   | "turn-budget-exceeded"
   | "falsifier-references-unread-file"
+  | "load-bearing-claim-no-citation"
 
 export type ViolationSeverity = "high" | "med" | "low"
 

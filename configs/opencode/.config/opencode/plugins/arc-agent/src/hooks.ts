@@ -41,15 +41,27 @@ const ENV_DISABLE = "ARC_AGENT_DISABLED" as const
 const DISABLED = process.env[ENV_DISABLE] === "1"
 const TEXT_COMPLETE_MIN_PLAN_CHARS = 2_000
 const MAX_BUFFERED_PLAN_CHARS = 60_000
-const INVESTIGATION_TOOL_BUDGET = 18
 /**
- * Agents that get a relaxed investigation budget. The base `orchestrator`
- * is included here as of v0.26.10 (when v0.26.9 was folded into base).
- * The cap is logged but does not pressure the agent until a much higher
- * ceiling.
+ * Investigation tool budget for *subagents only*.
+ *
+ * As of v0.26.11 the budget mechanism is scoped exclusively to advisory
+ * subagents dispatched by the orchestrator (review, critic, confidence-
+ * auditor, cost-checker, falsifier, unverified-auditor, compound-cause-
+ * auditor). Their job is narrow: ingest a plan slice, return a verdict
+ * or audit. They should not sprawl through 50 reads/greps before reporting.
+ *
+ * Primary agents — orchestrator, build, plan, quick-answer, and any other
+ * top-level agent the user invokes directly — are NOT budgeted. They are
+ * the user's primary working agent and must be free to read/grep/bash as
+ * the task requires. Nagging them halfway through real work was a
+ * misapplication of the mechanism.
+ *
+ * Subagent detection is by `parentID` presence on the session. The Task
+ * tool always creates child sessions with parentID set; top-level user
+ * sessions never have one. This is more robust than maintaining an
+ * agent-name allowlist (which drifted out of sync with custom agents).
  */
-const RELAXED_BUDGET_AGENTS = new Set(["orchestrator"])
-const INVESTIGATION_TOOL_BUDGET_RELAXED = 60
+const INVESTIGATION_TOOL_BUDGET = 18
 const INVESTIGATION_TOOLS = new Set(["read", "grep", "glob", "webfetch", "bash"])
 const DEPRECATED_SUBAGENTS = new Set([
   "frame",
@@ -188,32 +200,6 @@ async function getSessionDirectory(client: Client, sessionID: string): Promise<s
   } catch {
     return null
   }
-}
-
-/**
- * v0.26.6 — cached lookup of the session's agent slug. Used to pick per-agent
- * investigation budgets. Returns null if lookup fails.
- */
-const sessionAgentCache = new Map<string, string | null>()
-
-async function getSessionAgent(client: Client, sessionID: string): Promise<string | null> {
-  const cached = sessionAgentCache.get(sessionID)
-  if (cached !== undefined) return cached
-  try {
-    const result = (await client.session.get({ path: { id: sessionID } })) as SessionGetData
-    const agent = (result.data as { agent?: string } | undefined)?.agent ?? null
-    sessionAgentCache.set(sessionID, agent)
-    return agent
-  } catch {
-    sessionAgentCache.set(sessionID, null)
-    return null
-  }
-}
-
-function investigationBudgetForAgent(agent: string | null): number {
-  if (!agent) return INVESTIGATION_TOOL_BUDGET
-  if (RELAXED_BUDGET_AGENTS.has(agent)) return INVESTIGATION_TOOL_BUDGET_RELAXED
-  return INVESTIGATION_TOOL_BUDGET
 }
 
 function normalizeWorkspacePath(raw: string, directory: string): string | null {
@@ -487,10 +473,13 @@ export function buildHooks(client: Client): Hooks {
           const s = getState(input.sessionID)
           const count = (s.investigationToolCalls ?? 0) + 1
           s.investigationToolCalls = count
-          const agent = await getSessionAgent(client, input.sessionID)
-          const budget = investigationBudgetForAgent(agent)
-          if (count > budget) {
-            output.output = budgetSentinel(count, budget)
+          // v0.26.11: budget is enforced ONLY for subagent sessions
+          // (Task-dispatched children). Top-level user sessions — regardless
+          // of which agent they run as — are unrestricted. Subagent detection
+          // uses parentID presence via isChildSession (cached).
+          const isSubagent = await isChildSession(client, input.sessionID)
+          if (isSubagent && count > INVESTIGATION_TOOL_BUDGET) {
+            output.output = budgetSentinel(count, INVESTIGATION_TOOL_BUDGET)
             output.title = "tool budget exceeded"
             if (!s.investigationBudgetWarned) {
               s.investigationBudgetWarned = true
@@ -499,7 +488,7 @@ export function buildHooks(client: Client): Hooks {
                 session: input.sessionID,
                 tool: input.tool,
                 count,
-                budget,
+                budget: INVESTIGATION_TOOL_BUDGET,
                 action: "warn-output",
               })
             }
@@ -605,7 +594,6 @@ export function buildHooks(client: Client): Hooks {
               resetWorkflowMemory(s)
             }
             childSessionCache.delete(props.sessionID)
-            sessionAgentCache.delete(props.sessionID)
             clearState(props.sessionID)
           }
         }
