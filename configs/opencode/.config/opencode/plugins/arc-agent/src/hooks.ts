@@ -34,6 +34,7 @@ import {
 import { measurePlanQuality } from "./plan-quality"
 import { detectAndPersistViolations } from "./violation-pipeline"
 import { CEILINGS, isSubagent, isTaskToolArgs, type ArcState, type SubagentType } from "./types"
+import { evictParentCache, resolveRootSessionID } from "./workflow-memory-tools"
 
 type Client = ReturnType<typeof createOpencodeClient>
 
@@ -189,6 +190,27 @@ async function isChildSession(client: Client, sessionID: string): Promise<boolea
   }
 }
 
+/**
+ * v0.26.12 — Identify whether a session is part of an orchestrator workflow.
+ *
+ * Returns true iff:
+ *   - The session is the orchestrator running as a primary session, OR
+ *   - The session is a subagent whose root ancestor's agent is "orchestrator".
+ *
+ * Returns false on lookup failure (default-deny: build/plan unaffected if
+ * the SDK call hiccups). The underlying resolveRootSessionID caches both
+ * success and failure, so this helper is O(1) after the first call per
+ * session.
+ *
+ * This is the single gate for plugin behaviors that should not touch
+ * non-orchestrator agents (build, plan, quick-answer, custom user agents).
+ */
+async function isOrchestratorWorkflow(client: Client, sessionID: string): Promise<boolean> {
+  const { rootAgent, resolutionFailed } = await resolveRootSessionID(client, sessionID)
+  if (resolutionFailed) return false
+  return rootAgent === "orchestrator"
+}
+
 function privateAlias(path: string): string {
   return path.startsWith("/private/var/") ? path.slice("/private".length) : path
 }
@@ -315,6 +337,10 @@ export function buildHooks(client: Client): Hooks {
         const s = getState(input.sessionID)
         if (s.violationsDetected) return
         if (await isChildSession(client, input.sessionID)) return
+        // v0.26.12: skip plan-text normalization + violation telemetry for
+        // non-orchestrator workflows. Build/plan/quick-answer/custom primary
+        // agents emit their output unchanged.
+        if (!(await isOrchestratorWorkflow(client, input.sessionID))) return
 
         const normalized = normalizePlanText(output.text)
         if (normalized.rewrites.length > 0) {
@@ -384,6 +410,11 @@ export function buildHooks(client: Client): Hooks {
         }
 
         if (input.tool !== "task") return
+        // v0.26.12: subagent-handling logic (preamble injection, ceiling
+        // truncation, deprecated rewrites, plan-quality measurement) is
+        // orchestrator-only. If a non-orchestrator agent invokes Task
+        // directly, that dispatch passes through untouched.
+        if (!(await isOrchestratorWorkflow(client, input.sessionID))) return
         if (!isTaskToolArgs(output.args)) return
         if (!isSubagent(output.args.subagent_type)) {
           const requested = output.args.subagent_type
@@ -471,29 +502,36 @@ export function buildHooks(client: Client): Hooks {
       try {
         if (INVESTIGATION_TOOLS.has(input.tool)) {
           const s = getState(input.sessionID)
-          const count = (s.investigationToolCalls ?? 0) + 1
-          s.investigationToolCalls = count
-          // v0.26.11: budget is enforced ONLY for subagent sessions
-          // (Task-dispatched children). Top-level user sessions — regardless
-          // of which agent they run as — are unrestricted. Subagent detection
-          // uses parentID presence via isChildSession (cached).
+          // v0.26.12: counter increments for sessions that might trigger
+          // the budget sentinel OR contribute to orchestrator-workflow
+          // telemetry. Build/plan as primary sessions don't count.
+          // readFiles/greppedPatterns tracking stays universal — it's
+          // harmless state used by the falsifier-references-unread-file
+          // detector when an orchestrator workflow later inspects it.
           const isSubagent = await isChildSession(client, input.sessionID)
-          if (isSubagent && count > INVESTIGATION_TOOL_BUDGET) {
-            output.output = budgetSentinel(count, INVESTIGATION_TOOL_BUDGET)
-            output.title = "tool budget exceeded"
-            if (!s.investigationBudgetWarned) {
-              s.investigationBudgetWarned = true
-              await log({
-                kind: "workflow.tool_budget",
-                session: input.sessionID,
-                tool: input.tool,
-                count,
-                budget: INVESTIGATION_TOOL_BUDGET,
-                action: "warn-output",
-              })
+          const isOrchWorkflow = await isOrchestratorWorkflow(client, input.sessionID)
+          if (isSubagent || isOrchWorkflow) {
+            const count = (s.investigationToolCalls ?? 0) + 1
+            s.investigationToolCalls = count
+            // Subagent budget enforcement — unchanged from v0.26.11.
+            if (isSubagent && count > INVESTIGATION_TOOL_BUDGET) {
+              output.output = budgetSentinel(count, INVESTIGATION_TOOL_BUDGET)
+              output.title = "tool budget exceeded"
+              if (!s.investigationBudgetWarned) {
+                s.investigationBudgetWarned = true
+                await log({
+                  kind: "workflow.tool_budget",
+                  session: input.sessionID,
+                  tool: input.tool,
+                  count,
+                  budget: INVESTIGATION_TOOL_BUDGET,
+                  action: "warn-output",
+                })
+              }
             }
           }
           // v0.26.7 — track read files and grep patterns for falsifier audit.
+          // Universal: cheap state, only consumed by orchestrator workflows.
           if (input.tool === "read" && isPathToolArgs(input.args)) {
             const fp = input.args.filePath
             if (typeof fp === "string") {
@@ -514,6 +552,10 @@ export function buildHooks(client: Client): Hooks {
         }
 
         if (input.tool !== "task") return
+        // v0.26.12: only capture Task results into workflow memory for
+        // orchestrator workflows. A build/plan agent invoking Task directly
+        // does not feed into the orchestrator's memory store.
+        if (!(await isOrchestratorWorkflow(client, input.sessionID))) return
         if (!isTaskToolArgs(input.args)) return
         if (!isSubagent(input.args.subagent_type)) return
 
@@ -594,6 +636,7 @@ export function buildHooks(client: Client): Hooks {
               resetWorkflowMemory(s)
             }
             childSessionCache.delete(props.sessionID)
+            evictParentCache(props.sessionID)
             clearState(props.sessionID)
           }
         }

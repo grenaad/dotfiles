@@ -35,8 +35,20 @@ const z = tool.schema
 /**
  * Per-process cache of resolved child→root session mappings.
  * The orchestrator → subagent relationship is stable within a workflow.
+ *
+ * v0.26.12: cache stores both rootSessionID AND rootAgent so callers can
+ * gate plugin behavior on whether the workflow is rooted at an orchestrator
+ * agent (vs build, plan, quick-answer, etc.). Failures are cached too —
+ * a transient SDK hiccup default-denies for the rest of the session rather
+ * than triggering retry storms.
  */
-const parentResolutionCache = new Map<string, string>()
+interface CachedRoot {
+  rootSessionID: string
+  rootAgent: string | null
+  resolutionFailed: boolean
+}
+
+const parentResolutionCache = new Map<string, CachedRoot>()
 
 export function evictParentCache(sessionID: string): void {
   parentResolutionCache.delete(sessionID)
@@ -45,44 +57,50 @@ export function evictParentCache(sessionID: string): void {
 const PARENT_WALK_MAX_DEPTH = 8
 
 interface SessionGetData {
-  data?: { id?: string; parentID?: string }
+  data?: { id?: string; parentID?: string; agent?: string }
 }
 
-async function resolveRootSessionID(
+export async function resolveRootSessionID(
   client: Client,
   sessionID: string,
-): Promise<{ rootSessionID: string; resolutionFailed: boolean }> {
+): Promise<CachedRoot> {
   const cached = parentResolutionCache.get(sessionID)
-  if (cached) return { rootSessionID: cached, resolutionFailed: false }
+  if (cached) return cached
 
   let current = sessionID
+  let currentAgent: string | null = null
   const visited = new Set<string>([current])
 
   for (let depth = 0; depth < PARENT_WALK_MAX_DEPTH; depth++) {
-    let session: { id?: string; parentID?: string } | undefined
+    let session: { id?: string; parentID?: string; agent?: string } | undefined
     try {
       const result = (await client.session.get({
         path: { id: current },
       })) as SessionGetData
       session = result.data
     } catch {
-      parentResolutionCache.set(sessionID, current)
-      return { rootSessionID: current, resolutionFailed: true }
+      const out: CachedRoot = { rootSessionID: current, rootAgent: currentAgent, resolutionFailed: true }
+      parentResolutionCache.set(sessionID, out)
+      return out
     }
+    currentAgent = session?.agent ?? null
     if (!session || !session.parentID) {
-      parentResolutionCache.set(sessionID, current)
-      return { rootSessionID: current, resolutionFailed: false }
+      const out: CachedRoot = { rootSessionID: current, rootAgent: currentAgent, resolutionFailed: false }
+      parentResolutionCache.set(sessionID, out)
+      return out
     }
     if (visited.has(session.parentID)) {
-      parentResolutionCache.set(sessionID, current)
-      return { rootSessionID: current, resolutionFailed: false }
+      const out: CachedRoot = { rootSessionID: current, rootAgent: currentAgent, resolutionFailed: false }
+      parentResolutionCache.set(sessionID, out)
+      return out
     }
     current = session.parentID
     visited.add(current)
   }
 
-  parentResolutionCache.set(sessionID, current)
-  return { rootSessionID: current, resolutionFailed: false }
+  const out: CachedRoot = { rootSessionID: current, rootAgent: currentAgent, resolutionFailed: false }
+  parentResolutionCache.set(sessionID, out)
+  return out
 }
 
 function formatRecallHits(

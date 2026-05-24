@@ -534,9 +534,16 @@ assert("violation pipeline writes high+med violation topics",
   `topics=${JSON.stringify(pipelineTopics)}`)
 assert("violation pipeline marks workflow as detected", pipelineState.violationsDetected === true)
 
+// v0.26.12: every plugin hook gated by isOrchestratorWorkflow checks the
+// session's root agent. The default fake client below returns agent
+// "orchestrator" so the existing smoke battery exercises the active
+// plugin path. Tests that need to exercise non-orchestrator paths
+// construct their own clients (e.g., buildPrimaryClient further down).
 const fakeClient = {
   session: {
-    get: async ({ path }: { path: { id: string } }) => ({ data: { id: path.id } }),
+    get: async ({ path }: { path: { id: string } }) => ({
+      data: { id: path.id, agent: "orchestrator" },
+    }),
   },
 } as unknown as ReturnType<typeof createOpencodeClient>
 const hooks = buildHooks(fakeClient)
@@ -701,6 +708,167 @@ assert("tool hook DOES budget subagent (parentID present) sessions",
 assert("tool hook tracks investigation tool count on subagent sessions",
   getState("smoke-v0263-tool-budget-subagent").investigationToolCalls === 19,
   `count=${getState("smoke-v0263-tool-budget-subagent").investigationToolCalls}`)
+
+// === v0.26.12: isOrchestratorWorkflow gating ===
+// Plugin behaviors gated on isOrchestratorWorkflow MUST NOT fire when the
+// session's root agent is anything other than "orchestrator". Verify with
+// a build-primary fixture client.
+
+const buildPrimaryClient = {
+  session: {
+    get: async ({ path }: { path: { id: string } }) => ({
+      data: { id: path.id, agent: "build" },
+    }),
+  },
+} as unknown as ReturnType<typeof createOpencodeClient>
+const buildHooksForBuild = buildHooks(buildPrimaryClient)
+
+// 12a. text.complete: build-primary session — neither normalizes plan text
+// nor records violations. Use a plan that WOULD violate (uniform ✅ no
+// escape note) AND would normalize (## Coverage Analysis → ## Findings).
+const buildPlanText = `# Plan
+
+## Coverage Analysis
+- everything looks fine
+
+✅ a app/a.py:1
+✅ b app/b.py:2
+✅ c app/c.py:3
+
+## Assumptions
+- assumed.
+
+## Falsification
+Wrong if: foo.
+`
+clearState("smoke-v02612-build-text")
+const buildPlanOutput = { text: buildPlanText }
+await buildHooksForBuild["experimental.text.complete"]?.(
+  { sessionID: "smoke-v02612-build-text", messageID: "m1", partID: "p1" },
+  buildPlanOutput,
+)
+assert("v0.26.12: text.complete does NOT normalize plan text for build-primary",
+  buildPlanOutput.text.includes("## Coverage Analysis"),
+  `text=${buildPlanOutput.text.slice(0, 200)}`)
+const buildTextState = getState("smoke-v02612-build-text")
+assert("v0.26.12: text.complete does NOT detect violations for build-primary",
+  !buildTextState.violationsDetected,
+  `violationsDetected=${buildTextState.violationsDetected}`)
+assert("v0.26.12: text.complete does NOT write violation notes for build-primary",
+  !buildTextState.workflowMemory || buildTextState.workflowMemory.notes.length === 0,
+  `notes=${buildTextState.workflowMemory?.notes.length ?? "(no memory)"}`)
+
+// 12b. tool.execute.after: investigation counter does NOT increment for
+// build-primary session (no orchestrator, no parentID).
+clearState("smoke-v02612-build-counter")
+for (let i = 0; i < 5; i++) {
+  const out = { title: "ok", output: "x", metadata: {} }
+  await buildHooksForBuild["tool.execute.after"]?.(
+    { sessionID: "smoke-v02612-build-counter", tool: "read", callID: `bc${i}`, args: {} },
+    out,
+  )
+}
+assert("v0.26.12: investigation counter does NOT increment for build-primary",
+  (getState("smoke-v02612-build-counter").investigationToolCalls ?? 0) === 0,
+  `count=${getState("smoke-v02612-build-counter").investigationToolCalls}`)
+
+// 12c. readFiles tracking IS universal — even build-primary sessions get
+// their read paths recorded (cheap state, only consumed by detectors that
+// run in orchestrator workflows).
+const trackedReadOut = { title: "ok", output: "x", metadata: {} }
+await buildHooksForBuild["tool.execute.after"]?.(
+  {
+    sessionID: "smoke-v02612-build-counter",
+    tool: "read",
+    callID: "br1",
+    args: { filePath: "/repo/path/to/file.ts" },
+  },
+  trackedReadOut,
+)
+const buildCounterState = getState("smoke-v02612-build-counter")
+assert("v0.26.12: readFiles IS tracked universally (build-primary)",
+  buildCounterState.readFiles?.has("/repo/path/to/file.ts") === true,
+  `readFiles=${JSON.stringify([...(buildCounterState.readFiles ?? new Set())])}`)
+
+// 12d. tool.execute.before: when build-primary dispatches Task with a
+// deprecated subagent name, the plugin does NOT rewrite it. Build agent
+// is responsible for its own Task calls.
+const buildDeprecatedTask = {
+  args: {
+    subagent_type: "explore",
+    prompt: "Look for things",
+    description: "build's own dispatch",
+  },
+}
+await buildHooksForBuild["tool.execute.before"]?.(
+  { sessionID: "smoke-v02612-build-task", tool: "task", callID: "bt1" },
+  buildDeprecatedTask,
+)
+assert("v0.26.12: tool.execute.before does NOT rewrite deprecated subagent for build-primary",
+  buildDeprecatedTask.args.subagent_type === "explore" &&
+    !buildDeprecatedTask.args.prompt.includes("Deprecated subagent dispatch blocked"),
+  JSON.stringify(buildDeprecatedTask.args))
+
+// 12e. tool.execute.before: when build-primary dispatches Task with a
+// known subagent name, the prompt is NOT augmented with the plugin's
+// preamble (the orchestrator's delegation conventions).
+const buildKnownTask = {
+  args: {
+    subagent_type: "critic",
+    prompt: "## Plan\n## Falsification\nWrong if: bar.",
+    description: "build dispatch of critic",
+  },
+}
+await buildHooksForBuild["tool.execute.before"]?.(
+  { sessionID: "smoke-v02612-build-task2", tool: "task", callID: "bt2" },
+  buildKnownTask,
+)
+assert("v0.26.12: tool.execute.before does NOT inject preamble for build-primary",
+  !buildKnownTask.args.prompt.includes("DELEGATION") &&
+    !buildKnownTask.args.prompt.includes("REASONING CONVENTIONS"),
+  buildKnownTask.args.prompt.slice(0, 200))
+
+// 12f. Sanity-check: the SAME inputs DO trigger plugin behavior under the
+// default fakeClient (which says agent=orchestrator). Already covered by
+// the existing detector tests above and:
+clearState("smoke-v02612-orch-text")
+const orchPlanText = `# Plan
+
+## Coverage Analysis
+- everything looks fine
+
+## Falsification
+Wrong if: foo.
+`
+const orchPlanOutput = { text: orchPlanText }
+await hooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v02612-orch-text", messageID: "m1", partID: "p1" },
+  orchPlanOutput,
+)
+assert("v0.26.12: text.complete DOES normalize plan text for orchestrator-primary",
+  !orchPlanOutput.text.includes("## Coverage Analysis") &&
+    orchPlanOutput.text.includes("## Findings"),
+  `text=${orchPlanOutput.text.slice(0, 200)}`)
+
+// 12g. Lookup failure: when session.get throws, default-deny gating means
+// build-style (no orchestrator) — gated behaviors do NOT fire.
+const lookupFailClient = {
+  session: {
+    get: async () => {
+      throw new Error("simulated SDK failure")
+    },
+  },
+} as unknown as ReturnType<typeof createOpencodeClient>
+const failHooks = buildHooks(lookupFailClient)
+clearState("smoke-v02612-fail-text")
+const failPlanOutput = { text: buildPlanText }
+await failHooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v02612-fail-text", messageID: "m1", partID: "p1" },
+  failPlanOutput,
+)
+assert("v0.26.12: lookup failure defaults to NOT orchestrator (text not normalized)",
+  failPlanOutput.text.includes("## Coverage Analysis"),
+  `text=${failPlanOutput.text.slice(0, 200)}`)
 
 const deprecatedTask = {
   args: {
