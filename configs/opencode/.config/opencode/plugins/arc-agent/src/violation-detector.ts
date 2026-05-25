@@ -150,7 +150,55 @@ function isToolUnavailabilityPlan(plan: string): boolean {
   return hasHeading(plan, "Tool unavailability") || hasHeading(plan, "Provisional findings")
 }
 
+function hasFalsificationSection(plan: string): boolean {
+  return /^#{2,3}\s+Falsification\b/im.test(stripFencedBlocks(plan))
+}
+
+function countPlanishSections(plan: string): number {
+  const stripped = stripFencedBlocks(plan)
+  const planish = [
+    "What you asked for",
+    "Findings",
+    "Diagnosis",
+    "Key Findings",
+    "Assumptions",
+    "Architecture Decisions",
+    "Change Set",
+    "Implementation Steps",
+    "Recommendation",
+    "Verification",
+    "Test Plan",
+    "Open Decisions for the user",
+    "What I couldn't verify",
+  ]
+  let count = 0
+  for (const h of planish) {
+    if (new RegExp(`^#{2,3}\\s+${escapeRegex(h)}\\b`, "im").test(stripped)) count += 1
+  }
+  return count
+}
+
 // --- Individual detectors --------------------------------------------------
+
+/**
+ * Detector 0 (v0.26.25): final-looking plan with no `## Falsification`.
+ *
+ * This detector is intentionally conservative. The text-complete hook normally
+ * waits for `## Falsification` before running plan telemetry; the event-idle
+ * path calls this detector for buffered, plan-shaped text that never received
+ * the sentinel. Requiring 3+ plan-ish sections avoids firing on ordinary
+ * progress updates or partial notes.
+ */
+function detectMissingFalsificationSection(plan: string): Violation | null {
+  if (isToolUnavailabilityPlan(plan)) return null
+  if (hasFalsificationSection(plan)) return null
+  if (countPlanishSections(plan) < 3) return null
+  return {
+    kind: "missing-falsification-section",
+    severity: "high",
+    evidence: "Final-looking plan has 3+ plan sections but lacks required `## Falsification` section.",
+  }
+}
 
 /**
  * Detector 1: plan has an Assumptions section but no `## What I couldn't
@@ -482,6 +530,47 @@ function detectCrossServiceContractNotGated(plan: string): Violation | null {
   }
 }
 
+// --- Optional pasted-doc scope-creep detector -------------------------------
+
+const OPTIONAL_DOC_IMPLEMENTATION_RE =
+  /\b(?:text_stream|stream(?:ing)? support|stream=True|image input support|ImageContent|human_with_images|image_url multipart|reasoning_effort|batch mode|async client|async api)\b/i
+
+const OPTIONAL_DOC_DEFER_RE =
+  /\b(?:defer(?:red)?|drop(?:ped)? for v1|not added|not implemented|out of scope|open decision|future)\b/i
+
+function detectOptionalDocScopeCreep(plan: string): Violation | null {
+  if (!hasChangeSetOrImplementation(plan)) return null
+  const bodies = [
+    sectionBody(plan, "Change Set"),
+    sectionBody(plan, "Implementation Steps"),
+    sectionBody(plan, "Implementation"),
+    sectionBody(plan, "Test Plan"),
+  ].filter(Boolean)
+  if (bodies.length === 0) return null
+
+  const signals: string[] = []
+  for (const body of bodies) {
+    for (const rawLine of body.split("\n")) {
+      const line = rawLine.trim()
+      if (!OPTIONAL_DOC_IMPLEMENTATION_RE.test(line)) continue
+      if (OPTIONAL_DOC_DEFER_RE.test(line)) continue
+      signals.push(line.slice(0, 180))
+      if (signals.length >= 3) break
+    }
+    if (signals.length >= 3) break
+  }
+  if (signals.length === 0) return null
+
+  return {
+    kind: "optional-doc-scope-creep",
+    severity: "med",
+    evidence:
+      "Optional pasted-doc capability appears in Change Set / Implementation Steps without being deferred. " +
+      "Default v1 should match the existing interface unless the user explicitly selects broader scope. Signals: " +
+      signals.map((s) => `"${s}"`).join(" | "),
+  }
+}
+
 // --- Top-level detector ----------------------------------------------------
 
 /**
@@ -493,11 +582,13 @@ function detectCrossServiceContractNotGated(plan: string): Violation | null {
  */
 export function detectViolations(plan: string, _taskType: TaskType): Violation[] {
   const detectors = [
+    detectMissingFalsificationSection,
     detectMissingUnverifiedSection,
     detectUniformMarkerNoEscapeNote,
     detectCompoundCausesNoNotes,
     detectLoadBearingClaimsWithoutCitation,
     detectCrossServiceContractNotGated,
+    detectOptionalDocScopeCreep,
   ]
   const violations: Violation[] = []
   for (const d of detectors) {
@@ -566,7 +657,11 @@ export const __internals = {
   isToolUnavailabilityPlan,
   detectLoadBearingClaimsWithoutCitation,
   splitSentences,
+  detectMissingFalsificationSection,
+  countPlanishSections,
+  hasFalsificationSection,
   detectCrossServiceContractNotGated,
+  detectOptionalDocScopeCreep,
   hasAssumingGate,
   hasUpstreamBlocker,
 }

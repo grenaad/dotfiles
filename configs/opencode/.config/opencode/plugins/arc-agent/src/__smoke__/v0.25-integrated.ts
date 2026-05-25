@@ -383,6 +383,26 @@ assert("Tool-unavailability plans skip all detectors",
   v_tu.length === 0,
   `actual violations: ${JSON.stringify(v_tu)}`)
 
+const PLAN_MISSING_FALSIFICATION = `## What you asked for
+- Add the feature.
+
+## Findings
+✅ Existing handler is in app/foo.py:10.
+
+## Change Set
+| File | Action |
+| app/foo.py | Edit |
+
+## Implementation Steps
+1. Add the handler.
+
+## Verification
+Run pytest.`
+const v_missing_falsification = detectViolations(PLAN_MISSING_FALSIFICATION, "feature")
+assert("detect missing-falsification-section fires on final-looking plan",
+  v_missing_falsification.some((v) => v.kind === "missing-falsification-section"),
+  `got: ${JSON.stringify(v_missing_falsification.map((v) => v.kind))}`)
+
 // 6f. Severity ordering (high → med → low)
 const PLAN_ALL_VIOLATIONS = `## What you asked for
 - foo
@@ -504,6 +524,56 @@ const v_tu_lb = detectViolations(PLAN_TOOL_UNAVAIL_LB, "fix")
 assert("detect load-bearing-claim-no-citation suppressed for Tool unavailability short-plan",
   !v_tu_lb.some((v) => v.kind === "load-bearing-claim-no-citation"))
 
+const PLAN_OPTIONAL_DOC_SCOPE_CREEP = `## What you asked for
+- Add SDK wrapper.
+
+## Assumptions
+1. Match existing surface.
+
+## Change Set
+| File | Action | Notes |
+| app/azure.py | Add | Adds text_stream and image input support |
+
+## Implementation Steps
+1. Implement text_stream() with stream=True.
+
+## What I couldn't verify
+- Endpoint behavior.
+
+## Falsification
+Wrong if: SDK call fails.`
+const v_optional_doc = detectViolations(PLAN_OPTIONAL_DOC_SCOPE_CREEP, "feature")
+assert("detect optional-doc-scope-creep fires on optional features in implementation",
+  v_optional_doc.some((v) => v.kind === "optional-doc-scope-creep"),
+  `got: ${JSON.stringify(v_optional_doc.map((v) => v.kind))}`)
+
+const PLAN_OPTIONAL_DOC_DEFERRED = `## What you asked for
+- Add SDK wrapper.
+
+## Assumptions
+1. Match existing surface.
+
+## Source → Target Mapping
+| Streaming | Deferred for v1; no current consumer |
+| Image input | Deferred for v1; HumanMessage is string-only |
+
+## Change Set
+| File | Action | Notes |
+| app/azure.py | Add | Text and structured implementation only |
+
+## Implementation Steps
+1. Implement text() and structured().
+
+## What I couldn't verify
+- Endpoint behavior.
+
+## Falsification
+Wrong if: SDK call fails.`
+const v_optional_deferred = detectViolations(PLAN_OPTIONAL_DOC_DEFERRED, "feature")
+assert("detect optional-doc-scope-creep does NOT fire when optional features are deferred outside implementation",
+  !v_optional_deferred.some((v) => v.kind === "optional-doc-scope-creep"),
+  `got: ${JSON.stringify(v_optional_deferred.map((v) => v.kind))}`)
+
 // 6g. CEILINGS has the 2 new auditors
 assert("CEILINGS includes unverified-auditor",
   "unverified-auditor" in CEILINGS)
@@ -579,6 +649,86 @@ assert("violation pipeline writes high+med violation topics",
   `topics=${JSON.stringify(pipelineTopics)}`)
 assert("violation pipeline marks workflow as detected", pipelineState.violationsDetected === true)
 
+const CLEAN_BUDGET_PLAN = `## What you asked for
+- Propose the smallest safe fix.
+
+## Findings
+✅ VERIFIED — The handler reads the request body at \`app/handler.py:12\`.
+🔶 HIGH-CONFIDENCE — The existing service boundary can stay unchanged.
+
+## Implementation Steps
+1. Make the local guard explicit.
+
+## What I couldn't verify
+- No additional runtime-only config was available in this session.
+
+## Falsification
+Wrong if: the deployed config injects a different handler path.`
+
+clearState("smoke-v02624-turn-budget")
+const turnBudgetState = getState("smoke-v02624-turn-budget")
+turnBudgetState.investigationToolCalls = 41
+const turnBudgetResult = await detectAndPersistViolations({
+  sessionID: "smoke-v02624-turn-budget",
+  state: turnBudgetState,
+  plan: CLEAN_BUDGET_PLAN,
+  taskType: "fix",
+  source: "experimental.text.complete",
+})
+assert("violation pipeline logs turn-budget-exceeded above 40 calls",
+  turnBudgetResult.violations.some((v) => v.kind === "turn-budget-exceeded" && v.severity === "med"),
+  `actual=${JSON.stringify(turnBudgetResult.violations)}`)
+assert("turn-budget telemetry does not create auditor notes",
+  (turnBudgetState.workflowMemory?.notes.length ?? 0) === 0,
+  `notes=${turnBudgetState.workflowMemory?.notes.length}`)
+
+clearState("smoke-v02625-assistant-churn")
+const churnState = getState("smoke-v02625-assistant-churn")
+churnState.assistantTextParts = 9
+const churnResult = await detectAndPersistViolations({
+  sessionID: "smoke-v02625-assistant-churn",
+  state: churnState,
+  plan: CLEAN_BUDGET_PLAN,
+  taskType: "fix",
+  source: "experimental.text.complete",
+})
+assert("violation pipeline logs assistant-turn-churn above text-part ceiling",
+  churnResult.violations.some((v) => v.kind === "assistant-turn-churn"),
+  `actual=${JSON.stringify(churnResult.violations)}`)
+
+clearState("smoke-v02625-optional-doc-scope")
+const optionalDocState = getState("smoke-v02625-optional-doc-scope")
+optionalDocState.optionalDocScopeExpansionQuestion = true
+const OPTIONAL_DOC_PLAN = `## What you asked for
+- Add the SDK wrapper.
+
+## Findings
+✅ Existing LLM interface is text-only at app/llm.py:12.
+🔶 Pasted docs include optional streaming examples.
+
+## Change Set
+| File | Action | Notes |
+| app/azure.py | Add | Adds streaming and image input support |
+
+## Implementation Steps
+1. Add text_stream and image_url multipart handling.
+
+## What I couldn't verify
+- Whether the endpoint supports streaming.
+
+## Falsification
+Wrong if: the SDK call fails.`
+const optionalDocResult = await detectAndPersistViolations({
+  sessionID: "smoke-v02625-optional-doc-scope",
+  state: optionalDocState,
+  plan: OPTIONAL_DOC_PLAN,
+  taskType: "feature",
+  source: "experimental.text.complete",
+})
+assert("violation pipeline logs optional-doc-scope-creep when broad doc option was recommended",
+  optionalDocResult.violations.some((v) => v.kind === "optional-doc-scope-creep"),
+  `actual=${JSON.stringify(optionalDocResult.violations)}`)
+
 // v0.26.12: every plugin hook gated by isOrchestratorWorkflow checks the
 // session's root agent. The default fake client below returns agent
 // "orchestrator" so the existing smoke battery exercises the active
@@ -604,6 +754,62 @@ assert("text-complete hook runs mechanical detection",
 assert("text-complete hook writes capped violation notes",
   textHookState.workflowMemory?.notes.length === 2,
   `notes=${textHookState.workflowMemory?.notes.length}`)
+
+clearState("smoke-v02625-question-scope-risk")
+await hooks["tool.execute.after"]?.(
+  {
+    sessionID: "smoke-v02625-question-scope-risk",
+    tool: "question",
+    callID: "q1",
+    args: {
+      questions: [
+        {
+          question: "Should v1 include image input support from the pasted docs?",
+          options: [
+            { label: "Yes, include image input (Recommended)", description: "Add image_url multipart support now." },
+            { label: "No, defer image input", description: "Match current text-only surface." },
+          ],
+        },
+      ],
+    },
+  },
+  { title: "question", output: "", metadata: {} },
+)
+assert("question hook marks optional-doc scope expansion recommended option",
+  getState("smoke-v02625-question-scope-risk").optionalDocScopeExpansionQuestion === true)
+
+clearState("smoke-v02625-missing-falsification-idle")
+const missingFalsificationLong = `# Plan
+
+## What you asked for
+- Add a small SDK wrapper.
+
+## Findings
+✅ Existing wrapper is at app/llm.py:12.
+🔶 The pasted docs show optional streaming examples.
+
+## Change Set
+| File | Action |
+| app/llm.py | Edit |
+
+## Implementation Steps
+1. Add the wrapper.
+
+## Verification
+Run pytest.
+
+${Array.from({ length: 90 }, (_, i) => `Detail ${i}: enough body text to exceed the hook threshold.`).join("\n")}`
+await hooks["experimental.text.complete"]?.(
+  { sessionID: "smoke-v02625-missing-falsification-idle", messageID: "m1", partID: "p1" },
+  { text: missingFalsificationLong },
+)
+assert("missing-falsification hook buffers until idle",
+  getState("smoke-v02625-missing-falsification-idle").violationsDetected !== true)
+await hooks.event?.({
+  event: { type: "session.idle", properties: { sessionID: "smoke-v02625-missing-falsification-idle" } } as any,
+})
+assert("session.idle hook detects final-looking plan missing falsification",
+  getState("smoke-v02625-missing-falsification-idle").violationsDetected === true)
 
 const normalizeOutput = {
   text: `## Coverage Analysis: Upstream API → Data-Tables Requirements
@@ -1176,6 +1382,44 @@ Wrong if: the test passes on first run with default config.
   const enumeratesWICVSignal =
     /What I couldn't verify.{0,200}admits the receiver-side support is unknown/is.test(prompt)
   assert("contract check signal 6: What I couldn't verify", enumeratesWICVSignal)
+
+  // 18. v0.26.24: `## What I couldn't verify` is conditional-hard when
+  // Assumptions / unverified claims exist, not merely optional prose.
+  const hasConditionalHardUnverified =
+    /What I couldn't verify.{0,80}conditional-hard section/is.test(prompt) &&
+    /If you emit `## Assumptions`.{0,220}MUST include this section/is.test(prompt)
+  assert("v0.26.24 prompt makes unverified section conditional-hard", hasConditionalHardUnverified)
+
+  // 19. v0.26.24: external platform semantics need official docs or must be
+  // demoted; local call-site citations do not prove API semantics.
+  const hasExternalSemanticsRule =
+    /External platform semantics require external evidence/i.test(prompt) &&
+    /local call-site citation proves.{0,160}does NOT prove PostgreSQL\/Kubernetes\/SQLAlchemy\/browser semantics/is.test(prompt)
+  assert("v0.26.24 prompt distinguishes local call-sites from external semantics", hasExternalSemanticsRule)
+
+  // 20. v0.26.24: over-investigation is observable via turn-budget telemetry.
+  const hasTurnBudgetTelemetryPrompt =
+    /turn-budget-exceeded/i.test(prompt) &&
+    /Crossing 40 investigation calls before synthesis is a workflow defect/i.test(prompt)
+  assert("v0.26.24 prompt names turn-budget-exceeded telemetry", hasTurnBudgetTelemetryPrompt)
+
+  // 21. v0.26.25: pasted API docs often include optional examples (streaming,
+  // images, tool calling). The orchestrator should recommend matching the
+  // existing code surface, not full docs parity.
+  const hasOptionalDocTrigger =
+    /Optional pasted-doc feature expansion/i.test(prompt) &&
+    /Recommended answer MUST be the smallest option matching the existing surface/i.test(prompt)
+  assert("v0.26.25 prompt has optional pasted-doc feature expansion trigger", hasOptionalDocTrigger)
+
+  const hasOptionalDocPreemit =
+    /Pre-emit optional-doc feature check \(HARD\)/i.test(prompt) &&
+    /Do NOT mark optional pasted-doc capabilities as `\(Recommended\)`/i.test(prompt) &&
+    /Text \+ structured only \(Recommended\).*match current `LLMBase`\/consumer surface/is.test(prompt)
+  assert("v0.26.25 prompt prevents pasted-doc optional feature scope creep", hasOptionalDocPreemit)
+
+  const hasOptionalDocHardLine =
+    /Concrete hard line:.{0,300}text_stream\(\).{0,300}MUST NOT appear in `## Change Set`, `## Implementation Steps`, or tests/is.test(prompt)
+  assert("v0.26.25 prompt bans optional doc features from implementation sections", hasOptionalDocHardLine)
 }
 
 // --- v0.26.23 detector: cross-service contract not gated ------------------

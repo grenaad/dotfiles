@@ -205,6 +205,10 @@ export interface ArcState {
   readFiles?: Set<string>
   /** v0.26.7 — Grep patterns the orchestrator has searched in this session. */
   greppedPatterns?: Set<string>
+  /** v0.26.25 — Counts non-empty assistant text completions before plan telemetry. */
+  assistantTextParts?: number
+  /** v0.26.25 — Question tool recommended optional pasted-doc feature expansion. */
+  optionalDocScopeExpansionQuestion?: boolean
 }
 
 /**
@@ -383,9 +387,12 @@ export interface WorkflowPlanQualityLog extends LogBase {
  */
 export type ViolationKind =
   | "missing-unverified-section"
+  | "missing-falsification-section"
   | "uniform-marker-no-escape-note"
   | "compound-causes-no-notes-section"
   | "turn-budget-exceeded"
+  | "assistant-turn-churn"
+  | "optional-doc-scope-creep"
   | "falsifier-references-unread-file"
   | "load-bearing-claim-no-citation"
   | "cross-service-contract-not-gated"

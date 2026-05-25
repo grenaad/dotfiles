@@ -55,4 +55,6 @@ export function resetWorkflowMemory(state: ArcState): void {
   state.investigationBudgetWarned = undefined
   state.readFiles = undefined
   state.greppedPatterns = undefined
+  state.assistantTextParts = undefined
+  state.optionalDocScopeExpansionQuestion = undefined
 }

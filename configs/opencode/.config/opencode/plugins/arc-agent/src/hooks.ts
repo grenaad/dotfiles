@@ -155,6 +155,41 @@ function isCompletePlanCandidate(text: string): boolean {
   )
 }
 
+function isLikelyFinalPlanMissingFalsification(text: string): boolean {
+  if (text.length < TEXT_COMPLETE_MIN_PLAN_CHARS) return false
+  if (!hasPlanHeading(text)) return false
+  if (hasFalsificationHeading(text)) return false
+  const planishHeadings = text.match(
+    /^#{2,3}\s+(?:What you asked for|Findings|Diagnosis|Assumptions|Architecture Decisions|Change Set|Implementation Steps|Recommendation|Verification|Test Plan|Open Decisions for the user|What I couldn't verify)\b/gim,
+  ) ?? []
+  return planishHeadings.length >= 3
+}
+
+function questionArgsHaveOptionalDocScopeRisk(args: unknown): boolean {
+  if (typeof args !== "object" || args === null) return false
+  const questions = (args as { questions?: unknown }).questions
+  if (!Array.isArray(questions)) return false
+  const optionalCapabilityRe =
+    /\b(?:stream(?:ing)?|image(?: input)?|image_url|multimodal|function calling|tool calling|reasoning_effort|batch mode|async client|async api)\b/i
+  const deferRe = /\b(?:defer|no public|text \+ structured|match current|existing surface|current surface|minimal|smallest)\b/i
+  for (const q of questions) {
+    if (typeof q !== "object" || q === null) continue
+    const options = (q as { options?: unknown }).options
+    if (!Array.isArray(options)) continue
+    for (const opt of options) {
+      if (typeof opt !== "object" || opt === null) continue
+      const label = String((opt as { label?: unknown }).label ?? "")
+      const description = String((opt as { description?: unknown }).description ?? "")
+      const text = `${label} ${description}`
+      if (!/\(Recommended\)/.test(label)) continue
+      if (!optionalCapabilityRe.test(text)) continue
+      if (deferRe.test(text)) continue
+      return true
+    }
+  }
+  return false
+}
+
 function normalizePlanText(text: string): { text: string; rewrites: string[] } {
   let next = text
   const rewrites: string[] = []
@@ -354,6 +389,7 @@ export function buildHooks(client: Client): Hooks {
 
         const text = output.text.trim()
         if (text.length === 0) return
+        s.assistantTextParts = (s.assistantTextParts ?? 0) + 1
 
         const planText = accumulatePlanCandidate(s, text)
         if (!planText || !isCompletePlanCandidate(planText)) return
@@ -551,6 +587,16 @@ export function buildHooks(client: Client): Hooks {
           }
         }
 
+        if (input.tool === "question") {
+          if (await isOrchestratorWorkflow(client, input.sessionID)) {
+            const s = getState(input.sessionID)
+            if (questionArgsHaveOptionalDocScopeRisk(input.args)) {
+              s.optionalDocScopeExpansionQuestion = true
+            }
+          }
+          return
+        }
+
         if (input.tool !== "task") return
         // v0.26.12: only capture Task results into workflow memory for
         // orchestrator workflows. A build/plan agent invoking Task directly
@@ -627,6 +673,26 @@ export function buildHooks(client: Client): Hooks {
     event: async ({ event }) => {
       try {
         const e = event as Event
+        if (e.type === "session.idle") {
+          const props = (e as { properties?: { sessionID?: string } }).properties
+          if (props?.sessionID) {
+            const s = getState(props.sessionID)
+            if (!s.violationsDetected && s.pendingPlanText && isLikelyFinalPlanMissingFalsification(s.pendingPlanText)) {
+              if (!(await isChildSession(client, props.sessionID)) && await isOrchestratorWorkflow(client, props.sessionID)) {
+                const taskType = extractTaskType(s.pendingPlanText) ?? "fix"
+                s.taskType = taskType
+                await detectAndPersistViolations({
+                  sessionID: props.sessionID,
+                  state: s,
+                  plan: s.pendingPlanText,
+                  taskType,
+                  source: "event.session.idle",
+                })
+                s.pendingPlanText = undefined
+              }
+            }
+          }
+        }
         if (e.type === "session.deleted") {
           const props = (e as { properties?: { sessionID?: string } }).properties
           if (props?.sessionID) {
