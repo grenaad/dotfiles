@@ -361,6 +361,127 @@ function detectLoadBearingClaimsWithoutCitation(plan: string): Violation | null 
   }
 }
 
+// --- Cross-service contract gating detector --------------------------------
+
+/**
+ * v0.26.23 — Detect plans that recognize a cross-service wire-contract gap
+ * (the receiving side does not yet support a new param/field/payload) but
+ * still emit unconditional Change Set / Implementation Steps. The orchestrator
+ * prompt's pre-emit check tells the model to either dispatch the trigger-#6
+ * `question` or restructure the plan under `## Assuming <receiving service>
+ * supports <field/param>`. This detector verifies the section-structure
+ * remediation actually happened.
+ *
+ * Signals (any one fires the check):
+ *   1. ## Assumptions item mentions downstream/upstream/concurrently/in-flight/
+ *      will-be-updated/coordinated-deployment/will-accept/not-yet-deployed.
+ *   2. ## Diagnosis or ## Findings 🔶/⚠️ marker on a receiver-side handler.
+ *   3. ## Risks introduced by this plan bullet says receiving service must
+ *      be changed.
+ *   4. ## Open Decisions item asks whether the receiver supports the new
+ *      wire shape.
+ *   5. ## What I couldn't verify item mentions receiver-side support is
+ *      unknown.
+ *
+ * Suppression:
+ *   - Plan has at least one `## Assuming … supports …` H2/H3 heading.
+ *   - Plan has a top-level `## Blocker: upstream contract gap` heading.
+ *   - Plan body has no `## Change Set` / `## Implementation Steps` at all
+ *     (pure investigate/research output).
+ */
+
+// A contract-gap phrase must combine (a) a directional service-boundary
+// reference AND (b) a "support / accept / deploy / update / land" verb. The
+// raw word "upstream" or "downstream" alone is too common to be a signal —
+// it often appears in unrelated contexts like "upstream logs".
+const CONTRACT_BOUNDARY_RE =
+  /\b(?:downstream|upstream|receiver(?:[-\s]?side)?|other repo|sibling repo|cross-service|other service)\b/i
+
+const CONTRACT_DEPLOY_VERB_RE =
+  /\b(?:will (?:accept|support|be updated|land|ship|deploy)|not yet (?:deployed|supported|landed|merged)|coordinated deployment|in[-\s]?flight|concurrently (?:deployed|shipped|landed|updated)|must be (?:deployed|updated|changed)|requires? (?:upstream|downstream|coordinated) (?:change|update|deploy))/i
+
+function hasContractGapPhrase(body: string): boolean {
+  return CONTRACT_BOUNDARY_RE.test(body) && CONTRACT_DEPLOY_VERB_RE.test(body)
+}
+
+const CONTRACT_GAP_HEADINGS = [
+  "Assumptions",
+  "Assumptions (please correct any that are wrong)",
+  "Assumptions I'm making (please correct any that are wrong)",
+  "Risks introduced by this plan",
+  "Risks",
+  "What I couldn't verify",
+  "Open Decisions for the user",
+  "Open Decisions",
+]
+
+const RECEIVER_MARKER_LINE_RE =
+  /^[-*]\s.*(?:🔶|⚠️).*(?:downstream|upstream|receiver|coordinated deployment|in[-\s]?flight)/im
+
+function hasAssumingGate(plan: string): boolean {
+  const stripped = stripFencedBlocks(plan)
+  // Matches "## Assuming X supports Y" / "### Assuming X" / "## Assuming option N"
+  return /^#{2,3}\s+Assuming\b/m.test(stripped)
+}
+
+function hasUpstreamBlocker(plan: string): boolean {
+  const stripped = stripFencedBlocks(plan)
+  return /^#{2,3}\s+(?:Blocker|Critical[^a-z]*blocker|Decision needed before implementation|Possible task misdirection)\b/im
+    .test(stripped)
+}
+
+function hasChangeSetOrImplementation(plan: string): boolean {
+  const stripped = stripFencedBlocks(plan)
+  return (
+    /^#{2,3}\s+(?:Change Set|Implementation Steps)\b/im.test(stripped) ||
+    /^#{2,3}\s+Implementation\b/im.test(stripped)
+  )
+}
+
+function detectCrossServiceContractNotGated(plan: string): Violation | null {
+  if (!hasChangeSetOrImplementation(plan)) return null
+  if (hasAssumingGate(plan)) return null
+  if (hasUpstreamBlocker(plan)) return null
+
+  const signals: string[] = []
+  for (const h of CONTRACT_GAP_HEADINGS) {
+    const body = sectionBody(plan, h)
+    if (!body) continue
+    if (hasContractGapPhrase(body)) {
+      const firstLine = body
+        .split("\n")
+        .find((line) => CONTRACT_BOUNDARY_RE.test(line) && CONTRACT_DEPLOY_VERB_RE.test(line))
+      if (firstLine) {
+        signals.push(`${h}: "${firstLine.trim().slice(0, 140)}"`)
+      } else {
+        signals.push(`${h}: <phrase match>`)
+      }
+    }
+  }
+
+  // Findings/Diagnosis marker line check.
+  const stripped = stripFencedBlocks(plan)
+  const markerLineMatch = RECEIVER_MARKER_LINE_RE.exec(stripped)
+  if (markerLineMatch) {
+    signals.push(
+      `Findings/Diagnosis 🔶/⚠️ marker: "${markerLineMatch[0].trim().slice(0, 140)}"`,
+    )
+  }
+
+  if (signals.length === 0) return null
+
+  return {
+    kind: "cross-service-contract-not-gated",
+    severity: "high",
+    evidence:
+      `Plan recognizes a cross-service contract gap but emits unconditional Change Set / Implementation Steps. ` +
+      `Expected at least one '## Assuming <service> supports <field>' section header OR a top-level '## Blocker: upstream contract gap'. ` +
+      `Detected signals: ` +
+      signals.slice(0, 3).join(" | ") +
+      (signals.length > 3 ? ` (+${signals.length - 3} more)` : ""),
+  }
+}
+
 // --- Top-level detector ----------------------------------------------------
 
 /**
@@ -376,6 +497,7 @@ export function detectViolations(plan: string, _taskType: TaskType): Violation[]
     detectUniformMarkerNoEscapeNote,
     detectCompoundCausesNoNotes,
     detectLoadBearingClaimsWithoutCitation,
+    detectCrossServiceContractNotGated,
   ]
   const violations: Violation[] = []
   for (const d of detectors) {
@@ -444,6 +566,9 @@ export const __internals = {
   isToolUnavailabilityPlan,
   detectLoadBearingClaimsWithoutCitation,
   splitSentences,
+  detectCrossServiceContractNotGated,
+  hasAssumingGate,
+  hasUpstreamBlocker,
 }
 
 export type { TaskType, Violation, ViolationKind }

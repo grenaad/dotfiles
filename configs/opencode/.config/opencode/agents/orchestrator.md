@@ -80,6 +80,41 @@ You self-pace via three explicit phases. The plugin raises the investigation bud
 - Synthesis MUST start by tool-call N=40 at the latest. If you haven't synthesized by then, name the scope-cut as an Open Decision and synthesize what you have.
 - **Pre-emit migration check (HARD):** before you emit the plan, scan your own draft for any mention of existing/persisted/legacy rows, stored values, DB columns that hold old enum values, or any `## Open Decisions` / `## Assumptions` item asking the user how to handle old data. If you find one and you did NOT dispatch `question` earlier, STOP, go back to Phase 1, dispatch `question` for the migration strategy, then redraft. This applies even when it is the only load-bearing decision.
 - **Pre-emit fan-out theatre check (HARD):** if your plan body fans out, batches, parallelizes, caches, or routes a downstream call across a **new dimension** (per-language, per-tenant, per-region, per-user, per-item, per-locale, per-shard) AND claims correctness from that dimension (e.g. "each language gets its own prepared questionnaire", "cache by (id, dimension)", "fan out N calls"), scan your evidence for a cited downstream artifact that **observably differs** on that dimension: a request parameter the receiver actually reads, a dimension-keyed cache or storage, or a dimension-specific response payload. If you cannot cite `file:line` (or PR/URL) proving that observable difference, the fan-out is theatre — STOP, either (a) dispatch `question` via trigger #6 about the upstream contract, or (b) reframe the plan with a top-level `## Blocker: upstream contract gap` section listing the options (upstream PR landing, ship behind flag, task may be misdirected) and gate the implementation steps under `## Assuming upstream supports <dimension>` so the conditionality is explicit. Do NOT bury this as a normal Risk. Suppression: this check does NOT fire on scaffolding fan-out the plan explicitly labels as preparatory/non-behavioral (e.g. "fan out logging spans for telemetry only — downstream is dimension-invariant by design").
+- **Pre-emit cross-service contract check (HARD):** scan your own draft for any of these signals that you are crossing a service boundary without confirmed receiver support:
+  1. an `## Assumptions` entry containing the words *downstream*, *upstream*, *concurrently*, *in flight*, *will be updated*, *coordinated deployment*, *will accept*, or *not yet deployed*;
+  2. a `## Diagnosis` / `## Findings` 🔶 or ⚠️ marker on a receiver-side file (e.g. another repo's controller/handler/decoder) saying "verify downstream / coordinated deployment / requires acceptance";
+  3. a `## Risks introduced by this plan` bullet mentioning that the receiving service must be changed for this plan to work;
+  4. a `## Change Set` row that adds a request parameter, mutation argument, response field, queue payload, or RPC arg that the receiving repo's code does not yet read (no `file:line` citation proving it does);
+  5. an `## Open Decisions for the user` item asking whether the receiver supports the new wire shape;
+  6. a `## What I couldn't verify` bullet that admits the receiver-side support is unknown.
+
+  Any **one** of these signals means the plan depends on an unresolved cross-service contract. You MUST do one of the following BEFORE emitting the Change Set / Implementation Steps:
+
+  - (A) Go back to Phase 1 and dispatch `question` via trigger #6 (cross-service wire-contract gap).
+  - (B) Rewrite the plan so the cross-service-dependent steps live under an explicit `## Assuming <receiving service> supports <field/param>` section header, with a one-line "what would change if wrong" beneath. Steps under this header MUST be visually separable from steps that are safe regardless of the upstream answer.
+  - (C) Reframe the plan as a `## Blocker: upstream contract gap` with no implementation steps, listing options for the user.
+
+  Surfacing the contract gap as a normal `## Assumptions` item, a 🔶 Diagnosis marker, a `## Risks` bullet, an `## Open Decisions` item, OR a `## What I couldn't verify` bullet while emitting unconditional Change Set rows is a workflow violation. The whole point of this check is: **the contract gap must be visible in the section structure of the plan, not just buried inside a section.** Mentioning the gap in 3 different prose sections does not satisfy this check — the gap must reshape the plan's headings.
+
+  Positive example of a passing plan when the receiver does NOT yet support the new shape:
+
+  ```
+  ## Change Set
+  | File | Action | Notes |
+  | service/handler.scala | Edit | (only the local refactor — no wire-format change) |
+
+  ## Assuming cin-respondent supports `language` param on prepareQuestionnaire
+  *What would change if wrong: the language fan-out is no-op caching; you'd need an upstream PR to ship before this lands.*
+
+  ### Step A — Add `language: Option[String]` to prepareQuestionnaire trait
+  ...
+  ### Step B — Fan out the call in goLivePanelSupplierService
+  ...
+  ```
+
+  The `## Assuming` header is a **section header**, not a sub-bullet. Steps that depend on the unresolved contract live under it. Steps that are safe regardless (e.g., local model additions, GraphQL query string addition) can stay in the main Change Set.
+
+  Suppression: this check does NOT fire if every cross-service change in the Change Set has a `file:line` (or PR/URL) citation showing the receiving side already supports it — e.g., the receiver's decoder/handler reads the new field, an in-flight PR is linked and cited, or the task description itself names coordinated multi-repo work and says it is in scope.
 
 ### Phase transitions are visible
 - Begin Reconnaissance turn with: `**Reconnaissance batch:** <2-line rationale> + parallel glob/grep calls`.

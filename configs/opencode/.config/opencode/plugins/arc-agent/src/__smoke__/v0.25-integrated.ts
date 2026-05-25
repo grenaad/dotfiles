@@ -1124,6 +1124,214 @@ Wrong if: the test passes on first run with default config.
     "pre-emit migration check still present (regression guard)",
     stillHasMigrationPreemit,
   )
+
+  // 12. v0.26.23: cross-service contract pre-emit check is present.
+  const hasContractPreemit =
+    /Pre-emit cross-service contract check \(HARD\)/i.test(prompt)
+  assert("Synthesis has pre-emit cross-service contract check (HARD)", hasContractPreemit)
+
+  // 13. The contract check enumerates the 5 trigger signals.
+  const enumeratesAssumptionSignal =
+    /## Assumptions.{0,500}downstream.{0,500}upstream.{0,500}concurrently/is.test(prompt)
+  const enumeratesDiagnosisMarkerSignal = /🔶 or ⚠️ marker on a receiver-side/i.test(prompt)
+  const enumeratesRiskSignal =
+    /Risks introduced by this plan.{0,200}receiving service must be changed/is.test(prompt)
+  const enumeratesChangeSetSignal =
+    /Change Set.{0,400}receiving repo's code does not yet read/is.test(prompt)
+  const enumeratesOpenDecisionsSignal =
+    /Open Decisions for the user.{0,200}whether the receiver supports/is.test(prompt)
+  assert("contract check signal 1: Assumptions wording", enumeratesAssumptionSignal)
+  assert("contract check signal 2: Diagnosis 🔶/⚠️ marker", enumeratesDiagnosisMarkerSignal)
+  assert("contract check signal 3: Risks bullet", enumeratesRiskSignal)
+  assert("contract check signal 4: Change Set row without receiver citation", enumeratesChangeSetSignal)
+  assert("contract check signal 5: Open Decisions receiver question", enumeratesOpenDecisionsSignal)
+
+  // 14. The contract check enumerates A/B/C remediation paths.
+  const hasRemediationDispatch = /dispatch `question` via trigger #6/i.test(prompt)
+  const hasRemediationAssuming =
+    /## Assuming <receiving service> supports <field\/param>/i.test(prompt)
+  const hasRemediationBlocker =
+    /## Blocker: upstream contract gap/i.test(prompt) &&
+    /with no implementation steps/i.test(prompt)
+  assert("contract check remediation A: dispatch trigger-6 question", hasRemediationDispatch)
+  assert("contract check remediation B: Assuming <receiving service> gating", hasRemediationAssuming)
+  assert("contract check remediation C: Blocker section (no impl steps)", hasRemediationBlocker)
+
+  // 15. Suppression carve-out: receiver citation suppresses.
+  const hasContractSuppression =
+    /Suppression:.{0,400}every cross-service change.{0,200}has a `file:line`/is.test(prompt) ||
+    /every cross-service change in the Change Set has a `file:line` \(or PR\/URL\) citation showing the receiving side already supports it/i.test(
+      prompt,
+    )
+  assert("contract check has receiver-citation suppression", hasContractSuppression)
+
+  // 16. v0.26.23: Positive example present, showing `## Assuming` header
+  // sitting at top-level alongside the Change Set.
+  const hasPositiveExample =
+    /Positive example of a passing plan when the receiver does NOT yet support/i.test(prompt) &&
+    /## Assuming cin-respondent supports `language` param on prepareQuestionnaire/i.test(prompt)
+  assert("contract check has positive structural example", hasPositiveExample)
+
+  // 17. v0.26.23: 6th signal — `## What I couldn't verify`.
+  const enumeratesWICVSignal =
+    /What I couldn't verify.{0,200}admits the receiver-side support is unknown/is.test(prompt)
+  assert("contract check signal 6: What I couldn't verify", enumeratesWICVSignal)
+}
+
+// --- v0.26.23 detector: cross-service contract not gated ------------------
+
+{
+  section("Stage 9: v0.26.23 cross-service contract gating detector")
+  const {
+    detectCrossServiceContractNotGated,
+    hasAssumingGate,
+    hasUpstreamBlocker,
+  } = detectorInternals as unknown as {
+    detectCrossServiceContractNotGated: (plan: string) => { kind: string; severity: string; evidence: string } | null
+    hasAssumingGate: (plan: string) => boolean
+    hasUpstreamBlocker: (plan: string) => boolean
+  }
+
+  // Case 1: plan has Assumptions saying "downstream will be updated" + a
+  // Change Set; no Assuming gate, no Blocker → must flag.
+  const planNotGated = `
+# Plan
+
+## Assumptions
+1. **Downstream APIs support language parameter** — The cin-respondent
+   service will be updated concurrently with this PR.
+
+## Change Set
+| File | Action |
+| svc/respondentService.scala | Edit |
+
+## Implementation Steps
+1. Add language param.
+`
+  const v1 = detectCrossServiceContractNotGated(planNotGated)
+  assert(
+    "detector flags Assumptions-downstream + Change Set without Assuming gate",
+    v1 !== null && v1.kind === "cross-service-contract-not-gated",
+    `got ${JSON.stringify(v1)}`,
+  )
+
+  // Case 2: same shape BUT with `## Assuming` gate header → must NOT flag.
+  const planWithAssumingGate = `
+# Plan
+
+## Assumptions
+1. **Downstream APIs support language parameter** — concurrently shipping PR.
+
+## Change Set
+| File | Action |
+| local/model.scala | Edit (local refactor only) |
+
+## Assuming cin-respondent supports \`language\` param on prepareQuestionnaire
+*What would change if wrong: language fan-out is no-op caching.*
+
+### Step A — add param to trait
+### Step B — fan out in goLivePanelSupplierService
+`
+  const v2 = detectCrossServiceContractNotGated(planWithAssumingGate)
+  assert(
+    "detector does NOT flag when ## Assuming gate header is present",
+    v2 === null,
+    `got ${JSON.stringify(v2)}`,
+  )
+
+  // Case 3: top-level Blocker section + no impl steps → must NOT flag.
+  const planWithBlocker = `
+# Plan
+
+## Blocker: upstream contract gap
+The receiver does not accept language. Options:
+- ship behind feature flag
+- wait for upstream PR
+- task may be misdirected
+
+## Assumptions
+1. Downstream may be updated.
+`
+  const v3 = detectCrossServiceContractNotGated(planWithBlocker)
+  assert(
+    "detector does NOT flag when top-level Blocker section is present",
+    v3 === null,
+    `got ${JSON.stringify(v3)}`,
+  )
+
+  // Case 4: plan has no contract-gap signals at all → no flag.
+  const planClean = `
+# Plan
+
+## Assumptions
+1. The test runner is pytest.
+
+## Change Set
+| File | Action |
+| tests/test_foo.py | Add |
+
+## Implementation Steps
+1. Write the test.
+`
+  const v4 = detectCrossServiceContractNotGated(planClean)
+  assert(
+    "detector does NOT flag plans without cross-service signals",
+    v4 === null,
+    `got ${JSON.stringify(v4)}`,
+  )
+
+  // Case 5: investigate-only plan (no Change Set / Implementation Steps) → no flag.
+  const planInvestigateOnly = `
+# Plan
+
+## Findings
+🔶 Downstream service does not support the field.
+
+## Recommendation
+Wait for upstream PR.
+`
+  const v5 = detectCrossServiceContractNotGated(planInvestigateOnly)
+  assert(
+    "detector does NOT flag investigate-only plans (no Change Set/Impl Steps)",
+    v5 === null,
+    `got ${JSON.stringify(v5)}`,
+  )
+
+  // Case 6: Risks bullet mentions "receiving service must be changed" + Change Set → flag.
+  const planRisks = `
+# Plan
+
+## Change Set
+| File | Action |
+| svc/foo.ts | Edit |
+
+## Implementation Steps
+1. Do X.
+
+## Risks introduced by this plan
+1. The downstream service must be updated concurrently for the new
+   wire field to be read.
+`
+  const v6 = detectCrossServiceContractNotGated(planRisks)
+  assert(
+    "detector flags Risks-downstream-must-be-changed + Change Set",
+    v6 !== null && v6.kind === "cross-service-contract-not-gated",
+    `got ${JSON.stringify(v6)}`,
+  )
+
+  // Case 7: helper hasAssumingGate works on the heading variants.
+  assert("hasAssumingGate: H2", hasAssumingGate("## Assuming X supports Y\nbody"))
+  assert("hasAssumingGate: H3", hasAssumingGate("### Assuming option 1\nbody"))
+  assert("hasAssumingGate: returns false when absent",
+    !hasAssumingGate("## What you asked for\nbody"))
+
+  // Case 8: hasUpstreamBlocker covers several blocker phrasings.
+  assert("hasUpstreamBlocker: Blocker",
+    hasUpstreamBlocker("## Blocker: upstream contract gap\nbody"))
+  assert("hasUpstreamBlocker: Decision needed",
+    hasUpstreamBlocker("## Decision needed before implementation\nbody"))
+  assert("hasUpstreamBlocker: returns false when absent",
+    !hasUpstreamBlocker("## Risks introduced by this plan\nbody"))
 }
 
 // --- Summary ---------------------------------------------------------------

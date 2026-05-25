@@ -388,6 +388,7 @@ export type ViolationKind =
   | "turn-budget-exceeded"
   | "falsifier-references-unread-file"
   | "load-bearing-claim-no-citation"
+  | "cross-service-contract-not-gated"
 
 export type ViolationSeverity = "high" | "med" | "low"
 
