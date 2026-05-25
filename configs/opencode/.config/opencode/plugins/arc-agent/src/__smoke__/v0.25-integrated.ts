@@ -435,6 +435,51 @@ assert("detect load-bearing-claim-no-citation does NOT fire when citations prese
   !v_cited.some((v) => v.kind === "load-bearing-claim-no-citation"),
   `got: ${JSON.stringify(v_cited.map((v) => v.kind))}`)
 
+const PLAN_BARE_FILE_CLAIMS = `## What you asked for
+- Fix the auth bug.
+
+## Findings
+- The session middleware in auth/session.ts currently strips the user_id cookie. This breaks single-sign-on for federated users.
+- Token refresh requires a valid refresh_token because the rotation policy in auth/refresh.ts depends on the previous token's iat claim.
+- The auth handler must be called before the rate limiter, since rate-limit keys are derived from the user in middleware/rate.ts.
+
+## Falsification
+Wrong if: x.`
+const v_bare_file = detectViolations(PLAN_BARE_FILE_CLAIMS, "fix")
+assert("detect load-bearing-claim-no-citation treats bare filenames as uncited",
+  v_bare_file.some((v) => v.kind === "load-bearing-claim-no-citation"),
+  `got: ${JSON.stringify(v_bare_file.map((v) => v.kind))}`)
+
+const PLAN_URL_CLAIMS = `## What you asked for
+- Compare the API behavior.
+
+## Findings
+- The upstream API currently requires idempotency keys because retries can duplicate writes according to https://docs.example.com/api/retries.
+- The SDK must send a bearer token since the auth guide requires OAuth headers at https://docs.example.com/api/auth.
+- The export endpoint will paginate when results exceed the default page size documented at https://docs.example.com/api/pagination.
+
+## Falsification
+Wrong if: x.`
+const v_url = detectViolations(PLAN_URL_CLAIMS, "docs")
+assert("detect load-bearing-claim-no-citation accepts URLs as evidence",
+  !v_url.some((v) => v.kind === "load-bearing-claim-no-citation"),
+  `got: ${JSON.stringify(v_url.map((v) => v.kind))}`)
+
+const PLAN_ONE_OF_THREE_UNCITED = `## What you asked for
+- Fix the auth bug.
+
+## Findings
+- The session middleware at auth/session.ts:42 currently strips the user_id cookie.
+- Token refresh requires a valid refresh_token because the rotation policy at auth/refresh.ts:101 depends on the previous token's iat claim.
+- The auth handler must be called before the rate limiter, since rate-limit keys are derived from the user.
+
+## Falsification
+Wrong if: x.`
+const v_one_uncited = detectViolations(PLAN_ONE_OF_THREE_UNCITED, "fix")
+assert("detect load-bearing-claim-no-citation fires on one uncited major claim out of three",
+  v_one_uncited.some((v) => v.kind === "load-bearing-claim-no-citation"),
+  `got: ${JSON.stringify(v_one_uncited.map((v) => v.kind))}`)
+
 const PLAN_FEW_CLAIMS = `## What you asked for
 - Fix the bug.
 

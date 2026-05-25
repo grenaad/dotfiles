@@ -262,11 +262,12 @@ const LOAD_BEARING_RE =
   /\b(?:must|will|requires?|depends on|breaks if|fails when|cannot|always|never|currently|because|since)\b/i
 
 /**
- * Citation shape: `path/to/file.ext` with optional `:line` or `:line-line`.
- * Same alphabet as FALSIFIER_FILE_RE but matched anywhere in the sentence.
+ * Evidence shape: either a line-level code citation (`path/to/file.ext:line`
+ * or `:line-line`) or a URL. A bare filename proves only that a file exists;
+ * it does not ground the specific load-bearing claim.
  */
 const CITATION_RE =
-  /\b[\w./-]+\.(?:ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cpp|cc|h|hpp|md|toml|yaml|yml|json|sh|sql|graphql|proto|css|scss|html|vue|svelte|sav|ini|env|sln|csproj|gradle)(?::\d+(?:-\d+)?)?\b/
+  /(?:https?:\/\/\S+|\b[\w./-]+\.(?:ts|tsx|js|jsx|mjs|cjs|py|go|rs|rb|java|kt|swift|c|cpp|cc|h|hpp|md|toml|yaml|yml|json|sh|sql|graphql|proto|css|scss|html|vue|svelte|sav|ini|env|sln|csproj|gradle):\d+(?:-\d+)?\b)/
 
 /**
  * Split body into sentence-like units. Markdown table cells and list items
@@ -307,7 +308,10 @@ function splitSentences(body: string): string[] {
  * load-bearing assertion; Flash sometimes asserts without citation.
  *
  * Threshold: if there are ≥3 load-bearing sentences in claim sections
- * AND ≥50% of them lack a citation in the same sentence, emit a warning.
+ * AND ≥1/3 of them lack line-level evidence in the same sentence, emit a
+ * warning. This is intentionally below 50% because a plan with one uncited
+ * major claim among three findings is already materially under-grounded, while
+ * still suppressing one-off misses in larger sections.
  *
  * Suppressed for: tool-unavailability short plans, or plans where
  * Findings is purely a question list (no assertions).
@@ -346,7 +350,7 @@ function detectLoadBearingClaimsWithoutCitation(plan: string): Violation | null 
 
   if (loadBearing < 3) return null
   const ratio = uncited / loadBearing
-  if (ratio < 0.5) return null
+  if (ratio < 1 / 3) return null
 
   return {
     kind: "load-bearing-claim-no-citation",
