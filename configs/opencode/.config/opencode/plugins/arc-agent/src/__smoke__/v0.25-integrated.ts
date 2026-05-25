@@ -1019,6 +1019,113 @@ Wrong if: the test passes on first run with default config.
     `got ${v5?.evidence}`)
 }
 
+// --- v0.26.22 orchestrator prompt: cross-service wire-contract rules -------
+
+{
+  section("Stage 8: v0.26.22 cross-service wire-contract prompt rules")
+
+  const { readFileSync, existsSync } = await import("node:fs")
+  const { resolve, dirname } = await import("node:path")
+  const { fileURLToPath } = await import("node:url")
+  const here = dirname(fileURLToPath(import.meta.url))
+  // smoke file lives at .../plugins/arc-agent/src/__smoke__/
+  // orchestrator.md lives at .../agents/orchestrator.md  (4 dirs up + agents)
+  const orchestratorPath = resolve(here, "../../../../agents/orchestrator.md")
+  assert(
+    "orchestrator.md exists at expected relative path",
+    existsSync(orchestratorPath),
+    `expected ${orchestratorPath}`,
+  )
+
+  const prompt = readFileSync(orchestratorPath, "utf8")
+
+  // 1. Clarification Subroutine has a trigger #6 about cross-service wire contracts.
+  const hasTrigger6 = /6\.\s+\*\*Cross-service wire-contract gap\*\*/.test(prompt)
+  assert("Clarification Subroutine has trigger #6 (cross-service wire contract)", hasTrigger6)
+
+  // 2. The trigger names the receiver-side evidence required to suppress.
+  const hasReceiverEvidenceClause =
+    /receiving side's support is positively cited/i.test(prompt) ||
+    /receiver.side support is positively cited/i.test(prompt)
+  assert(
+    "trigger #6 suppression names positively-cited receiver evidence",
+    hasReceiverEvidenceClause,
+  )
+
+  // 3. Skip-if-single-decision rule explicitly excludes trigger #6.
+  const excludesTrigger6FromSkip =
+    /single-decision skip[^.]{0,80}does NOT apply[^.]{0,80}#6/i.test(prompt) ||
+    /single-decision skip[^.]{0,200}#6/i.test(prompt) ||
+    /trigger.*#6.*cross-service wire-contract gap with no evidenced/i.test(prompt)
+  assert(
+    "single-decision skip rule excludes trigger #6",
+    excludesTrigger6FromSkip,
+  )
+
+  // 4. Synthesis section has a fan-out theatre pre-emit check.
+  const hasFanOutTheatreCheck = /Pre-emit fan-out theatre check \(HARD\)/i.test(prompt)
+  assert("Synthesis has pre-emit fan-out theatre check (HARD)", hasFanOutTheatreCheck)
+
+  // 5. The fan-out check names a non-exhaustive dimension list and observable difference.
+  const hasDimensionList =
+    /per-language|per-tenant|per-region|per-user|per-locale|per-shard/i.test(prompt)
+  const hasObservableDifference = /observably differs/i.test(prompt)
+  assert("fan-out check enumerates dimensions", hasDimensionList)
+  assert("fan-out check requires observable downstream difference", hasObservableDifference)
+
+  // 6. Fan-out check has a Suppression carve-out for scaffolding/non-behavioral fan-out.
+  const hasScaffoldingCarveOut =
+    /Suppression:.{0,200}scaffolding|preparatory\/non-behavioral|non-behavioral by design|dimension-invariant by design/i.test(
+      prompt,
+    )
+  assert(
+    "fan-out check has suppression carve-out for scaffolding/non-behavioral fan-out",
+    hasScaffoldingCarveOut,
+  )
+
+  // 7. Open Decisions guard explicitly warns against burying cross-service contract risk.
+  const hasOpenDecisionsContractGuard =
+    /receiving side of a cross-service \/ cross-repo wire-contract change/i.test(prompt)
+  assert(
+    "Open Decisions guard covers cross-service wire-contract risk",
+    hasOpenDecisionsContractGuard,
+  )
+
+  // 8. Open Decisions guard mandates `## Assuming <upstream> supports <field/param>` gating
+  // when contract answer is unresolved at synthesis time.
+  const hasAssumingGating =
+    /## Assuming.*supports.*field\/param|gate the affected implementation steps under an explicit `## Assuming/i.test(
+      prompt,
+    )
+  assert(
+    "Open Decisions guard requires `## Assuming <upstream> supports …` gating",
+    hasAssumingGating,
+  )
+
+  // 9. `## Critical: ask before you guess` decision classes include cross-service wire-contract gap.
+  const hasCriticalWireBullet =
+    /Cross-service wire-contract gap:.{0,400}See Clarification Subroutine trigger #6/i.test(prompt)
+  assert(
+    "`## Critical: ask before you guess` lists cross-service wire-contract gap class",
+    hasCriticalWireBullet,
+  )
+
+  // 10. Existing persisted-value rule still present (regression guard).
+  const stillHasPersistedValueRule =
+    /Rename \/ enum-swap on a persisted field \(NO single-decision exception\)/i.test(prompt)
+  assert(
+    "persisted-value rename rule still present (regression guard)",
+    stillHasPersistedValueRule,
+  )
+
+  // 11. Existing migration pre-emit check still present (regression guard).
+  const stillHasMigrationPreemit = /Pre-emit migration check \(HARD\)/i.test(prompt)
+  assert(
+    "pre-emit migration check still present (regression guard)",
+    stillHasMigrationPreemit,
+  )
+}
+
 // --- Summary ---------------------------------------------------------------
 
 const total = results.length
