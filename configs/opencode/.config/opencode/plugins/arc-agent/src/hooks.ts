@@ -590,6 +590,7 @@ export function buildHooks(client: Client): Hooks {
         if (input.tool === "question") {
           if (await isOrchestratorWorkflow(client, input.sessionID)) {
             const s = getState(input.sessionID)
+            s.questionDispatched = true
             if (questionArgsHaveOptionalDocScopeRisk(input.args)) {
               s.optionalDocScopeExpansionQuestion = true
             }

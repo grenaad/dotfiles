@@ -574,6 +574,71 @@ assert("detect optional-doc-scope-creep does NOT fire when optional features are
   !v_optional_deferred.some((v) => v.kind === "optional-doc-scope-creep"),
   `got: ${JSON.stringify(v_optional_deferred.map((v) => v.kind))}`)
 
+const PLAN_OPTIONAL_DOC_PARAPHRASE = `## What you asked for
+- Add SDK wrapper.
+
+## Change Set
+| File | Action | Notes |
+| app/azure.py | Add | Adds real-time responses and media attachments |
+
+## Implementation Steps
+1. Add a non-blocking SDK wrapper for provider parity.
+
+## Falsification
+Wrong if: SDK call fails.`
+const v_optional_paraphrase = detectViolations(PLAN_OPTIONAL_DOC_PARAPHRASE, "feature")
+assert("detect optional-doc-scope-creep catches paraphrased optional docs scope",
+  v_optional_paraphrase.some((v) => v.kind === "optional-doc-scope-creep"),
+  `got: ${JSON.stringify(v_optional_paraphrase.map((v) => v.kind))}`)
+
+const PLAN_ARCH_UNCITED = `## What you asked for
+- Add SDK wrapper.
+
+## Architecture Decisions
+| Decision | Pick | Rejected alternative | Reasoning |
+|---|---|---|---|
+| Provider shape | Side-by-side AzureLLM | Replace existing implementation | Preserves existing callers and avoids churn |
+| Feature scope | Text + structured + tools | Full docs parity | Keeps v1 focused while preserving future expansion |
+
+## Falsification
+Wrong if: a current consumer requires image input in v1.`
+const v_arch_uncited = detectViolations(PLAN_ARCH_UNCITED, "feature")
+assert("detect architecture-decision-no-citation fires on uncited decision table",
+  v_arch_uncited.some((v) => v.kind === "architecture-decision-no-citation"),
+  `got: ${JSON.stringify(v_arch_uncited.map((v) => v.kind))}`)
+
+const PLAN_ARCH_CITED = `## What you asked for
+- Add SDK wrapper.
+
+## Architecture Decisions
+| Decision | Pick | Rejected alternative | Reasoning |
+|---|---|---|---|
+| Provider shape | Side-by-side AzureLLM | Replace existing implementation | Existing base class lives at app/llm.py:12 and current provider at app/nexus.py:7 |
+| Feature scope | Text + structured + tools | Full docs parity | Existing abstract methods at app/llm.py:20-44 require exactly these methods |
+
+## Falsification
+Wrong if: a current consumer requires image input in v1.`
+const v_arch_cited = detectViolations(PLAN_ARCH_CITED, "feature")
+assert("detect architecture-decision-no-citation does NOT fire on cited decision table",
+  !v_arch_cited.some((v) => v.kind === "architecture-decision-no-citation"),
+  `got: ${JSON.stringify(v_arch_cited.map((v) => v.kind))}`)
+
+const PLAN_ARCH_USER_SELECTED = `## What you asked for
+- Add SDK wrapper.
+
+## Architecture Decisions
+| Decision | Pick | Rejected alternative | Reasoning |
+|---|---|---|---|
+| Provider shape | Side-by-side AzureLLM | Replace existing implementation | User selected this in the question |
+| Feature scope | Text only | Full docs parity | Per your decision, images and streaming are out of scope |
+
+## Falsification
+Wrong if: a current consumer requires image input in v1.`
+const v_arch_user = detectViolations(PLAN_ARCH_USER_SELECTED, "feature")
+assert("detect architecture-decision-no-citation does NOT fire on user-selected rows",
+  !v_arch_user.some((v) => v.kind === "architecture-decision-no-citation"),
+  `got: ${JSON.stringify(v_arch_user.map((v) => v.kind))}`)
+
 // 6g. CEILINGS has the 2 new auditors
 assert("CEILINGS includes unverified-auditor",
   "unverified-auditor" in CEILINGS)
@@ -729,6 +794,33 @@ assert("violation pipeline logs optional-doc-scope-creep when broad doc option w
   optionalDocResult.violations.some((v) => v.kind === "optional-doc-scope-creep"),
   `actual=${JSON.stringify(optionalDocResult.violations)}`)
 
+clearState("smoke-v02626-semantic-default-no-question")
+const semanticDefaultState = getState("smoke-v02626-semantic-default-no-question")
+const semanticDefaultResult = await detectAndPersistViolations({
+  sessionID: "smoke-v02626-semantic-default-no-question",
+  state: semanticDefaultState,
+  plan: PLAN_ARCH_UNCITED,
+  taskType: "feature",
+  source: "experimental.text.complete",
+})
+assert("violation pipeline logs semantic-default-no-question without clarification",
+  semanticDefaultResult.violations.some((v) => v.kind === "semantic-default-no-question"),
+  `actual=${JSON.stringify(semanticDefaultResult.violations)}`)
+
+clearState("smoke-v02626-semantic-default-with-question")
+const semanticQuestionState = getState("smoke-v02626-semantic-default-with-question")
+semanticQuestionState.questionDispatched = true
+const semanticQuestionResult = await detectAndPersistViolations({
+  sessionID: "smoke-v02626-semantic-default-with-question",
+  state: semanticQuestionState,
+  plan: PLAN_ARCH_UNCITED,
+  taskType: "feature",
+  source: "experimental.text.complete",
+})
+assert("semantic-default-no-question suppressed after question dispatch",
+  !semanticQuestionResult.violations.some((v) => v.kind === "semantic-default-no-question"),
+  `actual=${JSON.stringify(semanticQuestionResult.violations)}`)
+
 // v0.26.12: every plugin hook gated by isOrchestratorWorkflow checks the
 // session's root agent. The default fake client below returns agent
 // "orchestrator" so the existing smoke battery exercises the active
@@ -777,6 +869,8 @@ await hooks["tool.execute.after"]?.(
 )
 assert("question hook marks optional-doc scope expansion recommended option",
   getState("smoke-v02625-question-scope-risk").optionalDocScopeExpansionQuestion === true)
+assert("question hook marks questionDispatched",
+  getState("smoke-v02625-question-scope-risk").questionDispatched === true)
 
 clearState("smoke-v02625-missing-falsification-idle")
 const missingFalsificationLong = `# Plan
@@ -1407,9 +1501,10 @@ Wrong if: the test passes on first run with default config.
   // images, tool calling). The orchestrator should recommend matching the
   // existing code surface, not full docs parity.
   const hasOptionalDocTrigger =
-    /Optional pasted-doc feature expansion/i.test(prompt) &&
+    /Optional pasted-doc feature scope/i.test(prompt) &&
+    /Ask one feature-scope question before drafting/i.test(prompt) &&
     /Recommended answer MUST be the smallest option matching the existing surface/i.test(prompt)
-  assert("v0.26.25 prompt has optional pasted-doc feature expansion trigger", hasOptionalDocTrigger)
+  assert("v0.26.26 prompt has required optional pasted-doc feature-scope trigger", hasOptionalDocTrigger)
 
   const hasOptionalDocPreemit =
     /Pre-emit optional-doc feature check \(HARD\)/i.test(prompt) &&

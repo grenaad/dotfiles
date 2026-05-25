@@ -57,4 +57,5 @@ export function resetWorkflowMemory(state: ArcState): void {
   state.greppedPatterns = undefined
   state.assistantTextParts = undefined
   state.optionalDocScopeExpansionQuestion = undefined
+  state.questionDispatched = undefined
 }

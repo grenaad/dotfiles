@@ -346,6 +346,51 @@ function splitSentences(body: string): string[] {
   return out
 }
 
+// --- Architecture-decision helpers -----------------------------------------
+
+const ARCH_USER_DECISION_RE =
+  /\b(?:per user|per your decision|user[-\s]?confirmed|user selected|user chose|selected by user|explicitly requested|chosen in (?:the )?question)\b/i
+
+const ARCH_SINGLE_APPROACH_RE =
+  /\b(?:single approach|no meaningful alternatives?|no real choice|not a real choice)\b/i
+
+const OPEN_DECISION_LOAD_BEARING_RE =
+  /\b(?:feature scope|scope|migration|schema|storage|data model|external api|wire|contract|rollout|compatibility|provider|default provider|config surface|auth|security|streaming|image input|tool calling|function calling|reasoning|batch|async|endpoint|api shape|interface|surface)\b/i
+
+function architectureDecisionRows(plan: string): string[] {
+  const body = sectionBody(plan, "Architecture Decisions")
+  if (!body) return []
+  const rows: string[] = []
+  for (const rawLine of body.split("\n")) {
+    const line = rawLine.trim()
+    if (!line.includes("|")) continue
+    if (/^\|?[\s\-:|]+\|?\s*$/.test(line)) continue
+    if (/\bDecision\b/i.test(line) && /\bPick\b/i.test(line)) continue
+    if (ARCH_SINGLE_APPROACH_RE.test(line)) continue
+    rows.push(line)
+  }
+  return rows
+}
+
+function hasArchitectureRowEvidence(row: string): boolean {
+  return CITATION_RE.test(row) || ARCH_USER_DECISION_RE.test(row) || /`[^`]+`/.test(row)
+}
+
+function loadBearingOpenDecisionLines(plan: string): string[] {
+  const bodies = [sectionBody(plan, "Open Decisions for the user"), sectionBody(plan, "Open Decisions")]
+    .filter(Boolean)
+  const lines: string[] = []
+  for (const body of bodies) {
+    for (const rawLine of body.split("\n")) {
+      const line = rawLine.trim()
+      if (!/^(?:[-*]\s+|\d+[.)]\s+)/.test(line)) continue
+      if (!OPEN_DECISION_LOAD_BEARING_RE.test(line)) continue
+      lines.push(line)
+    }
+  }
+  return lines
+}
+
 /**
  * Detector 4 (v0.26.11): the agent makes load-bearing claims in the
  * Findings/Diagnosis section without grounding them in file:line citations.
@@ -406,6 +451,66 @@ function detectLoadBearingClaimsWithoutCitation(plan: string): Violation | null 
     evidence:
       `${uncited}/${loadBearing} load-bearing claims in Findings/Diagnosis lack file:line citations. Examples: ` +
       uncitedSamples.map((s) => `"${s}…"`).join(" | "),
+  }
+}
+
+// --- Architecture Decisions citation detector ------------------------------
+
+/**
+ * v0.26.26 — Flash often hides semantic defaults in `## Architecture
+ * Decisions`: provider shape, feature scope, rollout/default choices. The
+ * Findings detector does not scan that table. Keep this narrow: only flag
+ * multi-row decision tables with 2+ rows that have no line citation, URL,
+ * inline code reference, or explicit user-selection evidence. A single weak
+ * row is noisy on historical plans; 2+ unsupported picks is the regression
+ * signal.
+ */
+function detectArchitectureDecisionNoCitation(plan: string): Violation | null {
+  if (isToolUnavailabilityPlan(plan)) return null
+  const rows = architectureDecisionRows(plan)
+  if (rows.length < 2) return null
+
+  const uncited = rows.filter((row) => !hasArchitectureRowEvidence(row))
+  if (uncited.length < 2) return null
+
+  return {
+    kind: "architecture-decision-no-citation",
+    severity: "low",
+    evidence:
+      `${uncited.length}/${rows.length} Architecture Decisions rows lack file:line or URL evidence. Examples: ` +
+      uncited.slice(0, 3).map((s) => `"${s.slice(0, 140)}"`).join(" | "),
+  }
+}
+
+/**
+ * v0.26.26 — Stateful companion detector used by the pipeline. It catches the
+ * Opus-vs-Flash gap where Flash silently chooses multiple semantic defaults
+ * instead of asking a batched clarification question first.
+ */
+export function detectSemanticDefaultNoQuestion(plan: string, questionDispatched: boolean | undefined): Violation | null {
+  if (questionDispatched) return null
+  if (isToolUnavailabilityPlan(plan)) return null
+
+  const uncitedArchitectureDefaults = architectureDecisionRows(plan)
+    .filter((row) => !hasArchitectureRowEvidence(row))
+  const openDecisionDefaults = loadBearingOpenDecisionLines(plan)
+
+  const signals: string[] = []
+  if (uncitedArchitectureDefaults.length >= 2) {
+    signals.push(`Architecture Decisions has ${uncitedArchitectureDefaults.length} uncited semantic picks`)
+  }
+  if (openDecisionDefaults.length >= 2) {
+    signals.push(`Open Decisions has ${openDecisionDefaults.length} load-bearing choices`)
+  }
+  if (signals.length === 0) return null
+
+  return {
+    kind: "semantic-default-no-question",
+    severity: "med",
+    evidence:
+      `Plan appears to choose or defer multiple load-bearing semantic defaults without a prior question dispatch. ` +
+      signals.join("; ") +
+      `. Ask once before drafting, or cite evidence proving the picks are dictated by existing code/user input.`,
   }
 }
 
@@ -533,7 +638,7 @@ function detectCrossServiceContractNotGated(plan: string): Violation | null {
 // --- Optional pasted-doc scope-creep detector -------------------------------
 
 const OPTIONAL_DOC_IMPLEMENTATION_RE =
-  /\b(?:text_stream|stream(?:ing)? support|stream=True|image input support|ImageContent|human_with_images|image_url multipart|reasoning_effort|batch mode|async client|async api)\b/i
+  /\b(?:text_stream|stream(?:ing)? support|stream=True|real[-\s]?time responses?|lower perceived latency|time to first token|image input support|ImageContent|human_with_images|image_url multipart|media attachments?|multimodal content|multipart content|content blocks?|provider parity|docs? parity|full provider parity|non[-\s]?blocking (?:sdk )?wrapper|reasoning_effort|batch mode|async client|async api|async wrapper)\b/i
 
 const OPTIONAL_DOC_DEFER_RE =
   /\b(?:defer(?:red)?|drop(?:ped)? for v1|not added|not implemented|out of scope|open decision|future)\b/i
@@ -587,6 +692,7 @@ export function detectViolations(plan: string, _taskType: TaskType): Violation[]
     detectUniformMarkerNoEscapeNote,
     detectCompoundCausesNoNotes,
     detectLoadBearingClaimsWithoutCitation,
+    detectArchitectureDecisionNoCitation,
     detectCrossServiceContractNotGated,
     detectOptionalDocScopeCreep,
   ]
@@ -660,6 +766,11 @@ export const __internals = {
   detectMissingFalsificationSection,
   countPlanishSections,
   hasFalsificationSection,
+  detectArchitectureDecisionNoCitation,
+  detectSemanticDefaultNoQuestion,
+  architectureDecisionRows,
+  hasArchitectureRowEvidence,
+  loadBearingOpenDecisionLines,
   detectCrossServiceContractNotGated,
   detectOptionalDocScopeCreep,
   hasAssumingGate,

@@ -9,7 +9,7 @@
 import { ensureWorkflowMemory } from "./state"
 import { log } from "./log"
 import { appendNote } from "./workflow-memory"
-import { detectViolations, detectFalsifierUnreadFiles } from "./violation-detector"
+import { detectViolations, detectFalsifierUnreadFiles, detectSemanticDefaultNoQuestion } from "./violation-detector"
 import type { ArcState, SubagentType, TaskType, Violation } from "./types"
 
 /** v0.26: per-workflow cap on violation notes. */
@@ -85,6 +85,8 @@ export async function detectAndPersistViolations(input: {
   if (assistantTurnViolation) violations.push(assistantTurnViolation)
   const optionalDocViolation = detectOptionalDocScopeCreep(input.plan, input.state)
   if (optionalDocViolation) violations.push(optionalDocViolation)
+  const semanticDefaultViolation = detectSemanticDefaultNoQuestion(input.plan, input.state.questionDispatched)
+  if (semanticDefaultViolation) violations.push(semanticDefaultViolation)
   // v0.26.7 — falsifier-references-unread-file detector. Needs ArcState's
   // readFiles set, so it lives outside the pure detector list.
   const falsifierViolation = detectFalsifierUnreadFiles(input.plan, input.state.readFiles)

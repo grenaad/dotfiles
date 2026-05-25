@@ -209,6 +209,8 @@ export interface ArcState {
   assistantTextParts?: number
   /** v0.26.25 — Question tool recommended optional pasted-doc feature expansion. */
   optionalDocScopeExpansionQuestion?: boolean
+  /** v0.26.26 — Orchestrator dispatched at least one clarification question. */
+  questionDispatched?: boolean
 }
 
 /**
@@ -393,6 +395,8 @@ export type ViolationKind =
   | "turn-budget-exceeded"
   | "assistant-turn-churn"
   | "optional-doc-scope-creep"
+  | "semantic-default-no-question"
+  | "architecture-decision-no-citation"
   | "falsifier-references-unread-file"
   | "load-bearing-claim-no-citation"
   | "cross-service-contract-not-gated"
