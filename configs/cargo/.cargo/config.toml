@@ -1,0 +1,15 @@
+[profile.dev]
+# Keep file:line in backtraces; drop heavy DWARF variable info.
+# Cuts debug-info bloat by ~80%. Stepping in lldb still works for
+# the current line; variable inspection is reduced.
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+# Dependencies: no debug info at all. You almost never step into
+# tokio/serde/etc. internals. This is the single biggest space saver.
+debug = false
+
+[profile.release]
+# Release builds keep line tables for crash reports, strip everything else.
+debug = "line-tables-only"
+strip = "debuginfo"
