@@ -4,8 +4,8 @@
     "@ex-machina/opencode-anthropic-auth@1.7.5",
     "opencode-pty",
     "opencode-gemini-auth@latest",
-    "./plugins/arc-agent/src/index.ts",
-    "./plugins/flow-agent/src/index.ts"
+    "/Users/ice/projects/tron-agents/packages/arc-agent/src/index.ts",
+    "/Users/ice/projects/tron-agents/packages/flow-agent/src/index.ts"
   ],
   "lsp": {
     "scala-lsp": {
