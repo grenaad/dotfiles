@@ -60,9 +60,9 @@
       - sf-pro
       - font-sketchybar-app-font
 
-      - cliproxyapi
       - p7zip
       - ocrmypdf
+      - modem-dev/tap/hunk
 
     homebrew_cask_apps:
       - docker
