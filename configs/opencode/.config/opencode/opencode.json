@@ -34,38 +34,16 @@
       "command": ["npx", "-y", "apidog-mcp-server@latest", "--site-id=748984"]
     },
     "fd-forge-local": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mcp-remote",
-        "http://localhost:8080/mcp",
-        "19876"
-      ],
-      "enabled": false,
-      "timeout": 120000
+      "type": "remote",
+      "url": "http://localhost:8080/mcp"
     },
     "fd-forge": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mcp-remote",
-        "https://forge.focaldata.com/mcp",
-        "19876"
-      ],
-      "enabled": false
+      "type": "remote",
+      "url": "https://forge.focaldata.com/mcp"
     },
     "fd-forge-dev": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "mcp-remote",
-        "https://forge.focaldata.dev/mcp",
-        "19876"
-      ],
-      "enabled": false
+      "type": "remote",
+      "url": "https://forge.focaldata.dev/mcp"
     },
     "kubefwd": {
       "type": "local",
@@ -93,7 +71,10 @@
     "playwright": {
       "type": "local",
       "command": ["npx", "@playwright/mcp@latest", "--extension"],
-      "enabled": false
+      "enabled": false,
+      "environment": {
+        "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "yfBXYMo3SK2ZVreuIp08aJFqMHUl1196yS6U2fBO_0"
+      }
     },
     "mcp-atlassian": {
       "type": "local",
