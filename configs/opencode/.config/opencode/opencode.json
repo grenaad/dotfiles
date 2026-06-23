@@ -122,17 +122,11 @@
       "enabled": false,
       "command": ["uvx", "--from", "llm-tldr", "tldr-mcp", "--project", "."]
     },
-    "contextplus": {
+    "mempalace": {
       "type": "local",
       "enabled": false,
-      "command": ["bunx", "contextplus"],
-      "timeout": 60000,
-      "environment": {
-        "OLLAMA_HOST": "http://100.103.182.62:11434",
-        "OLLAMA_EMBED_MODEL": "nomic-embed-text",
-        "OLLAMA_CHAT_MODEL": "gemma3:4b"
-      }
-    },
+      "command": ["docker", "run", "-i", "--rm", "-v", "mempalace-data:/data", "mempalace"]
+    }
     "takealot": {
       "type": "local",
       "enabled": false,
