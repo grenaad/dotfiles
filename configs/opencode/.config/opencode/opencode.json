@@ -125,8 +125,16 @@
     "mempalace": {
       "type": "local",
       "enabled": false,
-      "command": ["docker", "run", "-i", "--rm", "-v", "mempalace-data:/data", "mempalace"]
-    }
+      "command": [
+        "docker",
+        "run",
+        "-i",
+        "--rm",
+        "-v",
+        "mempalace-data:/data",
+        "mempalace"
+      ]
+    },
     "takealot": {
       "type": "local",
       "enabled": false,
