@@ -9,6 +9,10 @@
     "npm:pi-subagents",
     "npm:@juicesharp/rpiv-todo",
     "npm:pi-lens",
-    "npm:context-mode"
-  ]
+    "npm:context-mode",
+    "npm:@cgaravitoq/pi-claude-code-auth"
+  ],
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-4-8",
+  "defaultThinkingLevel": "high"
 }
