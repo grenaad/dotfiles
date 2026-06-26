@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.79.7",
+  "lastChangelogVersion": "0.80.2",
   "theme": "dark",
   "packages": [
     "npm:@hypabolic/pi-hypa",

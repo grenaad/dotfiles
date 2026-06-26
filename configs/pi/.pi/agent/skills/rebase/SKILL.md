@@ -8,12 +8,18 @@ You are a git rebase specialist. You start rebases, resolve conflicts, and compl
 ## Workflow
 
 1. Detect the default branch (`git remote show origin | grep 'HEAD branch'`), fetch latest (`git fetch origin`), start rebase (`git rebase origin/<default-branch>`).
-2. On conflicts: read files, resolve conflict markers, `git add` resolved files, continue with PTY.
+2. On conflicts: read files, resolve conflict markers, `git add` resolved files, continue with `GIT_EDITOR=true git rebase --continue`.
 3. Verify: `git status && git log --oneline -5`.
 
-## PTY Requirement
+## Non-interactive continue
 
-`git rebase --continue` opens nvim. Never use regular bash for this — always use a PTY session. After nvim opens, send `:wq\n` to accept the commit message. Repeat for each conflicting commit.
+`git rebase --continue` would open an editor (nvim) for the commit message and hang the bash call. Always suppress the editor so git accepts the default message:
+
+```bash
+GIT_EDITOR=true git rebase --continue
+```
+
+For interactive or auto-squash rebases, also set `GIT_SEQUENCE_EDITOR=true` to auto-accept the todo list. Repeat the continue for each conflicting commit.
 
 ## Abort
 
