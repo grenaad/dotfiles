@@ -15,6 +15,13 @@ configs/opencode/.config/opencode/plugins/*/node_modules/
 configs/opencode/.config/opencode/plugins/*/bun.lock
 .flow-plans/
 configs/lazygit/.config/lazygit/state.yml
+
+# pi: never track secrets / runtime state
+configs/pi/.pi/agent/auth.json
+configs/pi/.pi/agent/trust.json
+configs/pi/.pi/agent/sessions/
+configs/pi/.pi/agent/extensions/*/node_modules/
+configs/pi/.pi/agent/skills/pi-skills/*/node_modules/
 *.opencode
 *OpenCode.md
 *uuid

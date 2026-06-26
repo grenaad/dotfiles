@@ -1,0 +1,14 @@
+{
+  "lastChangelogVersion": "0.79.7",
+  "theme": "dark",
+  "packages": [
+    "npm:@hypabolic/pi-hypa",
+    "npm:pi-web-access",
+    "npm:pi-mcp-adapter",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:pi-subagents",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:pi-lens",
+    "npm:context-mode"
+  ]
+}
