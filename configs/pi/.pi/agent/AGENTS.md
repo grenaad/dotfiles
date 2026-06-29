@@ -43,16 +43,7 @@ web_search) first; reach for an MCP server only when it's the right surface.
 
 ### tldr usage note
 
-`tldr` is **not pinned to a directory** — always pass an absolute `project` path in
-`args`, so you can analyze any local repo in one session:
-
-```js
-mcp({ tool: "tldr_...", args: '{"project": "/Users/ice/projects/foo", ...}' });
-```
-
-Default to the current working directory when the user doesn't specify another. Use it
-for **control flow (CFG)**, **data flow (DFG)**, **program dependence graphs (PDG)**,
-**call-graph aggregation**, and **token-efficient structure extraction** — i.e. cross-file
-relationships, execution paths, and how data propagates. Do **not** use it for simple
-"find references" / "go to definition" / "show outline" — pi-lens (`lsp_navigation`,
-`module_report`, `read_symbol`) handles those natively with zero startup cost.
+Not pinned to a directory — always pass an absolute `project` path in `args`
+(default to cwd). Use for **CFG / DFG / PDG**, call-graph aggregation, and
+token-efficient structure extraction. **Not** for find-references / go-to-definition /
+outline — pi-lens handles those natively.
