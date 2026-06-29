@@ -2,15 +2,24 @@
   "mcpServers": {
     "fd-forge-local": {
       "url": "http://localhost:8080/mcp",
-      "lifecycle": "lazy"
+      "lifecycle": "lazy",
+      "oauth": {
+        "redirectUri": "http://localhost:19876/callback"
+      }
     },
     "fd-forge": {
       "url": "https://forge.focaldata.com/mcp",
-      "lifecycle": "lazy"
+      "lifecycle": "lazy",
+      "oauth": {
+        "redirectUri": "http://localhost:19876/callback"
+      }
     },
     "fd-forge-dev": {
       "url": "https://forge.focaldata.dev/mcp",
-      "lifecycle": "lazy"
+      "lifecycle": "lazy",
+      "oauth": {
+        "redirectUri": "http://localhost:19876/callback"
+      }
     },
     "github": {
       "url": "https://api.githubcopilot.com/mcp/",

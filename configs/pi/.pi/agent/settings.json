@@ -11,7 +11,7 @@
     "npm:context-mode",
     "npm:@cgaravitoq/pi-claude-code-auth"
   ],
-  "defaultProvider": "anthropic",
-  "defaultModel": "claude-opus-4-8",
-  "defaultThinkingLevel": "medium"
+  "defaultProvider": "openai",
+  "defaultModel": "gpt-5.5",
+  "defaultThinkingLevel": "high"
 }
