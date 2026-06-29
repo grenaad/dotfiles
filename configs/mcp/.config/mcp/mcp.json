@@ -74,8 +74,8 @@
       "lifecycle": "lazy"
     },
     "mempalace": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "-v", "mempalace-data:/data", "mempalace"],
+      "command": "uvx",
+      "args": ["--from", "mempalace", "mempalace-mcp"],
       "lifecycle": "lazy"
     },
     "float": {
