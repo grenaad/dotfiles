@@ -5,11 +5,18 @@ All servers are **lazy** — they don't connect until a tool is invoked. Discove
 `mcp({ tool: "name", args: '{...}' })`. Prefer native pi tools (pi-lens, Read, Bash,
 web_search) first; reach for an MCP server only when it's the right surface.
 
+> **GitHub URLs → prefer the `github` server.** When the user gives a
+> `github.com` link (repo, issue, PR, commit, diff/changes, file blob, or code
+> search), prefer the `github` MCP server over `fetch_content`/`web_search`.
+> Parse owner/repo/number from the URL and call the matching tool (e.g. a PR →
+> `get_pull_request` plus `get_pull_request_files`/`...diff`). Fall back to a
+> plain web fetch only if the `github` tools can't serve the request.
+
 ### Code & repositories
 
 | Server     | Use for                                                                       |
 | ---------- | ----------------------------------------------------------------------------- |
-| `github`   | GitHub repos, issues, PRs, code search, file contents on remote repos         |
+| `github`   | GitHub repos, issues, PRs, code search, file contents — and any github.com URL |
 | `grep-app` | `searchGitHub` — find real-world code examples across 1M+ public repos        |
 | `context7` | Up-to-date library/framework documentation and API references                 |
 | `tldr`     | Code structure, call graphs, control/data flow (CFG/DFG/PDG) — see note below |
