@@ -1,0 +1,98 @@
+{
+  "mcpServers": {
+    "fd-forge-local": {
+      "url": "http://localhost:8080/mcp",
+      "lifecycle": "lazy"
+    },
+    "fd-forge": {
+      "url": "https://forge.focaldata.com/mcp",
+      "lifecycle": "lazy"
+    },
+    "fd-forge-dev": {
+      "url": "https://forge.focaldata.dev/mcp",
+      "lifecycle": "lazy"
+    },
+    "github": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer ${GITHUB_TOKEN}"
+      },
+      "lifecycle": "lazy"
+    },
+    "datadog": {
+      "url": "https://mcp.datadoghq.eu/api/unstable/mcp-server/mcp",
+      "headers": {
+        "DD_API_KEY": "${DD_API_KEY}",
+        "DD_APPLICATION_KEY": "${DD_APP_KEY}"
+      },
+      "lifecycle": "lazy"
+    },
+    "open": {
+      "url": "http://127.0.0.1:18081/mcp",
+      "lifecycle": "lazy"
+    },
+    "linear": {
+      "url": "https://mcp.linear.app/mcp",
+      "lifecycle": "lazy"
+    },
+    "grep-app": {
+      "url": "https://mcp.grep.app",
+      "lifecycle": "lazy"
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp",
+      "lifecycle": "lazy"
+    },
+    "kubefwd": {
+      "command": "kubefwd",
+      "args": ["mcp"],
+      "lifecycle": "lazy"
+    },
+    "notion": {
+      "url": "https://mcp.notion.com/mcp",
+      "lifecycle": "lazy"
+    },
+    "tldr": {
+      "command": "uvx",
+      "args": ["--from", "llm-tldr", "tldr-mcp"],
+      "lifecycle": "lazy"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--extension"],
+      "env": {
+        "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "DyfBXYMo3SK2ZVreuIp08aJFqMHUl1196yS6U2fBO_0"
+      },
+      "lifecycle": "lazy"
+    },
+    "digitalocean": {
+      "command": "npx",
+      "args": ["-y", "@digitalocean/mcp"],
+      "env": {
+        "DIGITALOCEAN_API_TOKEN": "${DIGITALOCEAN_ACCESS_TOKEN}"
+      },
+      "lifecycle": "lazy"
+    },
+    "mempalace": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-v", "mempalace-data:/data", "mempalace"],
+      "lifecycle": "lazy"
+    },
+    "float": {
+      "command": "/Users/ice/.local/bin/uv",
+      "args": [
+        "--directory",
+        "/Users/ice/projects/mcp-float",
+        "run",
+        "fastmcp",
+        "run",
+        "server.py:mcp"
+      ],
+      "env": {
+        "FLOAT_EMAIL": "${FLOAT_EMAIL}",
+        "FLOAT_PASSWORD": "${FLOAT_PASSWORD}"
+      },
+      "lifecycle": "lazy"
+    }
+  }
+}

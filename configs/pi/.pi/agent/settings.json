@@ -12,6 +12,6 @@
     "npm:@cgaravitoq/pi-claude-code-auth"
   ],
   "defaultProvider": "anthropic",
-  "defaultModel": "claude-opus-4-7",
+  "defaultModel": "claude-opus-4-8",
   "defaultThinkingLevel": "medium"
 }
