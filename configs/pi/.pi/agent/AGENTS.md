@@ -14,11 +14,11 @@ web_search) first; reach for an MCP server only when it's the right surface.
 
 ### Code & repositories
 
-| Server     | Use for                                                                       |
-| ---------- | ----------------------------------------------------------------------------- |
+| Server     | Use for                                                                        |
+| ---------- | ------------------------------------------------------------------------------ |
 | `github`   | GitHub repos, issues, PRs, code search, file contents — and any github.com URL |
-| `grep-app` | `searchGitHub` — find real-world code examples across 1M+ public repos        |
-| `context7` | Up-to-date library/framework documentation and API references                 |
+| `grep-app` | `searchGitHub` — find real-world code examples across 1M+ public repos         |
+| `context7` | Up-to-date library/framework documentation and API references                  |
 
 ### Project & work management
 
@@ -46,3 +46,30 @@ web_search) first; reach for an MCP server only when it's the right surface.
 | `playwright` | Browser automation via Chrome extension — navigate, click, screenshot                                 |
 | `mempalace`  | Local-first AI memory store (github.com/mempalace/mempalace) — persist/recall context across sessions |
 | `open`       | Local server on `localhost:18081` <!-- TODO: confirm purpose -->                                      |
+
+## Subagents
+
+When delegating with `pi-subagents`, **default to Sonnet** (`anthropic/claude-sonnet-4-6`)
+and bump the model up only when the task's reasoning complexity warrants it.
+
+| Model                         | Subagents                                                                           |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| `anthropic/claude-sonnet-4-6` | `scout`, `delegate`, `researcher`, `context-builder`, `reviewer`, routine `worker`  |
+| `anthropic/claude-opus-4-5`   | `planner`, complex `worker` (also `context-builder`/`reviewer` when large/critical) |
+| `anthropic/claude-opus-4-8`   | `oracle` — reserve for deep trajectory calls; overkill elsewhere                    |
+
+Set it per run via the tool call:
+
+```typescript
+subagent({
+  agent: "scout",
+  task: "Map the auth flow",
+  model: "anthropic/claude-sonnet-4-6",
+});
+
+subagent({
+  agent: "oracle",
+  task: "Review this architecture decision",
+  model: "anthropic/claude-opus-4-5",
+});
+```
