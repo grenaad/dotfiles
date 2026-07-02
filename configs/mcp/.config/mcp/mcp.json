@@ -61,11 +61,6 @@
       "url": "https://mcp.notion.com/mcp",
       "lifecycle": "lazy"
     },
-    "tldr": {
-      "command": "uvx",
-      "args": ["--from", "llm-tldr", "tldr-mcp"],
-      "lifecycle": "lazy"
-    },
     "playwright": {
       "command": "npx",
       "args": ["@playwright/mcp@latest", "--extension"],
@@ -101,6 +96,18 @@
         "FLOAT_EMAIL": "${FLOAT_EMAIL}",
         "FLOAT_PASSWORD": "${FLOAT_PASSWORD}"
       },
+      "lifecycle": "lazy"
+    },
+    "takealot": {
+      "command": "/Users/ice/.local/bin/uv",
+      "args": [
+        "--directory",
+        "/Users/ice/projects/mcp-takealot",
+        "run",
+        "fastmcp",
+        "run",
+        "server.py:mcp"
+      ],
       "lifecycle": "lazy"
     }
   }

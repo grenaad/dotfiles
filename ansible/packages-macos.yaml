@@ -63,6 +63,7 @@
       - p7zip
       - ocrmypdf
       - modem-dev/tap/hunk
+      - rclone
 
     homebrew_cask_apps:
       - docker

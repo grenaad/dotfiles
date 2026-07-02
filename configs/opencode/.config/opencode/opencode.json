@@ -141,7 +141,7 @@
       "command": [
         "/Users/ice/.local/bin/uv",
         "--directory",
-        "/Users/ice/projects/takealot",
+        "/Users/ice/projects/mcp-takealot",
         "run",
         "fastmcp",
         "run",
