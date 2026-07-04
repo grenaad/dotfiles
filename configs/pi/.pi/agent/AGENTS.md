@@ -49,6 +49,22 @@ web_search) first; reach for an MCP server only when it's the right surface.
 
 ## Subagents
 
+### When to use subagents
+
+Proactively delegate — don't wait to be asked — when a task matches:
+
+- **Broad codebase recon** → `scout` (fast map, compressed handoff).
+- **Multi-file implementation** → `worker` (forked context, keeps the main session clean).
+- **Non-trivial design (3+ steps)** → `planner`, then hand the plan to `worker`.
+- **Review a diff, plan, or decision** → `reviewer`; reserve `oracle` for deep, high-stakes checks.
+- **Focused web research** → `researcher`.
+- **Context gathering for a handoff** → `context-builder` or `scout`.
+
+Keep the main session in control: delegate independent/heavy legs, fan out in
+parallel when work is independent, and integrate results yourself.
+
+### Model routing
+
 When delegating with `pi-subagents`, **default to Sonnet** (`anthropic/claude-sonnet-4-6`)
 and bump the model up only when the task's reasoning complexity warrants it.
 
@@ -73,3 +89,42 @@ subagent({
   model: "anthropic/claude-opus-4-5",
 });
 ```
+
+## Peer sessions (pi-intercom)
+
+For a long-lived, visible worker/planner split, spawn a second `pi` instance in a
+tmux window. Any pi session with `pi-intercom` loaded auto-connects to the
+same-machine broker on startup — no manual pairing.
+
+Choose a descriptive name for the task and use it for **both** the tmux window
+(`-n`) and the pi session name (`/name`). Pick it from the work at hand — e.g.
+`research`, `auth-worker`, `docs-review` — not a generic `pi-worker`.
+
+```bash
+# open a new tmux window in the current session running pi in this repo
+# swap `research` for a name that describes the task
+tmux new-window -c "$(pwd)" -n research 'pi'
+```
+
+Then name the pi session to match, so it is targetable over intercom:
+
+```text
+/name research          # run inside the new session; use the same name as -n above
+```
+
+The `-n` value is the tmux window label; `/name` is the pi/intercom session name
+that `intercom({ to: "..." })` targets. Keep them identical to avoid confusion.
+
+```typescript
+intercom({ action: "list" }); // discover peers + live status
+intercom({
+  action: "send",
+  to: "research",
+  message: "Take task X. Ask if blocked.",
+});
+intercom({ action: "ask", to: "research", message: "Status on task X?" }); // blocks up to 10 min
+```
+
+Intercom is same-machine only. Verify a session joined with
+`intercom({ action: "status" })`. Prefer `cmux new-split right` when available for
+a side-by-side view; use tmux as the fallback.

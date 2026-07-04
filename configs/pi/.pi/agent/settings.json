@@ -14,14 +14,15 @@
     "npm:pi-prompt-template-model"
   ],
   "defaultProvider": "anthropic",
-  "defaultModel": "claude-opus-4-8",
+  "defaultModel": "claude-sonnet-4-6",
   "enabledModels": [
     "openai/gpt-5.5",
     "anthropic/claude-sonnet-4-6",
     "anthropic/claude-opus-4-8",
     "github-copilot/gpt-5.4",
     "opencode-go/glm-5.2",
-    "github-copilot/claude-opus-4.6"
+    "github-copilot/claude-opus-4.6",
+    "anthropic/claude-fable-5"
   ],
   "defaultThinkingLevel": "high",
   "hideThinkingBlock": false
