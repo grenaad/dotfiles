@@ -1,3 +1,19 @@
+[build]
+# sccache: content-addressed compile cache (~/Library/Caches/Mozilla.sccache).
+# Makes dependency rebuilds after `cargo clean`, branch switches, or
+# flag-churn near-instant. Workspace crates still use cargo's own
+# incremental engine (sccache passes incremental compiles through).
+rustc-wrapper = "/opt/homebrew/bin/sccache"
+
+[env]
+# Never idle-shutdown the sccache server. The default 10-min idle exit
+# means the next cargo build auto-respawns it under a parallel compile
+# burst, which occasionally races and fails compiles with exit status 254.
+# Cargo sets this for every process it spawns (incl. the sccache client
+# that spawns the server), so it lives here next to the wrapper config
+# instead of in shell rc files.
+SCCACHE_IDLE_TIMEOUT = "0"
+
 [profile.dev]
 # Keep file:line in backtraces; drop heavy DWARF variable info.
 # Cuts debug-info bloat by ~80%. Stepping in lldb still works for
