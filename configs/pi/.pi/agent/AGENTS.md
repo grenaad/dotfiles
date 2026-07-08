@@ -1,9 +1,28 @@
+## Orchestrator role
+
+The main Pi session is the orchestrator, not a worker. It should do meta work only:
+coordinate, brief, dispatch, synthesize, and report. Delegate actual work to
+subagents/minions instead of doing it directly in the orchestrator session.
+
+Actual work includes implementation, exploration, discovery, codebase search,
+reading files to understand a problem, MCP calls, and even small edits. Task size
+is not a reason for the orchestrator to do work directly; exploration is work and
+should be delegated.
+
+Direct orchestrator tool use is limited to coordination overhead: quick read-only
+checks that improve a delegation brief, verifying subagent results, checking
+coordination state, or synthesizing final results. Launch subagents in the
+background so the orchestrator remains available; do not poll unless the current
+turn must block to finish the user response.
+
 ## MCP servers
 
 All servers are **lazy** — they don't connect until a tool is invoked. Discover with
 `mcp({ search: "..." })` or `mcp({ server: "name" })`, then call via
 `mcp({ tool: "name", args: '{...}' })`. Prefer native pi tools (pi-lens, Read, Bash,
-web_search) first; reach for an MCP server only when it's the right surface.
+web_search) first; reach for an MCP server only when it's the right surface. This
+guidance is primarily for delegated subagents/minions; the orchestrator should use
+MCP only for coordination-only verification or final synthesis.
 
 > **GitHub URLs → prefer the `github` server.** When the user gives a
 > `github.com` link (repo, issue, PR, commit, diff/changes, file blob, or code
@@ -49,82 +68,70 @@ web_search) first; reach for an MCP server only when it's the right surface.
 
 ## Subagents
 
-### When to use subagents
+Use subagents for the work itself. The orchestrator should keep control of the
+plan, delegation brief, and final synthesis while subagents perform exploration,
+research, implementation, review, and other task execution.
 
-Proactively delegate — don't wait to be asked — when a task matches:
+Proactively delegate — don't wait to be asked:
 
 - **Broad codebase recon** → `scout` (fast map, compressed handoff).
-- **Multi-file implementation** → `worker` (forked context, keeps the main session clean).
+- **Implementation, including small edits** → `worker` (forked context, keeps the main session clean).
 - **Non-trivial design (3+ steps)** → `planner`, then hand the plan to `worker`.
 - **Review a diff, plan, or decision** → `reviewer`; reserve `oracle` for deep, high-stakes checks.
 - **Focused web research** → `researcher`.
 - **Context gathering for a handoff** → `context-builder` or `scout`.
 
-Keep the main session in control: delegate independent/heavy legs, fan out in
-parallel when work is independent, and integrate results yourself.
+Fan out in parallel when legs are independent, then integrate the results
+yourself. Launch subagents in the background with `async: true` so the
+orchestrator remains available; only poll or block when the current user response
+cannot be completed without the result.
 
 ### Model routing
 
-When delegating with `pi-subagents`, **default to Sonnet** (`anthropic/claude-sonnet-4-6`)
-and bump the model up only when the task's reasoning complexity warrants it.
-
-| Model                         | Subagents                                                                           |
-| ----------------------------- | ----------------------------------------------------------------------------------- |
-| `anthropic/claude-sonnet-4-6` | `scout`, `delegate`, `researcher`, `context-builder`, `reviewer`, routine `worker`  |
-| `anthropic/claude-opus-4-5`   | `planner`, complex `worker` (also `context-builder`/`reviewer` when large/critical) |
-| `anthropic/claude-opus-4-8`   | `oracle` — reserve for deep trajectory calls; overkill elsewhere                    |
-
-Set it per run via the tool call:
+All subagents must use `model: "openai-codex/gpt-5.5"`. This model has been
+verified to launch successfully. Use a different model only when the user
+explicitly requests it or when `openai-codex/gpt-5.5` is unavailable.
 
 ```typescript
 subagent({
   agent: "scout",
-  task: "Map the auth flow",
-  model: "anthropic/claude-sonnet-4-6",
-});
-
-subagent({
-  agent: "oracle",
-  task: "Review this architecture decision",
-  model: "anthropic/claude-opus-4-5",
+  task: "Map the auth flow and report the key files and risks.",
+  model: "openai-codex/gpt-5.5",
+  async: true,
 });
 ```
+
+### Minion / worker conventions
+
+Execution subagents are leaf workers: do not delegate further. Complete the
+assigned task using the available tools, inspect before making assumptions, make
+targeted changes, verify when feasible, and report blockers or ambiguity instead
+of guessing. Keep final responses concise with a summary, changed files,
+blockers, and any verification gaps.
 
 ## Peer sessions (pi-intercom)
 
-For a long-lived, visible worker/planner split, spawn a second `pi` instance in a
+For a long-lived, visible worker/planner split, open a second `pi` instance in a
 tmux window. Any pi session with `pi-intercom` loaded auto-connects to the
-same-machine broker on startup — no manual pairing.
-
-Choose a descriptive name for the task and use it for **both** the tmux window
-(`-n`) and the pi session name (`/name`). Pick it from the work at hand — e.g.
-`research`, `auth-worker`, `docs-review` — not a generic `pi-worker`.
+same-machine broker — no pairing. Use one descriptive, task-based name (e.g.
+`research`, `auth-worker`) for **both** the tmux window (`-n`) and the pi session
+(`/name`) so `intercom({ to })` can target it.
 
 ```bash
-# open a new tmux window in the current session running pi in this repo
-# swap `research` for a name that describes the task
-tmux new-window -c "$(pwd)" -n research 'pi'
+tmux new-window -c "$(pwd)" -n research 'pi'   # open the instance
 ```
-
-Then name the pi session to match, so it is targetable over intercom:
 
 ```text
-/name research          # run inside the new session; use the same name as -n above
+/name research                                 # run inside it; match the -n name
 ```
 
-The `-n` value is the tmux window label; `/name` is the pi/intercom session name
-that `intercom({ to: "..." })` targets. Keep them identical to avoid confusion.
+Then coordinate over intercom:
 
 ```typescript
-intercom({ action: "list" }); // discover peers + live status
-intercom({
-  action: "send",
-  to: "research",
-  message: "Take task X. Ask if blocked.",
-});
-intercom({ action: "ask", to: "research", message: "Status on task X?" }); // blocks up to 10 min
+intercom({ action: "list" }); // discover peers
+intercom({ action: "send", to: "research", message: "Take task X." });
+intercom({ action: "ask", to: "research", message: "Status on X?" }); // blocks up to 10 min
 ```
 
-Intercom is same-machine only. Verify a session joined with
-`intercom({ action: "status" })`. Prefer `cmux new-split right` when available for
-a side-by-side view; use tmux as the fallback.
+Same-machine only; verify with `intercom({ action: "status" })`. Prefer
+`cmux new-split right` when available, tmux otherwise.

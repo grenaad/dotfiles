@@ -9,20 +9,20 @@
     "npm:@juicesharp/rpiv-todo",
     "npm:pi-lens",
     "npm:context-mode",
-    "npm:@cgaravitoq/pi-claude-code-auth",
+    "/Users/ice/projects/pi-claude-code-auth-switcher",
     "npm:pi-intercom",
     "npm:pi-prompt-template-model"
   ],
-  "defaultProvider": "anthropic",
-  "defaultModel": "claude-sonnet-4-6",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
   "enabledModels": [
-    "openai/gpt-5.5",
     "anthropic/claude-sonnet-4-6",
     "anthropic/claude-opus-4-8",
     "github-copilot/gpt-5.4",
     "opencode-go/glm-5.2",
     "github-copilot/claude-opus-4.6",
-    "anthropic/claude-fable-5"
+    "anthropic/claude-fable-5",
+    "openai-codex/gpt-5.5"
   ],
   "defaultThinkingLevel": "high",
   "hideThinkingBlock": false
