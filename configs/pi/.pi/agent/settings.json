@@ -24,6 +24,6 @@
     "anthropic/claude-fable-5",
     "openai-codex/gpt-5.5"
   ],
-  "defaultThinkingLevel": "high",
-  "hideThinkingBlock": false
+  "defaultThinkingLevel": "xhigh",
+  "hideThinkingBlock": true
 }
