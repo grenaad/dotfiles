@@ -3,15 +3,6 @@
 - name: Install System Packages
   apt:
     name: [
-        "wl-clipboard",
-        "zsh",
-        "ffmpeg",
-        "unzip",
-        "zip",
-        "stow",
-        "mpv",
-        "parallel",
-        "tmux",
         "build-essential",
       ]
   become: true

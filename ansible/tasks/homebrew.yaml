@@ -48,16 +48,25 @@
   community.general.homebrew:
     name:
       - bat
+      - ffmpeg
       - fzf
       - git-delta
       - gogcli # Google Suite CLI (Gmail, Calendar, Drive, etc.)
       - lazygit
+      - mpv
       - neovim
+      - parallel
       - sst/tap/opencode
       - ripgrep
+      - stow
       - tlrc
+      - tmux
+      - unzip
       - uv
+      - wl-clipboard
       - yazi
+      - zip
+      - zsh
       - p7zip
       - qpdf # PDF decryption and transformation tool
     state: present
