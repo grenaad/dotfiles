@@ -49,8 +49,8 @@ const AGENTS: Record<string, unknown> = {
   },
   minion: {
     mode: "subagent",
-    model: "xai/grok-4.5",
-    variant: "high",
+    model: "openai/gpt-5.5",
+    variant: "medium",
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
     prompt: MINION_PROMPT,

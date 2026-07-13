@@ -13,8 +13,8 @@
     "npm:pi-intercom",
     "npm:pi-prompt-template-model"
   ],
-  "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-4-8",
   "enabledModels": [
     "anthropic/claude-sonnet-4-6",
     "anthropic/claude-opus-4-8",
@@ -24,6 +24,6 @@
     "anthropic/claude-fable-5",
     "openai-codex/gpt-5.5"
   ],
-  "defaultThinkingLevel": "xhigh",
+  "defaultThinkingLevel": "high",
   "hideThinkingBlock": true
 }
