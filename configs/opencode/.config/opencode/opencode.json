@@ -39,11 +39,20 @@
     },
     "fd-forge": {
       "type": "remote",
-      "url": "https://forge.focaldata.com/mcp"
+      "url": "https://forge.focaldata.com/mcp",
+      "oauth": false,
+      "headers": {
+        "Authorization": "ApiKey {env:FD_FORGE_MCP_API_KEY}"
+      }
     },
     "fd-forge-dev": {
       "type": "remote",
-      "url": "https://forge.focaldata.dev/mcp"
+      "url": "https://forge.focaldata.dev/mcp",
+      "enabled": false,
+      "oauth": false,
+      "headers": {
+        "Authorization": "ApiKey {env:FD_FORGE_MCP_API_KEY}"
+      }
     },
     "kubefwd": {
       "type": "local",
