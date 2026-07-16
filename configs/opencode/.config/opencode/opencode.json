@@ -39,6 +39,7 @@
     },
     "fd-forge": {
       "type": "remote",
+      "enabled": false,
       "url": "https://forge.focaldata.com/mcp",
       "oauth": false,
       "headers": {
