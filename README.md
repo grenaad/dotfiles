@@ -48,14 +48,14 @@ Uses Ansible to install applications for both macOS and Ubuntu/WSL. See `ansible
 
 ### Key Make Targets
 
-| Target | Description |
-|---|---|
-| `make install` | Full installation |
+| Target          | Description                  |
+| --------------- | ---------------------------- |
+| `make install`  | Full installation            |
 | `make dotfiles` | Dotfiles configurations only |
-| `make packages` | OS-specific packages only |
-| `make stow` | Symlink all configs |
-| `make homebrew` | Homebrew and CLI packages |
-| `make tmux` | Tmux plugins |
+| `make packages` | OS-specific packages only    |
+| `make stow`     | Symlink all configs          |
+| `make homebrew` | Homebrew and CLI packages    |
+| `make tmux`     | Tmux plugins                 |
 
 ## Tips
 

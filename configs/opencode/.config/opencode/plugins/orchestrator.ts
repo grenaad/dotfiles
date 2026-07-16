@@ -40,6 +40,12 @@ const MINION_PROMPT = [
   "Do not delegate to other subagents; execute the assigned work yourself.",
 ].join("\n");
 
+/*
+  model: "anthropic/claude-opus-4-5",
+  model: "openai/gpt-5.5",
+  model: "xai/grok-4.5"
+*/
+
 const AGENTS: Record<string, unknown> = {
   orchestrator: {
     mode: "primary",
@@ -49,7 +55,7 @@ const AGENTS: Record<string, unknown> = {
   },
   minion: {
     mode: "subagent",
-    model: "openai/gpt-5.5",
+    model: "xai/grok-4.5",
     variant: "medium",
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
