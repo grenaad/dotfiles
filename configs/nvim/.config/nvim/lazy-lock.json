@@ -24,6 +24,7 @@
   "guihua.lua": { "branch": "master", "commit": "0cc9631914ffcbe3e474e809c610d12a75b660cf" },
   "harpoon": { "branch": "harpoon2", "commit": "ed1f853847ffd04b2b61c314865665e1dadf22c7" },
   "heirline.nvim": { "branch": "master", "commit": "fae936abb5e0345b85c3a03ecf38525b0828b992" },
+  "herdr-splits.nvim": { "branch": "main", "commit": "107273e004e4f7ef07f13c83164d2cb2c51df65d" },
   "kulala.nvim": { "branch": "main", "commit": "48902de58ea576c30f8aa8e0a791d06b54f9f81f" },
   "lazy.nvim": { "branch": "main", "commit": "6c3bda4aca61a13a9c63f1c1d1b16b9d3be90d7a" },
   "lazydev.nvim": { "branch": "main", "commit": "f59bd14a852ca43db38e3662395354cb2a9b13e0" },

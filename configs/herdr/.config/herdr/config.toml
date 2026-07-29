@@ -1,0 +1,46 @@
+# herdr — agent multiplexer. https://herdr.dev
+# All options: herdr --default-config  |  https://herdr.dev/docs/config-reference/
+# Apply edits to a running server: herdr server reload-config
+
+# Skip the first-run setup flow (shown when this key is missing or true).
+onboarding = false
+
+[theme]
+# Catppuccin Mocha — matches .tmux.conf:85 @catppuccin_flavor 'mocha'.
+name = "catppuccin"
+
+[keys]
+# Match the tmux prefix (.tmux.conf:11) instead of herdr's ctrl+b default.
+prefix = "ctrl+a"
+
+# Tab switching, mirroring .tmux.conf:58-59.
+previous_tab = ["prefix+p", "shift+left"]
+next_tab = ["prefix+n", "shift+right"]
+
+# Pane navigation via the herdr-splits plugin, mirroring .tmux.conf:15-18.
+# plugin_action rather than focus_pane_* so the plugin can inspect the pane's
+# foreground process and forward the chord to nvim, moving panes otherwise.
+# focus_pane_* stays at its prefix+h/j/k/l defaults as an edge-case fallback.
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "herdr-splits.nav-left"
+description = "navigate left (nvim-aware)"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "herdr-splits.nav-down"
+description = "navigate down (nvim-aware)"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "herdr-splits.nav-up"
+description = "navigate up (nvim-aware)"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-splits.nav-right"
+description = "navigate right (nvim-aware)"

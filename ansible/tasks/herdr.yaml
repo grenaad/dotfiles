@@ -1,0 +1,40 @@
+---
+- name: Check if Herdr is installed
+  become: false
+  ansible.builtin.command: which herdr
+  register: herdr_binary
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  tags:
+    - install
+    - dotfiles
+    - herdr
+
+- name: List installed Herdr plugins
+  become: false
+  ansible.builtin.command: herdr plugin list --json
+  register: herdr_plugins
+  check_mode: false
+  changed_when: false
+  failed_when: false
+  when: herdr_binary.rc == 0
+  tags:
+    - install
+    - dotfiles
+    - herdr
+
+- name: Install Herdr Splits plugin
+  become: false
+  ansible.builtin.command: herdr plugin install lmilojevicc/herdr-splits.nvim --ref v0.5.1 --yes
+  when:
+    - herdr_binary.rc == 0
+    - herdr_plugins.rc == 0
+    - >-
+      'herdr-splits' not in
+      ((herdr_plugins.stdout | default('{"result":{"plugins":[]}}', true)
+      | from_json).result.plugins | map(attribute='plugin_id') | list)
+  tags:
+    - install
+    - dotfiles
+    - herdr

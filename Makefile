@@ -1,4 +1,4 @@
-.PHONY: help install dotfiles packages env ssh git stow unstow check install_ansible
+.PHONY: help install dotfiles packages env ssh git ghostty homebrew herdr tmux stow unstow check install_ansible
 
 # Default target
 help:
@@ -18,6 +18,7 @@ help:
 	@echo "  git        - Setup Git configurations"
 	@echo "  ghostty    - Install Ghostty terminal"
 	@echo "  homebrew   - Install Homebrew and packages"
+	@echo "  herdr      - Install pinned Herdr plugins"
 	@echo "  tmux       - Install tmux plugins"
 	@echo ""
 	@echo "Utility targets:"
@@ -59,6 +60,9 @@ ghostty:
 
 homebrew:
 	cd ansible && ansible-playbook main.yaml --tags homebrew
+
+herdr:
+	cd ansible && ansible-playbook main.yaml --tags herdr
 
 tmux:
 	cd ansible && ansible-playbook main.yaml --tags tmux

@@ -32,3 +32,11 @@ keymap.toml-*
 !**/keybindings.json
 .mcp_data/
 
+# herdr: never track runtime state (sockets, logs, session)
+configs/herdr/.config/herdr/session.json
+configs/herdr/.config/herdr/*.log
+configs/herdr/.config/herdr/*.log.*
+configs/herdr/.config/herdr/*.sock
+configs/herdr/.config/herdr/.plugins.lock
+configs/herdr/.config/herdr/plugins/
+configs/herdr/.config/herdr/plugins.json

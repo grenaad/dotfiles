@@ -33,6 +33,13 @@
         - install
         - dotfiles
         - stow
+        - herdr
+
+    - include_tasks: tasks/herdr.yaml
+      tags:
+        - herdr
+        - install
+        - dotfiles
 
     - name: Install tmux plugins via TPM
       shell: ~/.tmux/plugins/tpm/bin/install_plugins

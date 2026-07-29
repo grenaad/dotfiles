@@ -52,6 +52,7 @@
       - fzf
       - git-delta
       - gogcli # Google Suite CLI (Gmail, Calendar, Drive, etc.)
+      - herdr
       - lazygit
       - mpv
       - neovim

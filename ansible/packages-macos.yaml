@@ -64,6 +64,7 @@
       - ocrmypdf
       - modem-dev/tap/hunk
       - rclone
+      - herdr
 
     homebrew_cask_apps:
       - docker
