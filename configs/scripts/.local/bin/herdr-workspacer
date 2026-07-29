@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+#
+# herdr-workspacer [path]
+# if no path is given, using fzf, search in default locations
+
+if ! command -v herdr > /dev/null 2>&1; then
+    echo "herdr-workspacer: herdr is not installed or not in PATH" >&2
+    exit 1
+fi
+
+if [[ $# -eq 1 ]]; then
+    selected=$1
+else
+    if ! command -v fzf > /dev/null 2>&1; then
+        echo "herdr-workspacer: fzf is not installed or not in PATH" >&2
+        exit 1
+    fi
+    selected=$(find ~/work/focaldata ~/work/old/checkout ~/work ~/work2 ~/work3 ~/projects ~/ -mindepth 1 -maxdepth 1 -type d | fzf)
+fi
+
+if [[ -z $selected ]]; then
+    exit 0
+fi
+
+if ! selected=$(cd -- "$selected" 2> /dev/null && pwd -P); then
+    echo "herdr-workspacer: directory does not exist: $selected" >&2
+    exit 1
+fi
+
+selected_name=$(basename "$selected" | tr . _)
+
+if ! command -v jq > /dev/null 2>&1; then
+    echo "herdr-workspacer: jq is not installed or not in PATH" >&2
+    exit 1
+fi
+
+if ! herdr status > /dev/null 2>&1; then
+    if [[ -n ${HERDR_ENV:-} || -n ${HERDR_PANE_ID:-} ]]; then
+        echo "herdr-workspacer: the herdr server is not reachable from this pane" >&2
+    else
+        echo "herdr-workspacer: the herdr server is not running; start herdr and retry" >&2
+    fi
+    exit 1
+fi
+
+# herdr 0.7.5 workspace get omits cwd/identity_cwd, so match the sanitized
+# basename label, mirroring tmux-sessionizer's session-name matching.
+if ! workspaces=$(herdr workspace list); then
+    echo "herdr-workspacer: failed to list herdr workspaces" >&2
+    exit 1
+fi
+workspace_id=$(jq -r --arg label "$selected_name" '[.result.workspaces[] | select(.label == $label) | .workspace_id][0] // empty' <<< "$workspaces")
+
+if [[ -n $workspace_id ]]; then
+    herdr workspace focus "$workspace_id"
+else
+    herdr workspace create --cwd "$selected" --label "$selected_name" --focus
+fi

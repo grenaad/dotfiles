@@ -44,3 +44,21 @@ key = "ctrl+l"
 type = "plugin_action"
 command = "herdr-splits.nav-right"
 description = "navigate right (nvim-aware)"
+
+# Workspace picker 
+[[keys.command]]
+key = "prefix+shift+s"
+type = "popup"
+command = "herdr-workspacer"
+description = "workspace picker (project dirs)"
+width = "80%"
+height = "80%"
+
+# Tab picker
+[[keys.command]]
+key = "prefix+t"
+type = "popup"
+command = "herdr-tabizer"
+description = "tab picker (project dirs)"
+width = "80%"
+height = "80%"
