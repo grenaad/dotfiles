@@ -6,18 +6,18 @@
 onboarding = false
 
 [theme]
-# Catppuccin Mocha — matches .tmux.conf:85 @catppuccin_flavor 'mocha'.
+# Catppuccin Mocha 
 name = "catppuccin"
 
 [keys]
-# Match the tmux prefix (.tmux.conf:11) instead of herdr's ctrl+b default.
+# Match the tmux prefix 
 prefix = "ctrl+a"
 
-# Tab switching, mirroring .tmux.conf:58-59.
+# Tab switching
 previous_tab = ["prefix+p", "shift+left"]
 next_tab = ["prefix+n", "shift+right"]
 
-# Pane navigation via the herdr-splits plugin, mirroring .tmux.conf:15-18.
+# Pane navigation via the herdr-splits plugin
 # plugin_action rather than focus_pane_* so the plugin can inspect the pane's
 # foreground process and forward the chord to nvim, moving panes otherwise.
 # focus_pane_* stays at its prefix+h/j/k/l defaults as an edge-case fallback.
