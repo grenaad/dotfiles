@@ -201,6 +201,15 @@
       "type": "remote",
       "url": "https://mcp.context7.com/mcp",
       "enabled": true
+    },
+    "xero": {
+      "type": "local",
+      "command": ["uv", "--directory", "/Users/ice/projects/mcp-xero", "run", "mcp-xero"],
+      "enabled": true,
+      "environment": {
+        "MCP_XERO_DELIVERY": "chrome",
+        "MCP_XERO_BRIDGE_PORT": "8765"
+      }
     }
   },
   "provider": {

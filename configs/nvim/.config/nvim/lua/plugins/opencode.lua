@@ -1,7 +1,10 @@
 --- When you quit any Neovim session, it will close an open OpenCode session as well.
 
+local cmd = "opencode --port"
+local topts = { win = { position = "right", enter = false } }
+
 return {
-  "NickvanDyke/opencode.nvim",
+  "nickjvandyke/opencode.nvim",
   version = "*",
   dependencies = {
     {
@@ -10,18 +13,7 @@ return {
       opts = {
         input = {},
         terminal = {},
-        picker = {
-          actions = {
-            opencode_send = function(...) return require("opencode").snacks_picker_send(...) end,
-          },
-          win = {
-            input = {
-              keys = {
-                ["<a-a>"] = { "opencode_send", mode = { "n", "i" } },
-              },
-            },
-          },
-        },
+        picker = {},
       },
     },
   },
@@ -29,8 +21,10 @@ return {
     ---@type opencode.Opts
     vim.g.opencode_opts = {
       -- Your configuration, if any — see `lua/opencode/config.lua`
+      server = {
+        start = function() require("snacks.terminal").open(cmd, topts) end,
+      },
     }
-    vim.opt.autoread = true
   end,
   specs = {
     {
@@ -38,16 +32,10 @@ return {
       opts = {
         mappings = {
           n = {
-            -- ["<Leader>O"] = {
-            --   function()
-            --     require("neo-tree.command").execute({ action = "focus" })
-            --   end,
-            --   desc = "Neotree focus",
-            -- },
             ["<Leader>o"] = { desc = "OpenCode" },
             ["<Leader>oa"] = {
               function()
-                require("opencode").ask("@this: ", { submit = true })
+                require("opencode").ask("@this: ")
               end,
               desc = "Ask about this",
             },
@@ -59,13 +47,13 @@ return {
             },
             ["<Leader>o+"] = {
               function()
-                require("opencode").prompt("@this")
+                require("opencode").prompt("@this ")
               end,
               desc = "Add this",
             },
             ["<Leader>ot"] = {
               function()
-                require("opencode").toggle()
+                require("snacks.terminal").toggle(cmd, topts)
               end,
               desc = "Toggle embedded",
             },
@@ -119,13 +107,19 @@ return {
             ["<Leader>o"] = { desc = "OpenCode" },
             ["<Leader>oa"] = {
               function()
-                require("opencode").ask("@this: ", { submit = true })
+                require("opencode").ask("@this: ")
               end,
               desc = "Ask about this",
             },
+            ["<Leader>os"] = {
+              function()
+                require("opencode").select()
+              end,
+              desc = "Select prompt",
+            },
             ["<Leader>o+"] = {
               function()
-                require("opencode").prompt("@this")
+                require("opencode").prompt("@this ")
               end,
               desc = "Add this",
             },
