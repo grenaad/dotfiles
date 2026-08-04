@@ -62,7 +62,7 @@
 
       - p7zip
       - ocrmypdf
-      - modem-dev/tap/hunk
+      - tuicr
       - rclone
       - herdr
 

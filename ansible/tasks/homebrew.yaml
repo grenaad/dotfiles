@@ -69,6 +69,7 @@
       - zip
       - zsh
       - p7zip
+      - tuicr
       - qpdf # PDF decryption and transformation tool
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
