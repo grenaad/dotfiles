@@ -1,0 +1,20 @@
+# tuicr — code review TUI. https://tuicr.dev
+# Full reference: https://github.com/tuicr/tuicr/blob/main/docs/CONFIG.md
+# Press ? inside the TUI for the keybinding cheatsheet.
+
+# Catppuccin Mocha, to match herdr/ghostty
+# theme = "catppuccin-mocha"
+diff_view = "side-by-side"
+
+# Review the whole PR by default, not just the commits added since the last
+# review pass. Without this, revisiting a PR pre-selects only the newer commits
+# (incremental review) and the diff no longer reflects what lands on the base
+# branch.
+initial_commit_selection = "all"
+
+# Keep the inline commit selector on screen so it is obvious which commits are
+# feeding the diff. Toggle with `;s`, focus with Tab, cycle with ( and ).
+show_commits = true
+
+# Newest commit first.
+commit_order = "descending"

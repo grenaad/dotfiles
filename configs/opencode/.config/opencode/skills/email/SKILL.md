@@ -3,137 +3,103 @@ name: email
 description: CLI client for Outlook/Hotmail email and Google Suite (Gmail, Calendar, Drive, Contacts, Tasks, Sheets)
 ---
 
-## Outlook / Hotmail (himalaya)
+## Outlook / Hotmail (`himalaya`)
 
-### Prerequisites
+### Proxy
 
-Start the proxy first (runs in foreground):
+The backend is live IMAP through local OAuth2 `emailproxy`, not a cached maildir. Start it in the foreground:
 
 ```bash
-emailproxy
+emailproxy --config-file /Users/ice/.config/emailproxy/emailproxy.config --debug
 ```
 
-**Check if proxy is already running:**
-```bash
-ps aux | grep emailproxy | grep -v grep
-```
+Restart after timeouts or connection failures:
 
-**If himalaya commands timeout**, kill and restart the proxy:
 ```bash
 pkill -f emailproxy
-emailproxy
+emailproxy --config-file /Users/ice/.config/emailproxy/emailproxy.config --debug
 ```
 
-### Common Commands
+### Search
 
-| Task | Command |
-|------|---------|
-| List emails | `himalaya envelope list` |
-| List more | `himalaya envelope list --page-size 50` |
-| Read email | `himalaya message read <id>` |
-| Download attachments | `himalaya attachment download <id>` |
-| List folders | `himalaya folder list` |
-| List folder emails | `himalaya envelope list --folder "Sent"` |
+This mailbox has 173 folders. `himalaya` v1.2.0 searches exactly one folder per invocation; there is no all-folder search, `himalaya search`, or `account sync`.
 
-### Troubleshooting
+Each live IMAP invocation costs ~2.5–3.5 s in connection/auth overhead regardless of query. Never loop over all folders (~10 min).
 
-| Issue | Solution |
-|-------|----------|
-| Commands timeout | Kill and restart proxy: `pkill -f emailproxy && emailproxy` |
-| Connection refused | Start the proxy: `emailproxy` |
-| Config not found | Proxy must use `--config-file ~/.config/emailproxy/emailproxy.config` (handled by alias) |
+List folders:
 
----
-
-## Google Suite (gog)
-
-### Account Handling
-
-| Task | Command |
-|------|---------|
-| List accounts | `gog auth list` |
-
-**Important:**
-- If a command fails with "missing --account", first run `gog auth list` to see available accounts
-- Use `--account <email>` flag to specify which account to use (e.g., `gog gmail search 'newer_than:7d' --account user@gmail.com`)
-- **NEVER use `gog auth manage`** - it opens a browser interactively
-
-### Gmail
-
-| Task | Command |
-|------|---------|
-| Search emails | `gog gmail search 'newer_than:7d' --max 10` |
-| Read thread | `gog gmail thread get <threadId>` |
-| Send email | `gog gmail send --to a@b.com --subject "Hi" --body "Hello"` |
-| Send with HTML | `gog gmail send --to a@b.com --subject "Hi" --body-html "<p>Hello</p>"` |
-| List labels | `gog gmail labels list` |
-| List drafts | `gog gmail drafts list` |
-
-### Calendar
-
-| Task | Command |
-|------|---------|
-| Today's events | `gog calendar events primary --today` |
-| Tomorrow | `gog calendar events primary --tomorrow` |
-| This week | `gog calendar events primary --week` |
-| Next N days | `gog calendar events primary --days 3` |
-| Create event | `gog calendar create primary --summary "Meeting" --from 2025-01-15T10:00:00Z --to 2025-01-15T11:00:00Z` |
-| Create with attendees | `gog calendar create primary --summary "Sync" --from ... --to ... --attendees "a@b.com,c@d.com"` |
-| Respond to invite | `gog calendar respond primary <eventId> --status accepted` |
-| Free/busy | `gog calendar freebusy --calendars "primary" --from ... --to ...` |
-
-### Drive
-
-| Task | Command |
-|------|---------|
-| List files | `gog drive list` |
-| Search files | `gog drive search "report"` |
-| Download file | `gog drive download <fileId>` |
-| Upload file | `gog drive upload ./file.pdf` |
-| Upload to folder | `gog drive upload ./file.pdf --parent <folderId>` |
-
-### Contacts
-
-| Task | Command |
-|------|---------|
-| Search contacts | `gog contacts search "john"` |
-| Create contact | `gog contacts create --name "John Doe" --email "john@example.com"` |
-
-### Tasks
-
-| Task | Command |
-|------|---------|
-| List task lists | `gog tasks lists` |
-| List tasks | `gog tasks list <tasklistId>` |
-| Add task | `gog tasks add <tasklistId> --title "Do something"` |
-| Complete task | `gog tasks done <tasklistId> <taskId>` |
-
-### Sheets
-
-| Task | Command |
-|------|---------|
-| Read sheet | `gog sheets read <spreadsheetId>` |
-| Read range | `gog sheets read <spreadsheetId> --range "Sheet1!A1:B10"` |
-| Write cells | `gog sheets write <spreadsheetId> --range "A1" --values "Hello,World"` |
-| List tabs | `gog sheets tabs <spreadsheetId>` |
-
----
-
-## Decrypting PDF Attachments
-
-Some email attachments (e.g., bank statements) are password-protected. Use `qpdf` to decrypt:
-
-| Task | Command |
-|------|---------|
-| Decrypt PDF | `qpdf --password=PASSWORD --decrypt input.pdf output.pdf` |
-
-**Example:**
 ```bash
-qpdf --password=mysecretpassword --decrypt statement.pdf statement_decrypted.pdf
+himalaya folder list --output json
 ```
 
-## When to use me
+Search the dedicated/likely folder first (~5 s), then stop on a match:
 
-Use this skill when the user wants to:
-- Check, read, or search their Hotmail/Outlook email from the CLI
-- Interact with Google services (Gmail, Calendar, Drive, Contacts, Tasks, Sheets) from the CLI
+```bash
+himalaya envelope list --folder "Inbox/WebAfrica" --page-size 20 --output json \
+  'from webafrica or subject Webafrica order by date desc'
+```
+
+Otherwise search `INBOX`, `Sent`, and `Archive` in parallel (~4.7 s):
+
+```bash
+printf '%s\0' INBOX Sent Archive | xargs -0 -P 4 -I{} sh -c \
+  'printf "\n=== %s ===\n" "$1"; himalaya envelope list --folder "$1" --page-size 20 --output json "from webafrica or subject Webafrica order by date desc"' _ '{}'
+```
+
+Cap parallelism at 4: measured 4 concurrent at 4.85 s; 8 regressed to 6.42 s. Keep `--page-size 20`; `1000` adds fetch/output with no search speedup.
+
+Header search is preferred for precision, not speed. Outlook body search is well indexed (2.25–2.74 s):
+
+```bash
+himalaya envelope list --folder INBOX --page-size 20 --output json \
+  'body WHMIG-3191 order by date desc'
+
+himalaya envelope list --folder Sent --page-size 20 --output json \
+  'to someone@example.com order by date desc'
+```
+
+Useful folders: `INBOX`, `Sent`, `Archive`, `Junk`, `Spambox`, `Deleted`, and sender folders such as `Inbox/WebAfrica`.
+
+Future options: `mbsync` + `notmuch` local indexing is viable but not installed; Microsoft Graph `$search` needs new OAuth scopes.
+
+### Read and attachments
+
+IDs are mailbox-local and unstable: search by content, never reuse a recorded ID. Always read with `--preview` to preserve unread state:
+
+```bash
+himalaya message read --folder "<folder>" --preview <id>
+himalaya attachment download --folder "<folder>" <id>
+```
+
+## Google Suite (`gog`)
+
+### Auth
+
+On `missing --account`, list accounts and pass one explicitly. Never run `gog auth manage`; it opens an interactive browser.
+
+```bash
+gog auth list
+gog gmail search 'newer_than:7d' --max 10 --account user@gmail.com
+```
+
+### Commands
+
+```bash
+gog gmail thread get <threadId>
+gog gmail send --to a@b.com --subject "Hi" --body "Hello"
+gog calendar events primary --today
+gog calendar create primary --summary "Meeting" --from 2026-08-05T10:00:00Z --to 2026-08-05T11:00:00Z
+gog drive search "report"
+gog drive download <fileId>
+gog contacts search "john"
+gog tasks list <tasklistId>
+gog sheets read <spreadsheetId> --range "Sheet1!A1:B10"
+```
+
+## PDF attachments
+
+Decrypt a password-protected PDF without recording the real password in this file:
+
+```bash
+qpdf --password=PASSWORD --decrypt input.pdf output.pdf
+```
