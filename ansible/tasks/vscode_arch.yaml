@@ -1,0 +1,62 @@
+---
+# Install Visual Studio Code (visual-studio-code-bin) from the AUR
+# Dependencies are installed up front so makepkg never needs to call sudo
+- name: Install VSCode AUR dependencies
+  community.general.pacman:
+    name:
+      - libxkbfile
+      - gnupg
+      - gtk3
+      - libsecret
+      - nss
+      - gcc-libs
+      - libnotify
+      - libxss
+      - glibc
+      - lsof
+      - shared-mime-info
+      - xdg-utils
+      - alsa-lib
+    state: present
+  become: true
+  tags:
+    - install
+    - vscode
+
+- name: Check if visual-studio-code-bin is installed
+  shell: pacman -Q visual-studio-code-bin
+  register: vscode_bin_check
+  failed_when: false
+  changed_when: false
+  tags:
+    - install
+    - vscode
+
+- name: Clone visual-studio-code-bin AUR repository
+  ansible.builtin.git:
+    repo: https://aur.archlinux.org/visual-studio-code-bin.git
+    dest: /tmp/visual-studio-code-bin
+    force: yes
+  become: false
+  when: vscode_bin_check.rc != 0
+  tags:
+    - install
+    - vscode
+
+- name: Build visual-studio-code-bin package
+  shell: makepkg -f --noconfirm
+  args:
+    chdir: /tmp/visual-studio-code-bin
+  become: false
+  when: vscode_bin_check.rc != 0
+  tags:
+    - install
+    - vscode
+
+- name: Install built visual-studio-code-bin package
+  shell: pacman -U --noconfirm /tmp/visual-studio-code-bin/visual-studio-code-bin-*.pkg.tar.zst
+  become: true
+  when: vscode_bin_check.rc != 0
+  tags:
+    - install
+    - vscode

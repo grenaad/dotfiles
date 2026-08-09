@@ -6,11 +6,6 @@
     - include_tasks: tasks/env.yaml
     - include_tasks: tasks/ssh.yaml
     - include_tasks: tasks/git.yaml
-    - include_tasks: tasks/himalaya.yaml
-      tags:
-        - himalaya
-        - install
-        - dotfiles
     - include_tasks: tasks/rust.yaml
     - include_tasks: tasks/tmux.yaml
 
@@ -20,13 +15,27 @@
       tags:
         - always
 
+    - include_tasks: packages-arch.yaml
+      when: ansible_facts['os_family'] == "Archlinux"
+      tags:
+        - always
+
     - include_tasks: packages-macos.yaml
       when: ansible_facts['os_family'] == "Darwin"
+
+    # himalaya needs brew (pipx) and cargo, installed by the tasks above
+    - include_tasks: tasks/himalaya.yaml
+      tags:
+        - himalaya
+        - install
+        - dotfiles
 
     - name: Stow all config files
       shell: |
         cd ../configs/
         stow -t "{{ lookup('env', 'HOME') }}" */
+      environment:
+        PATH: "/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
       args:
         executable: /bin/bash
       tags:
@@ -43,6 +52,8 @@
 
     - name: Install tmux plugins via TPM
       shell: ~/.tmux/plugins/tpm/bin/install_plugins
+      environment:
+        PATH: "/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
       tags:
         - install
         - dotfiles

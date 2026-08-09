@@ -2,6 +2,8 @@
 - name: Check if Herdr is installed
   become: false
   ansible.builtin.command: which herdr
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
   register: herdr_binary
   check_mode: false
   changed_when: false
@@ -14,6 +16,8 @@
 - name: List installed Herdr plugins
   become: false
   ansible.builtin.command: herdr plugin list --json
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
   register: herdr_plugins
   check_mode: false
   changed_when: false
@@ -27,6 +31,8 @@
 - name: Install Herdr Splits plugin
   become: false
   ansible.builtin.command: herdr plugin install lmilojevicc/herdr-splits.nvim --ref v0.5.1 --yes
+  environment:
+    PATH: "/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
   when:
     - herdr_binary.rc == 0
     - herdr_plugins.rc == 0

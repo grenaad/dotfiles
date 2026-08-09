@@ -98,28 +98,10 @@
     homebrew_taps:
       - ankitpokhrel/jira-cli
       - oven-sh/bun
+      - sst/tap
 
   roles:
     - geerlingguy.mac.homebrew
 
   tasks:
     - include_tasks: tasks/mpv.yaml
-    # - include_tasks: tasks/meridian.yaml
-
-    - name: Stop and unload cliproxyapi brew service
-      shell: |
-        brew services stop cliproxyapi
-        launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/homebrew.mxcl.cliproxyapi.plist 2>/dev/null || true
-      failed_when: false
-      tags:
-        - install
-        - packages
-
-    - name: Load custom cliproxyapi service
-      shell: launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.cliproxyapi.plist
-      register: cliproxyapi_load
-      changed_when: cliproxyapi_load.rc == 0
-      failed_when: false
-      tags:
-        - install
-        - packages

@@ -1,5 +1,5 @@
 # Himalaya CLI email client with email-oauth2-proxy for OAuth2 authentication
-# Prerequisites: rustup (for cargo) must be installed via homebrew
+# Prerequisites: homebrew (for pipx) and rustup (for cargo) - included before this file in main.yaml
 
 # Installation tasks
 - name: Install pipx via homebrew
@@ -13,6 +13,8 @@
 
 - name: Ensure pipx path is set
   shell: pipx ensurepath
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.cargo/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
   changed_when: false
   tags:
     - install
@@ -21,6 +23,8 @@
 
 - name: Install email-oauth2-proxy via pipx
   shell: pipx install "emailproxy[gui]"
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.cargo/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
   args:
     creates: "{{ lookup('env', 'HOME') }}/.local/bin/emailproxy"
   tags:
@@ -28,8 +32,10 @@
     - packages
     - himalaya
 
-- name: Install himalaya via cargo (with oauth2 feature)
-  shell: cargo install himalaya --features oauth2
+- name: Install himalaya via cargo
+  shell: cargo install himalaya
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.cargo/bin:/home/linuxbrew/.linuxbrew/bin:/opt/homebrew/bin:{{ ansible_facts['env']['PATH'] }}"
   args:
     creates: "{{ lookup('env', 'HOME') }}/.cargo/bin/himalaya"
   tags:

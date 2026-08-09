@@ -1,19 +1,20 @@
 ---
 # Install packages with sudo
 - name: Install System Packages
-  apt:
-    name: [
-        "build-essential",
-      ]
+  community.general.pacman:
+    name:
+      - base-devel
+      - git
+    state: present
+    update_cache: true
   become: true
   tags:
     - install
     - dotfiles
     - packages
 
-- include_tasks: tasks/vscode.yaml
+- include_tasks: tasks/vscode_arch.yaml
 - import_tasks: tasks/homebrew.yaml
 - import_tasks: tasks/nvm.yaml
 - import_tasks: tasks/rust.yaml
 - import_tasks: tasks/bun.yaml
-

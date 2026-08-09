@@ -1,6 +1,6 @@
 # Ansible Installation and Setup
 
-Ansible is used to automate the installation of packages and configuration for both macOS and Ubuntu/WSL.
+Ansible is used to automate the installation of packages and configuration for macOS, Ubuntu/WSL, and Arch-based distros (Arch, CachyOS, Manjaro, etc.).
 
 ## Prerequisites
 
@@ -59,6 +59,14 @@ This runs the main Ansible playbook with `--ask-become-pass` (sudo) and `--ask-v
 
 **Other:** VS Code, Rust
 
+### Arch (Arch, CachyOS, Manjaro, ...)
+
+**System packages (pacman):** base-devel, git
+
+**Homebrew packages:** same list as Ubuntu
+
+**Other:** VS Code (`visual-studio-code-bin` from the AUR), Rust
+
 ### macOS
 
 All packages are installed via Homebrew, including:
@@ -75,6 +83,7 @@ See `packages-macos.yaml` for the full list.
 ansible/
   main.yaml              # Entry point - runs all tasks
   packages-ubuntu.yaml   # Ubuntu/WSL specific packages
+  packages-arch.yaml     # Arch-based specific packages
   packages-macos.yaml    # macOS specific packages (uses geerlingguy.mac role)
   tasks/
     env.yaml             # .env file (vault-encrypted)
@@ -84,6 +93,7 @@ ansible/
     tmux.yaml            # TPM (Tmux Plugin Manager)
     homebrew.yaml        # Linuxbrew + CLI packages
     vscode.yaml          # VS Code via apt repo
+    vscode_arch.yaml     # VS Code via AUR (visual-studio-code-bin)
     ...
 ```
 

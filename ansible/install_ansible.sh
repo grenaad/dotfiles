@@ -32,10 +32,14 @@ fi
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   if ! command -v ansible >/dev/null; then
     echo "Installing ansible ..."
-    sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository --yes --update ppa:ansible/ansible
-    sudo apt install -y ansible
+    if command -v pacman >/dev/null; then
+      sudo pacman -S --needed --noconfirm ansible
+    else
+      sudo apt update
+      sudo apt install -y software-properties-common
+      sudo add-apt-repository --yes --update ppa:ansible/ansible
+      sudo apt install -y ansible
+    fi
   else
     echo "Ansible  already installed. Skipping."
   fi
