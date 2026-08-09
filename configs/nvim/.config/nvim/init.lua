@@ -15,5 +15,8 @@ if not pcall(require, "lazy") then
   vim.cmd.quit()
 end
 
+-- must run before plugins register tree-sitter query predicates/directives
+require "treesitter_compat"
+
 require "lazy_setup"
 require "polish"
