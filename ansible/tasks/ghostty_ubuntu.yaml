@@ -1,24 +1,60 @@
-- name: Install Ghostty
-  shell: |
-    curl -fsSL https://download.opensuse.org/repositories/home:clayrisser:sid/Debian_Unstable/Release.key | gpg --dearmor | sudo tee /etc/apt/keyrings/home_clayrisser_sid.gpg > /dev/null
-    ARCH="$(dpkg --print-architecture)"
-    sudo tee /etc/apt/sources.list.d/home:clayrisser:sid.sources > /dev/null <<EOF
-    Types: deb
-    URIs: http://download.opensuse.org/repositories/home:/clayrisser:/sid/Debian_Unstable/
-    Suites: /
-    Architectures: $ARCH
-    Signed-By: /etc/apt/keyrings/home_clayrisser_sid.gpg
-    EOF
-    sudo apt update
-    sudo apt install ghostty
+---
+# Ghostty has no official Debian/Ubuntu package, so we use the clayrisser
+# OBS repo. On Arch this is unnecessary - see tasks/ghostty_arch.yaml.
+- name: Ensure apt keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  tags:
+    - install
+    - dotfiles
+    - ghostty
 
+- name: Add Ghostty apt signing key
+  ansible.builtin.shell: |
+    set -o pipefail
+    curl -fsSL https://download.opensuse.org/repositories/home:clayrisser:sid/Debian_Unstable/Release.key \
+      | gpg --dearmor \
+      | tee /etc/apt/keyrings/home_clayrisser_sid.gpg > /dev/null
+  args:
+    executable: /bin/bash
+    creates: /etc/apt/keyrings/home_clayrisser_sid.gpg
+  become: true
+  tags:
+    - install
+    - dotfiles
+    - ghostty
+
+- name: Add Ghostty apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/home:clayrisser:sid.sources
+    mode: "0644"
+    content: |
+      Types: deb
+      URIs: http://download.opensuse.org/repositories/home:/clayrisser:/sid/Debian_Unstable/
+      Suites: /
+      Signed-By: /etc/apt/keyrings/home_clayrisser_sid.gpg
+  become: true
+  tags:
+    - install
+    - dotfiles
+    - ghostty
+
+- name: Install Ghostty
+  ansible.builtin.apt:
+    name: ghostty
+    state: present
+    update_cache: true
+  become: true
   tags:
     - install
     - dotfiles
     - ghostty
 
 - name: Set Ghostty as default terminal
-  alternatives:
+  community.general.alternatives:
     name: x-terminal-emulator
     path: /usr/bin/ghostty
     priority: 50

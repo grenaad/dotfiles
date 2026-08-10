@@ -56,7 +56,7 @@ git:
 	cd ansible && ansible-playbook main.yaml --tags git --ask-vault-pass
 
 ghostty:
-	cd ansible && ansible-playbook main.yaml --tags ghostty
+	cd ansible && ansible-playbook main.yaml --tags ghostty --ask-become-pass
 
 homebrew:
 	cd ansible && ansible-playbook main.yaml --tags homebrew

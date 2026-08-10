@@ -1,0 +1,11 @@
+// COSMIC custom keyboard shortcuts.
+//
+// This file is merged over the system defaults in
+// /usr/share/cosmic/com.system76.CosmicSettings.Shortcuts/v1/defaults
+//
+// Super+T is bound by default to System(Terminal), which the system_actions
+// config hardcodes to "cosmic-term" - it does NOT respect the
+// x-scheme-handler/terminal xdg-mime default. So we rebind it explicitly.
+{
+    (modifiers: [Super], key: "t"): Spawn("ghostty"),
+}

@@ -13,7 +13,8 @@
     - dotfiles
     - packages
 
-- include_tasks: tasks/vscode_arch.yaml
+- import_tasks: tasks/vscode_arch.yaml
+- import_tasks: tasks/ghostty_arch.yaml
 - import_tasks: tasks/homebrew.yaml
 - import_tasks: tasks/nvm.yaml
 - import_tasks: tasks/rust.yaml

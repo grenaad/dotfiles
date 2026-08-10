@@ -57,15 +57,18 @@ This runs the main Ansible playbook with `--ask-become-pass` (sudo) and `--ask-v
 
 **Homebrew packages:** bat, fzf, git-delta, lazygit, neovim, opencode, ripgrep, tlrc, yazi
 
-**Other:** VS Code, Rust
+**Other:** VS Code, Ghostty (clayrisser OBS apt repo), Rust
 
 ### Arch (Arch, CachyOS, Manjaro, ...)
 
-**System packages (pacman):** base-devel, git
+**System packages (pacman):** base-devel, git, ghostty, xdg-utils
 
 **Homebrew packages:** same list as Ubuntu
 
 **Other:** VS Code (`visual-studio-code-bin` from the AUR), Rust
+
+Ghostty comes from the official `extra` repo, so no AUR build is needed. It is also
+registered as the default `x-scheme-handler/terminal` handler via `xdg-mime`.
 
 ### macOS
 
@@ -94,6 +97,8 @@ ansible/
     homebrew.yaml        # Linuxbrew + CLI packages
     vscode.yaml          # VS Code via apt repo
     vscode_arch.yaml     # VS Code via AUR (visual-studio-code-bin)
+    ghostty_arch.yaml    # Ghostty via pacman (extra repo)
+    ghostty_ubuntu.yaml  # Ghostty via clayrisser OBS apt repo
     ...
 ```
 

@@ -40,7 +40,7 @@ make unstow
 
 ### Available Configs
 
-`aerospace`, `ghostty`, `idea`, `lazygit`, `nerdfonts`, `nvim`, `opencode`, `raycast`, `scripts`, `sketchy_bar`, `tiling`, `tmux`, `vscode`, `yazi`, `zsh`
+`aerospace`, `cosmic`, `ghostty`, `idea`, `lazygit`, `nerdfonts`, `nvim`, `opencode`, `raycast`, `scripts`, `sketchy_bar`, `tiling`, `tmux`, `vscode`, `yazi`, `zsh`
 
 ## Ansible
 

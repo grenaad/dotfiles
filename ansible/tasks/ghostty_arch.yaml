@@ -1,0 +1,26 @@
+---
+# Ghostty is in the official Arch "extra" repo, so no AUR build is needed.
+# ghostty-shell-integration and ghostty-terminfo come in as hard dependencies.
+# xdg-utils is required by the xdg_mime task below (it shells out to xdg-mime).
+- name: Install Ghostty
+  community.general.pacman:
+    name:
+      - ghostty
+      - xdg-utils
+    state: present
+  become: true
+  tags:
+    - install
+    - dotfiles
+    - packages
+    - ghostty
+
+- name: Set Ghostty as the default terminal handler
+  community.general.xdg_mime:
+    mime_types: x-scheme-handler/terminal
+    handler: com.mitchellh.ghostty.desktop
+  become: false
+  tags:
+    - install
+    - dotfiles
+    - ghostty
