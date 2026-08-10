@@ -1,9 +1,11 @@
 [build]
-# sccache: content-addressed compile cache (~/Library/Caches/Mozilla.sccache).
+# sccache: content-addressed compile cache.
 # Makes dependency rebuilds after `cargo clean`, branch switches, or
 # flag-churn near-instant. Workspace crates still use cargo's own
 # incremental engine (sccache passes incremental compiles through).
-rustc-wrapper = "/opt/homebrew/bin/sccache"
+# Resolved via PATH so this config stays portable across machines
+# (linuxbrew /home/linuxbrew/.linuxbrew/bin vs macOS /opt/homebrew/bin).
+rustc-wrapper = "sccache"
 
 [env]
 # Never idle-shutdown the sccache server. The default 10-min idle exit
