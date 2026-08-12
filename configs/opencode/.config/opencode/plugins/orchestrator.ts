@@ -44,6 +44,7 @@ const MINION_PROMPT = [
   model: "anthropic/claude-opus-4-5",
   model: "openai/gpt-5.6-sol",
   model: "xai/grok-4.5"
+  model: "opencode/deepseek-v4-flash",
 */
 
 const AGENTS: Record<string, unknown> = {
@@ -55,8 +56,7 @@ const AGENTS: Record<string, unknown> = {
   },
   minion: {
     mode: "subagent",
-    model: "openai/gpt-5.6-sol",
-    variant: "medium",
+    model: "opencode/deepseek-v4-flash",
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
     prompt: MINION_PROMPT,
