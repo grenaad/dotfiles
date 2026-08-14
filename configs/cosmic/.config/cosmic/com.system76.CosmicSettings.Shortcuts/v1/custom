@@ -8,4 +8,5 @@
 // x-scheme-handler/terminal xdg-mime default. So we rebind it explicitly.
 {
     (modifiers: [Super], key: "t"): Spawn("ghostty"),
+    (modifiers: [Super, Shift], key: "s"): System(Screenshot),
 }
