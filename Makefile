@@ -1,4 +1,4 @@
-.PHONY: help install dotfiles packages env ssh git ghostty homebrew herdr tmux stow unstow check install_ansible
+.PHONY: help install dotfiles packages env ssh git ghostty homebrew herdr tmux himalaya rclone stow unstow check install_ansible
 
 # Default target
 help:
@@ -19,6 +19,8 @@ help:
 	@echo "  ghostty    - Install Ghostty terminal"
 	@echo "  homebrew   - Install Homebrew and packages"
 	@echo "  herdr      - Install pinned Herdr plugins"
+	@echo "  himalaya   - Install Himalaya and copy vaulted email config"
+	@echo "  rclone     - Install rclone and copy vaulted rclone config"
 	@echo "  tmux       - Install tmux plugins"
 	@echo ""
 	@echo "Utility targets:"
@@ -69,6 +71,9 @@ tmux:
 
 himalaya:
 	cd ansible && ansible-playbook main.yaml --tags himalaya --ask-vault-pass
+
+rclone:
+	cd ansible && ansible-playbook main.yaml --tags rclone --ask-vault-pass
 
 # Run stow manually
 stow:

@@ -80,6 +80,7 @@
       - neovim
       - parallel
       - sst/tap/opencode
+      - rclone
       - ripgrep
       - stow
       - tlrc

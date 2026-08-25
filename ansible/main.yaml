@@ -30,6 +30,12 @@
         - install
         - dotfiles
 
+    - include_tasks: tasks/rclone.yaml
+      tags:
+        - rclone
+        - install
+        - dotfiles
+
     - name: Stow all config files
       shell: |
         cd ../configs/

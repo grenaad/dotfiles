@@ -1,0 +1,21 @@
+# rclone remote storage CLI — config contains OAuth tokens (ansible-vault)
+
+- name: Create rclone config directory
+  file:
+    path: "{{ lookup('env', 'HOME') }}/.config/rclone"
+    state: directory
+    mode: 0700
+  tags:
+    - dotfiles
+    - install
+    - rclone
+
+- name: Copy rclone config (contains OAuth tokens)
+  copy:
+    src: "{{ playbook_dir }}/rclone/rclone.conf"
+    dest: "{{ lookup('env', 'HOME') }}/.config/rclone/rclone.conf"
+    mode: 0600
+  tags:
+    - dotfiles
+    - install
+    - rclone
