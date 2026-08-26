@@ -58,7 +58,7 @@ const AGENTS: Record<string, unknown> = {
   },
   minion: {
     mode: "subagent",
-    model: "opencode-go/qwen3.8-max",
+    model: "anthropic/claude-opus-4-5",
     variant: "default",
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
