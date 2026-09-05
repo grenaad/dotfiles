@@ -47,6 +47,7 @@ const MINION_PROMPT = [
   model: "opencode/deepseek-v4-flash",
   model: "opencode-go/kimi-k3",
   model: "opencode-go/qwen3.8-max",
+  model: "cerebras/qwen-3.8-27b",
 */
 
 const AGENTS: Record<string, unknown> = {
@@ -58,7 +59,7 @@ const AGENTS: Record<string, unknown> = {
   },
   minion: {
     mode: "subagent",
-    model: "openai/gpt-5.6-sol",
+    model: "xai/grok-4.6",
     variant: "low",
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
