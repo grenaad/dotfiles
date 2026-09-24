@@ -103,7 +103,7 @@ const AGENTS: Record<string, unknown> = {
   },
   worker: {
     mode: "subagent",
-    model: "opencode-go/glm-5.3-flash",
+    model: "xai/grok-4.7",
     variant: "max",
     description:
       "Research and writing subagent: discovery, search, and investigation with concrete path:line evidence, plus prose/documentation writing. Does not make code changes.",

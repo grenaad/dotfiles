@@ -62,7 +62,7 @@ const AGENTS: Record<string, unknown> = {
   },
   minion: {
     mode: "subagent",
-    model: "xai/grok-4.6",
+    model: "xai/grok-4.7",
     variant: "low",
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
