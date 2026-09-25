@@ -1,23 +1,52 @@
 /**
- * Orchestrator / minion plugin (v1 port).
+ * Orchestrator / minion plugin (OpenCode v2).
  *
- * Ports opencode's v2 `.opencode/plugins/orchestrator.ts` (commit
- * "bye bye orchestrator", a15afbe) to the v1 plugin API used by the
- * installed opencode binary (1.17.x).
+ * Mirrors opencode's upstream `.opencode/plugins/orchestrator.ts` (removed in
+ * commit "bye bye orchestrator", a15afbe), which registers both agents via
+ * `ctx.agent.transform(...)`.
  *
- * The v2 original defined both agents via `ctx.agent.transform(...)`, an API
- * that does not exist in v1. v1 plugins instead inject agents through the
- * `config` hook by merging definitions into `config.agent` — the same
- * mechanism the orchid-agent plugin uses. Existing user-declared agents win
- * over these bundled definitions.
- *
- * Shape differences from the v2 original (v1 uses config-form AgentConfig):
- *   - `agent.system = [...]`                     -> `prompt: "..."`
- *   - `agent.model = { providerID, id }`         -> `model: "openai/gpt-5.5"`
- *   - `agent.permissions.push({subagent deny})`  -> `permission: { task: "deny" }`
- *
- * Prompt text is copied verbatim from the v2 original.
+ * v2 notes:
+ *   - `editor.update(id, fn)` creates the agent when it does not exist yet.
+ *   - A freshly created agent starts with an empty permission ruleset, and an
+ *     unmatched permission defaults to "ask". To keep v1-like defaults, new
+ *     agents are seeded from the built-in `build` (primary) / `general`
+ *     (subagent) rulesets before the agent-specific rules are appended.
+ *   - Agents already defined elsewhere (e.g. in opencode.json `agents`) are
+ *     left untouched so user definitions win, matching the v1 behaviour.
+ *   - Permission rules are ordered; the last matching rule wins.
  */
+
+type Rule = {
+  action: string;
+  resource: string;
+  effect: "allow" | "ask" | "deny";
+};
+
+type Agent = {
+  id: string;
+  description?: string;
+  mode: "primary" | "subagent" | "all";
+  system?: string;
+  model?: { providerID: string; id: string; variant?: string };
+  permissions: Rule[];
+};
+
+type AgentEditor = {
+  get(id: string): Agent | undefined;
+  update(id: string, fn: (agent: Agent) => void): void;
+};
+
+type Context = {
+  agent: { transform(fn: (editor: AgentEditor) => void): Promise<unknown> };
+};
+
+type Definition = {
+  description: string;
+  mode: Agent["mode"];
+  system: string;
+  model?: Agent["model"];
+  permissions?: Rule[];
+};
 
 const ORCHESTRATOR_PROMPT = [
   "You are Orchestrator, the primary coordinating agent for this repository. You do meta work only: you coordinate, brief, and synthesize — you do not perform the work itself.",
@@ -41,46 +70,52 @@ const MINION_PROMPT = [
 ].join("\n");
 
 /*
-  model: "anthropic/claude-opus-4-5",
-  model: "anthropic/claude-opus-4-8",
-  model: "openai/gpt-5.6-sol",
-  model: "xai/grok-4.6"
-  model: "opencode/deepseek-v4-flash",
-  model: "opencode-go/deepseek-v4.1-flash",
-  model: "opencode-go/kimi-k3",
-  model: "opencode-go/qwen3.8-max",
-  model: "cerebras/qwen-3.8-27b",
-  model: "opencode-go/glm-5.3-flash"
+  model: { providerID: "anthropic", id: "claude-opus-4-5" },
+  model: { providerID: "anthropic", id: "claude-opus-4-8" },
+  model: { providerID: "openai", id: "gpt-5.6-sol" },
+  model: { providerID: "xai", id: "grok-4.6" },
+  model: { providerID: "opencode", id: "deepseek-v4-flash" },
+  model: { providerID: "opencode-go", id: "deepseek-v4.1-flash" },
+  model: { providerID: "opencode-go", id: "kimi-k3" },
+  model: { providerID: "opencode-go", id: "qwen3.8-max" },
+  model: { providerID: "cerebras", id: "qwen-3.8-27b" },
+  model: { providerID: "opencode-go", id: "glm-5.3-flash" },
 */
 
-const AGENTS: Record<string, unknown> = {
+const AGENTS: Record<string, Definition> = {
   orchestrator: {
     mode: "primary",
     description:
       "Coordinates work by delegating implementation tasks to the minion subagent.",
-    prompt: ORCHESTRATOR_PROMPT,
+    system: ORCHESTRATOR_PROMPT,
   },
   minion: {
     mode: "subagent",
-    model: "xai/grok-4.7",
-    variant: "low",
+    model: { providerID: "anthropic", id: "claude-opus-5-5", variant: "low" },
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
-    prompt: MINION_PROMPT,
-    // v1 equivalent of the v2 `{ action: "subagent", resource: "*", effect: "deny" }`
-    // rule: block minion from spawning any further subagents via the Task tool.
-    permission: { task: "deny" },
+    system: MINION_PROMPT,
+    permissions: [{ action: "subagent", resource: "*", effect: "deny" }],
   },
 };
 
-const server = async () => ({
-  config: async (config: { agent?: Record<string, unknown> }) => {
-    const existing = config.agent ?? {};
-    config.agent = { ...AGENTS, ...existing };
-  },
-});
-
 export default {
   id: "orchestrator",
-  server,
+  setup: async (ctx: Context) => {
+    await ctx.agent.transform((editor) => {
+      for (const [id, def] of Object.entries(AGENTS)) {
+        if (editor.get(id)) continue;
+        const base =
+          editor.get(def.mode === "subagent" ? "general" : "build")
+            ?.permissions ?? [];
+        editor.update(id, (agent) => {
+          agent.mode = def.mode;
+          agent.description = def.description;
+          agent.system = def.system;
+          if (def.model) agent.model = { ...def.model };
+          agent.permissions.push(...base, ...(def.permissions ?? []));
+        });
+      }
+    });
+  },
 };
