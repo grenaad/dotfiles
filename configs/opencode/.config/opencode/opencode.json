@@ -45,7 +45,7 @@
     "playwright": {
       "type": "local",
       "command": ["npx", "@playwright/mcp@latest", "--extension"],
-      "enabled": false,
+      "enabled": true,
       "environment": {
         "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "DyfBXYMo3SK2ZVreuIp08aJFqMHUl1196yS6U2fBO_0"
       }
@@ -61,7 +61,7 @@
     "datadog": {
       "type": "remote",
       "enabled": true,
-      "url": "https://mcp.datadoghq.eu/api/unstable/mcp-server/mcp",
+      "url": "https://mcp.datadoghq.eu/v1/mcp",
       "headers": {
         "DD_API_KEY": "{env:DD_API_KEY}",
         "DD_APPLICATION_KEY": "{env:DD_APP_KEY}"
