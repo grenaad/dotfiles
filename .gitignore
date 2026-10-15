@@ -40,3 +40,6 @@ configs/herdr/.config/herdr/*.sock
 configs/herdr/.config/herdr/.plugins.lock
 configs/herdr/.config/herdr/plugins/
 configs/herdr/.config/herdr/plugins.json
+
+# omniwm: write-once recovery/migration backups (settings.toml.corrupt*, settings.toml.pre-v*)
+configs/omniwm/.config/omniwm/settings.toml.*
