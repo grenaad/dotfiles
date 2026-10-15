@@ -94,6 +94,9 @@
       - sf-symbols # SketchyBar font
 
       - notunes # Stops Music/iTunes from launching, need to add the login item in System Preferences
+      - crmne/tap/spotifast # Spotify community
+      - vorssaint
+      - omniwm
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
