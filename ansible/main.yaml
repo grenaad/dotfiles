@@ -22,6 +22,8 @@
 
     - include_tasks: packages-macos.yaml
       when: ansible_facts['os_family'] == "Darwin"
+      tags:
+        - always
 
     # himalaya needs brew (pipx) and cargo, installed by the tasks above
     - include_tasks: tasks/himalaya.yaml

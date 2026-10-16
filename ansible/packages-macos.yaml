@@ -1,6 +1,14 @@
 ---
-- name: Install MacOS Packages
-
+# macOS packages. This is a task list, included from main.yaml when
+# os_family == Darwin, so it must not contain play-level keys (hosts/roles/...).
+- name: Install macOS Homebrew packages and casks
+  ansible.builtin.include_role:
+    name: geerlingguy.mac.homebrew
+    apply:
+      tags:
+        - install
+        - packages
+        - homebrew
   vars:
     homebrew_installed_packages:
       - neovim
@@ -13,7 +21,6 @@
       - pyenv
       - stern
       - tlrc
-      - tmux
       - gnu-sed
       - bat
       - rustup
@@ -42,23 +49,16 @@
       - gogcli # Google Suite CLI (Gmail, Calendar, Drive, etc.)
       - qpdf # PDF decryption and transformation tool
 
-      # yazi and all its dependencies
-      - yazi # yazi, and it's dependencies
-      - ffmpeg # for video thumbnails
+      # yazi and its dependencies (ffmpeg, jq and fzf are listed above)
+      - yazi
       - sevenzip # for archive extraction and preview
-      - jq # for JSON preview
       - poppler # for PDF preview
       - fd # for file searching
       - ripgrep # for file content searching
-      - fzf # for quick file subtree navigation, >= 0.53.0
       - zoxide # for historical directories navigation, requires fzf
       - resvg # for SVG preview
       - imagemagick # for Font, HEIC, and JPEG XL preview
       - font-symbols-only-nerd-font
-
-      # SketchyBar font
-      - sf-pro
-      - font-sketchybar-app-font
 
       - p7zip
       - ocrmypdf
@@ -74,7 +74,6 @@
       - mpv
       - slack
       - zoom
-      - firefox
       - obs
       - postman
       - transmission
@@ -87,24 +86,20 @@
       - raycast
       - font-jetbrains-mono-nerd-font
 
-      # Aerospace and SketchyBar
-      - nikitabobko/tap/aerospace
-      - FelixKratz/formulae/sketchybar
-      - FelixKratz/formulae/borders
-      - sf-symbols # SketchyBar font
+      # Tiling window manager (config: configs/omniwm)
+      - omniwm
 
       - notunes # Stops Music/iTunes from launching, need to add the login item in System Preferences
       - crmne/tap/spotifast # Spotify community
       - vorssaint
-      - omniwm
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
       - oven-sh/bun
       - sst/tap
+  tags:
+    - install
+    - packages
+    - homebrew
 
-  roles:
-    - geerlingguy.mac.homebrew
-
-  tasks:
-    - include_tasks: tasks/mpv.yaml
+- import_tasks: tasks/mpv.yaml

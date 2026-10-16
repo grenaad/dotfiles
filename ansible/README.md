@@ -76,7 +76,7 @@ All packages are installed via Homebrew, including:
 
 **Formulae:** neovim, bat, fzf, git-delta, lazygit, tmux, ripgrep, tlrc, yazi, opencode, k9s, btop, go, gh, and more
 
-**Cask apps:** Docker, Firefox, Ghostty, Zen, Raycast, Aerospace, SketchyBar, and more
+**Cask apps:** Docker, Firefox, Ghostty, Zen, Raycast, OmniWM, and more
 
 See `packages-macos.yaml` for the full list.
 

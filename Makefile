@@ -45,7 +45,7 @@ dotfiles:
 
 # OS-specific packages
 packages: 
-	cd ansible && ansible-playbook main.yaml --tags packages
+	cd ansible && ansible-playbook main.yaml --tags packages --ask-become-pass
 
 # Individual tasks
 env: 
@@ -61,7 +61,7 @@ ghostty:
 	cd ansible && ansible-playbook main.yaml --tags ghostty --ask-become-pass
 
 homebrew:
-	cd ansible && ansible-playbook main.yaml --tags homebrew
+	cd ansible && ansible-playbook main.yaml --tags homebrew --ask-become-pass
 
 herdr:
 	cd ansible && ansible-playbook main.yaml --tags herdr
