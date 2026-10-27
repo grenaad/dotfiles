@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TL2A-03-BLOCK I-(1) Secure Transport Operations Handbook, page 2.7-1</title>
+<style>
+  /* EXAMPLE FILE: fonts load from ../fonts because this page lives in assets/examples/. Your page
+     uses fonts/ next to it, as template.html does. Copy drawing markup from here, never this style block. */
+  /* ---------- fonts (files in ./fonts, copied from the skill's assets/fonts) ---------- */
+  /* Leroy-template lettering for every drawing label. */
+  @font-face { font-family: "Routed Gothic"; src: url("../fonts/routed-gothic.ttf"); unicode-range: U+0000-0030, U+0032-FFFF; }
+  @font-face { font-family: "Routed Gothic Narrow"; src: url("../fonts/routed-gothic-narrow.ttf"); unicode-range: U+0000-0030, U+0032-FFFF; }
+  /* Leroy's plain "1" reads as "I" (API V1, T1). Borrow a flagged one. Delete these two
+     rules for a strictly period look on pages without versions or subscripts. */
+  @font-face { font-family: "Routed Gothic"; src: local("Helvetica Neue"), local("HelveticaNeue"), local("Arial"); unicode-range: U+0031; }
+  @font-face { font-family: "Routed Gothic Narrow"; src: local("Helvetica Neue"), local("HelveticaNeue"), local("Arial"); unicode-range: U+0031; }
+  /* IBM Selectric Letter Gothic: crew checklists only. */
+  @font-face { font-family: "Letter Gothic"; src: url("../fonts/LetterGothicCode-R.ttf"); font-weight: 400; }
+  @font-face { font-family: "Letter Gothic"; src: url("../fonts/LetterGothicCode-B.ttf"); font-weight: 700; }
+
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #8a8a86; }
+  body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @media print { html, body { background: none; } }
+
+  :root {
+    --ink: #000000;
+    --paper: #fbfaf5;   /* screen only; print is pure white (below) */
+    --type: "Iowan Old Style", "Iowan", Georgia, serif;
+    --leroy: "Routed Gothic Narrow", "Routed Gothic", sans-serif;
+    --selectric: "Letter Gothic", "Courier", monospace;
+  }
+  /* Must come after :root. A printed off-white tint is halftoned into dots. */
+  @media print { :root { --paper: #ffffff; } }
+
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    margin: 0 auto;
+    padding: 9mm 15mm 0 16mm;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--type);
+    font-size: 8pt;
+    line-height: 1.33;
+    letter-spacing: 0.055em;   /* the Selectric typewriter spacing */
+    overflow: hidden;
+  }
+
+  /* ---------- running head / foot ---------- */
+  .head { text-align: center; line-height: 1.25; }
+  .head .doc { font-weight: 700; font-size: 8.6pt; letter-spacing: 0.06em; }
+  .head .title { font-weight: 700; font-size: 8.6pt; letter-spacing: 0.08em; }
+  .head .part { margin-top: 2.2mm; font-size: 8.2pt; letter-spacing: 0.1em; }
+  .rule { height: 0; border-top: 1.5pt solid var(--ink); margin: 1.4mm -2mm 0; }
+
+  .foot { position: absolute; left: 16mm; right: 15mm; bottom: 8mm; }
+  .foot .rule { margin: 0 -2mm 1.6mm; }
+  .foot .sub { text-align: center; letter-spacing: 0.1em; font-size: 8.2pt; }
+  .foot .line { display: flex; align-items: baseline; justify-content: space-between; margin-top: 2.2mm; font-size: 8.2pt; }
+  .foot .fill { display: inline-block; border-bottom: 0.6pt solid var(--ink); text-align: center; padding: 0 1mm; font-size: 8.8pt; letter-spacing: 0.03em; }
+
+  /* ---------- section opener ---------- */
+  .opener { text-align: center; letter-spacing: 0.12em; margin: 3.4mm 0 2mm; line-height: 1.6; }
+
+  /* ---------- numbered paragraphs ---------- */
+  .para { display: grid; grid-template-columns: 19mm 1fr; position: relative; }
+  .para .num { letter-spacing: 0.08em; }
+  .para h2, .para h3 { margin: 0 0 0.8mm; font: inherit; font-weight: 400; letter-spacing: 0.08em; }
+  .para h3 { text-decoration: underline; text-underline-offset: 1.6pt; text-decoration-thickness: 0.5pt; letter-spacing: 0.06em; }
+  .para p { margin: 0 0 1mm; text-indent: 9mm; text-align: left; }
+  .para p.flush { text-indent: 0; }
+  .changebar { position: absolute; left: -9mm; width: 1.3mm; background: var(--ink); }
+  .nowrap { white-space: nowrap; }
+
+  /* ---------- figures ---------- */
+  figure { margin: 1.6mm 0 0; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { text-align: center; margin-top: 0.6mm; letter-spacing: 0.07em; }
+  figcaption .n { margin-right: 3mm; }
+
+  /* SVG units are millimetres on paper: a figure 180 units wide fills the 179 mm column. */
+  svg text { font-family: var(--leroy); fill: var(--ink); letter-spacing: 0.04px; }
+  svg .o    { fill: none; stroke: var(--ink); stroke-width: 0.42; stroke-linejoin: round; stroke-linecap: round; } /* object line */
+  svg .of   { fill: var(--paper); stroke: var(--ink); stroke-width: 0.42; stroke-linejoin: round; }               /* object, opaque */
+  svg .t    { fill: none; stroke: var(--ink); stroke-width: 0.17; stroke-linecap: round; }                        /* thin detail */
+  svg .hid  { fill: none; stroke: var(--ink); stroke-width: 0.22; stroke-dasharray: 1.3 0.7; }                     /* hidden */
+  svg .cl   { fill: none; stroke: var(--ink); stroke-width: 0.16; stroke-dasharray: 5 0.8 0.9 0.8; }               /* centerline */
+  svg .cut  { fill: none; stroke: var(--ink); stroke-width: 0.5; stroke-dasharray: 5 1 1 1; }                      /* section cut */
+  svg .ld   { fill: none; stroke: var(--ink); stroke-width: 0.16; marker-end: url(#nh-leader); }                   /* leader */
+  svg .dim  { fill: none; stroke: var(--ink); stroke-width: 0.16; marker-start: url(#nh-dim); }                    /* dimension half */
+  svg .w    { fill: none; stroke: var(--ink); stroke-width: 0.3; stroke-linejoin: round; }                         /* wire */
+  svg .wa   { fill: none; stroke: var(--ink); stroke-width: 0.3; stroke-linejoin: round; marker-end: url(#nh-arrow); } /* wire with arrow */
+  svg .box  { fill: var(--paper); stroke: var(--ink); stroke-width: 0.45; }
+  svg .panel{ fill: none; stroke: var(--ink); stroke-width: 0.3; stroke-dasharray: 2 1; }
+  svg .ev   { fill: none; stroke: var(--ink); stroke-width: 0.18; stroke-dasharray: 1 0.7; }                       /* timeline event */
+  svg .vid  { fill: url(#nh-hatch); stroke: var(--ink); stroke-width: 0.35; }                                      /* hatched bar */
+  svg .aud  { fill: var(--paper); stroke: var(--ink); stroke-width: 0.35; }                                        /* plain bar */
+  svg .gap  { fill: var(--paper); stroke: var(--ink); stroke-width: 0.35; stroke-dasharray: 0.6 0.5; }             /* dotted bar */
+  svg .grain{ fill: url(#nh-dots); stroke: var(--ink); stroke-width: 0.35; }                                       /* granular, powder, fill */
+  svg .dot  { fill: var(--ink); }
+  svg .lbl   { font-size: 2.35px; }                                         /* callouts, box titles */
+  svg .lbl-s { font-size: 2.05px; }                                         /* secondary lines, wire names */
+  svg .lbl-b { font-size: 2.5px; font-family: "Routed Gothic", sans-serif; } /* view titles, big letters */
+  svg .code  { font-size: 2.4px; font-family: "Routed Gothic", sans-serif; } /* figure code, bottom right */
+
+  /* ---------- lower band: data table + notice + checklist ---------- */
+  .lower { display: grid; grid-template-columns: 1fr 64mm; column-gap: 6mm; margin-top: 2.8mm; }
+  .tcap { text-align: center; letter-spacing: 0.07em; margin: 0 0 0.8mm; }
+  table { width: 100%; border-collapse: collapse; font-size: 7.3pt; line-height: 1.2; }
+  th, td { border: 0.6pt solid var(--ink); padding: 0.35mm 1.6mm; text-align: left; vertical-align: top; font-weight: 400; }
+  thead th { text-align: center; letter-spacing: 0.1em; padding: 0.5mm 1.6mm; }
+  td.v { white-space: nowrap; }
+
+  .notice { text-align: left; margin-bottom: 1.8mm; }
+  .notice .tag { display: block; text-align: center; letter-spacing: 0.18em; font-weight: 700; text-decoration: underline; text-underline-offset: 1.6pt; text-decoration-thickness: 0.6pt; margin-bottom: 0.8mm; }
+  .notice p { margin: 0; font-size: 7.4pt; line-height: 1.28; }
+
+  .card { border: 0.8pt solid var(--ink); font-family: var(--selectric); font-size: 7.1pt; line-height: 1.3; letter-spacing: 0; }
+  .card .bar { background: var(--ink); color: var(--paper); font-weight: 700; padding: 0.5mm 1.8mm; display: flex; justify-content: space-between; }
+  .card ol { list-style: none; margin: 0; padding: 0.8mm 1.8mm 1mm; }
+  .card li { display: grid; grid-template-columns: 3.2mm 1fr; white-space: pre; }
+
+  /* black thumb tab, bleeds off the trim edge */
+  .tab { position: absolute; right: 0; top: 112mm; width: 8.5mm; height: 17mm; background: var(--ink); color: var(--paper);
+    font-family: "Routed Gothic", sans-serif; font-size: 8pt; letter-spacing: 0.08em; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<!-- Shared drawing defs: every figure on the page uses these ids. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <marker id="nh-leader" viewBox="0 0 6 4" refX="5.6" refY="2" markerWidth="2.1" markerHeight="1.05" markerUnits="userSpaceOnUse" orient="auto" preserveAspectRatio="none"><path d="M0,0 L6,2 L0,4 Z" fill="#000"/></marker>
+    <marker id="nh-arrow" viewBox="0 0 6 4" refX="5.6" refY="2" markerWidth="2.4" markerHeight="1.3" markerUnits="userSpaceOnUse" orient="auto" preserveAspectRatio="none"><path d="M0,0 L6,2 L0,4 Z" fill="#000"/></marker>
+    <marker id="nh-dim" viewBox="0 0 6 4" refX="0" refY="2" markerWidth="2.2" markerHeight="0.95" markerUnits="userSpaceOnUse" orient="auto" preserveAspectRatio="none"><path d="M6,0 L0,2 L6,4 Z" fill="#000"/></marker>
+    <pattern id="nh-hatch" width="1.1" height="1.1" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="1.1" stroke="#000" stroke-width="0.2"/></pattern>
+    <pattern id="nh-bp" width="1.4" height="1.4" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><rect width="0.7" height="1.4" fill="#000"/></pattern>
+    <pattern id="nh-dots" width="1.3" height="1.3" patternUnits="userSpaceOnUse"><circle cx="0.32" cy="0.32" r="0.15" fill="#000"/><circle cx="0.97" cy="0.97" r="0.15" fill="#000"/></pattern>
+  </defs>
+</svg>
+
+<div class="page">
+
+  <header class="head">
+    <div class="doc">TL2A-03-BLOCK I-(1)</div>
+    <div class="title">SECURE TRANSPORT OPERATIONS HANDBOOK</div>
+    <div class="part">SYSTEMS DATA</div>
+    <div class="rule"></div>
+  </header>
+
+  <div class="tab">TLS</div>
+
+  <div class="opener">
+    SECTION 2 &nbsp;&nbsp;&middot;&nbsp;&nbsp; SUBSECTION 2.7<br>
+    TLS 1.3 HANDSHAKE PROTOCOL
+  </div>
+
+  <section class="para">
+    <div class="num">2.7.1</div>
+    <div>
+      <h2>INTRODUCTION.</h2>
+      <p>The TLS 1.3 handshake protocol (RFC 8446) establishes shared traffic keys between a client and a server. The client sends its key share in the first flight, so the server derives handshake keys on receipt; every message after ServerHello is encrypted, and a full handshake completes in one round trip (figure 2.7-1).</p>
+    </div>
+  </section>
+
+  <figure>
+    <svg viewBox="0 0 180 72" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TLS 1.3 full handshake message flow">
+<text class="lbl-b" x="36" y="3.2" text-anchor="middle">CLIENT</text>
+<text class="lbl-b" x="118" y="3.2" text-anchor="middle">SERVER</text>
+<line class="w" x1="36" y1="4.4" x2="36" y2="71"/><line class="w" x1="118" y1="4.4" x2="118" y2="71"/>
+<rect class="aud" x="2" y="5.6" width="31" height="15.4"/>
+<text class="lbl" x="17.5" y="8.9" text-anchor="middle">CLIENTHELLO</text>
+<text class="lbl-s" x="4.4" y="11.9">+ KEY_SHARE</text>
+<text class="lbl-s" x="4.4" y="14.5">+ SUPPORTED_VERSIONS</text>
+<text class="lbl-s" x="4.4" y="17.1">+ SIGNATURE_ALGORITHMS</text>
+<text class="lbl-s" x="4.4" y="19.7">+ SUPPORTED_GROUPS</text>
+<rect class="aud" x="121" y="14.6" width="31" height="10.4"/>
+<text class="lbl" x="136.5" y="17.9" text-anchor="middle">SERVERHELLO</text>
+<text class="lbl-s" x="123.4" y="20.9">+ KEY_SHARE</text>
+<text class="lbl-s" x="123.4" y="23.5">+ SUPPORTED_VERSIONS</text>
+<rect class="aud" x="121" y="26.4" width="31" height="3.6"/>
+<rect class="vid" x="121" y="26.4" width="2.6" height="3.6"/>
+<text class="lbl" x="137.8" y="29.05" text-anchor="middle">{ENCRYPTEDEXTENSIONS}</text>
+
+<rect class="gap" x="121" y="30.599999999999998" width="31" height="3.6"/>
+<rect class="vid" style="stroke-dasharray:0.6 0.5" x="121" y="30.599999999999998" width="2.6" height="3.6"/>
+<text class="lbl" x="137.8" y="33.25" text-anchor="middle">{CERTIFICATEREQUEST*}</text>
+
+<rect class="aud" x="121" y="34.8" width="31" height="3.6"/>
+<rect class="vid" x="121" y="34.8" width="2.6" height="3.6"/>
+<text class="lbl" x="137.8" y="37.45" text-anchor="middle">{CERTIFICATE}</text>
+
+<rect class="aud" x="121" y="39.0" width="31" height="3.6"/>
+<rect class="vid" x="121" y="39.0" width="2.6" height="3.6"/>
+<text class="lbl" x="137.8" y="41.65" text-anchor="middle">{CERTIFICATEVERIFY}</text>
+
+<rect class="aud" x="121" y="43.2" width="31" height="3.6"/>
+<rect class="vid" x="121" y="43.2" width="2.6" height="3.6"/>
+<text class="lbl" x="137.8" y="45.85" text-anchor="middle">{FINISHED}</text>
+
+<rect class="gap" x="121" y="47.4" width="31" height="3.6"/>
+<rect class="grain" style="stroke-dasharray:0.6 0.5" x="121" y="47.4" width="2.6" height="3.6"/>
+<text class="lbl" x="137.8" y="50.05" text-anchor="middle">[APPLICATION DATA*]</text>
+
+<rect class="gap" x="2" y="52.4" width="31" height="3.6"/>
+<rect class="vid" style="stroke-dasharray:0.6 0.5" x="2" y="52.4" width="2.6" height="3.6"/>
+<text class="lbl" x="18.8" y="55.05" text-anchor="middle">{CERTIFICATE*}</text>
+
+<rect class="gap" x="2" y="56.6" width="31" height="3.6"/>
+<rect class="vid" style="stroke-dasharray:0.6 0.5" x="2" y="56.6" width="2.6" height="3.6"/>
+<text class="lbl" x="18.8" y="59.25" text-anchor="middle">{CERTIFICATEVERIFY*}</text>
+
+<rect class="aud" x="2" y="60.8" width="31" height="3.6"/>
+<rect class="vid" x="2" y="60.8" width="2.6" height="3.6"/>
+<text class="lbl" x="18.8" y="63.45" text-anchor="middle">{FINISHED}</text>
+
+<rect class="aud" x="2" y="67" width="31" height="3.6"/>
+<rect class="grain" x="2" y="67" width="2.6" height="3.6"/>
+<text class="lbl" x="18.8" y="69.65" text-anchor="middle">[APPLICATION DATA]</text>
+
+<rect class="aud" x="121" y="67" width="31" height="3.6"/>
+<rect class="grain" x="121" y="67" width="2.6" height="3.6"/>
+<text class="lbl" x="137.8" y="69.65" text-anchor="middle">[APPLICATION DATA]</text>
+
+<line class="wa" x1="36" y1="9" x2="117.6" y2="16.6"/>
+<text class="lbl-s" transform="translate(76.80 11.90) rotate(5.32)" text-anchor="middle">FLIGHT 1 · KEY EXCHANGE, PLAINTEXT</text>
+<line class="wa" x1="118" y1="49.6" x2="36.4" y2="55"/>
+<text class="lbl-s" transform="translate(77.20 51.40) rotate(-3.79)" text-anchor="middle">FLIGHT 2 · SERVER PARAMETERS AND AUTH</text>
+<line class="wa" x1="36" y1="63.6" x2="117.6" y2="66.4"/>
+<text class="lbl-s" transform="translate(76.80 64.10) rotate(1.97)" text-anchor="middle">FLIGHT 3 · CLIENT AUTH</text>
+<line class="wa" x1="77" y1="69.6" x2="36.4" y2="69.6"/><line class="wa" x1="77" y1="69.6" x2="117.6" y2="69.6"/>
+<line class="dim" x1="41" y1="9.47" x2="41" y2="27.6"/><line class="dim" x1="41" y1="54.67" x2="41" y2="36.4"/>
+<text class="lbl" transform="translate(41.85 35.2) rotate(-90)">1 RTT</text>
+<rect class="panel" x="52" y="23" width="56" height="21"/>
+<text class="lbl-s" x="54" y="26.2">RECORD PROTECTION</text>
+<rect class="aud" x="54" y="28.0" width="5" height="2.4"/><text class="lbl-s" x="61" y="30.05">PLAINTEXT</text>
+<rect class="vid" x="54" y="31.8" width="5" height="2.4"/><text class="lbl-s" x="61" y="33.85">{ } HANDSHAKE TRAFFIC KEYS</text>
+<rect class="grain" x="54" y="35.6" width="5" height="2.4"/><text class="lbl-s" x="61" y="37.65">[ ] APPLICATION TRAFFIC KEYS</text>
+<rect class="gap" x="54" y="39.4" width="5" height="2.4"/><text class="lbl-s" x="61" y="41.45">* OPTIONAL, DOTTED OUTLINE</text>
+<text class="lbl-s" x="155" y="3.2">SERVER KEY SCHEDULE</text>
+<rect class="aud" x="155" y="5.6" width="1.6" height="11"/>
+<rect class="aud" x="155" y="16.6" width="1.6" height="8.4"/>
+<rect class="vid" x="155" y="25" width="1.6" height="22.6"/>
+<rect class="grain" x="155" y="47.6" width="1.6" height="23"/>
+<line class="w" x1="153.8" y1="16.6" x2="158" y2="16.6"/>
+<line class="w" x1="153.8" y1="25" x2="158" y2="25"/>
+<line class="w" x1="153.8" y1="47.6" x2="158" y2="47.6"/>
+<text class="lbl" x="158.6" y="19.4">EARLY SECRET</text><text class="lbl-s" x="158.6" y="22.0">PSK OR 0</text>
+<text class="lbl" x="158.6" y="27.8">HANDSHAKE SECRET</text><text class="lbl-s" x="158.6" y="30.4">+ (EC)DHE</text>
+<text class="lbl" x="158.6" y="50.4">MASTER SECRET</text><text class="lbl-s" x="158.6" y="53.0">+ 0</text>
+<text class="lbl-s" x="158.6" y="10.6">PLAINTEXT</text>
+<text class="lbl-s" x="158.6" y="35.6">HS TRAFFIC</text><text class="lbl-s" x="158.6" y="38">KEYS IN USE</text>
+<text class="lbl-s" x="158.6" y="58.6">AP TRAFFIC</text><text class="lbl-s" x="158.6" y="61">KEYS IN USE</text>
+<text class="code" x="178.6" y="71.6" text-anchor="end">TLS-501A</text>
+    </svg>
+    <figcaption><span class="n">Figure 2.7-1.</span>Full Handshake, Message Flow and Record Protection</figcaption>
+  </figure>
+
+  <section class="para" style="margin-top:2.2mm">
+    <div class="num">2.7.2</div>
+    <div>
+      <h2>FUNCTIONAL DESCRIPTION.</h2>
+      <p>The client sends ClientHello in plaintext with supported_versions, key_share and signature_algorithms. The server answers with ServerHello and its own key_share; both sides compute the (EC)DHE secret. Under handshake keys the server sends EncryptedExtensions, Certificate, CertificateVerify and Finished. The client verifies them, returns Finished and switches to application keys (figure 2.7-2).</p>
+    </div>
+  </section>
+
+  <section class="para">
+    <div class="num">2.7.2.1</div>
+    <div>
+      <h3>Key Schedule Chaining.</h3>
+      <p class="flush">HKDF-Extract chains three secrets: Early Secret (input PSK or 0), Handshake Secret (input (EC)DHE) and Master Secret (input 0). Derive-Secret(., "derived", "") links each stage to the next.</p>
+    </div>
+  </section>
+
+  <figure>
+    <svg viewBox="0 0 180 48" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Record and ClientHello field layout and key schedule">
+<text class="lbl" x="2" y="4.8">TLSPLAINTEXT</text>
+<text class="lbl-s" x="2" y="7.4">RECORD, SEC 5.1</text>
+<rect class="aud" x="32" y="2" width="16" height="6.4"/>
+<text class="lbl-s" x="40.0" y="4.8" text-anchor="middle">TYPE</text>
+<text class="lbl-s" x="40.0" y="7.3" text-anchor="middle">1 B · 22</text>
+<rect class="aud" x="48" y="2" width="28" height="6.4"/>
+<text class="lbl-s" x="62.0" y="4.8" text-anchor="middle">LEGACY_RECORD_VERSION</text>
+<text class="lbl-s" x="62.0" y="7.3" text-anchor="middle">2 B · 0x0303</text>
+<rect class="aud" x="76" y="2" width="16" height="6.4"/>
+<text class="lbl-s" x="84.0" y="4.8" text-anchor="middle">LENGTH</text>
+<text class="lbl-s" x="84.0" y="7.3" text-anchor="middle">2 B</text>
+<rect class="aud" x="92" y="2" width="28" height="6.4"/>
+<text class="lbl-s" x="106.0" y="4.8" text-anchor="middle">FRAGMENT</text>
+<text class="lbl-s" x="106.0" y="7.3" text-anchor="middle">≤ 2<tspan dy="-0.75" style="font-size:1.5px">14</tspan><tspan dy="0.75" style="font-size:2.05px"> B</tspan></text>
+<line class="t" x1="92" y1="8.4" x2="32" y2="15"/><line class="t" x1="120" y1="8.4" x2="120" y2="15"/>
+<text class="lbl" x="2" y="17.8">HANDSHAKE</text>
+<text class="lbl-s" x="2" y="20.4">HEADER, SEC 4</text>
+<rect class="aud" x="32" y="15" width="18" height="6.4"/>
+<text class="lbl-s" x="41.0" y="17.8" text-anchor="middle">MSG_TYPE</text>
+<text class="lbl-s" x="41.0" y="20.3" text-anchor="middle">1 B · 1</text>
+<rect class="aud" x="50" y="15" width="22" height="6.4"/>
+<text class="lbl-s" x="61.0" y="17.8" text-anchor="middle">LENGTH</text>
+<text class="lbl-s" x="61.0" y="20.3" text-anchor="middle">3 B (UINT24)</text>
+<rect class="aud" x="72" y="15" width="48" height="6.4"/>
+<text class="lbl-s" x="96.0" y="17.8" text-anchor="middle">CLIENTHELLO BODY</text>
+<text class="lbl-s" x="96.0" y="20.3" text-anchor="middle">LENGTH BYTES</text>
+<line class="t" x1="72" y1="21.4" x2="32" y2="28"/><line class="t" x1="120" y1="21.4" x2="120" y2="28"/>
+<text class="lbl" x="2" y="30.8">CLIENTHELLO</text>
+<text class="lbl-s" x="2" y="33.4">SEC 4.1.2</text>
+<rect class="aud" x="32" y="28" width="12" height="6.4"/>
+<text class="lbl-s" x="38.0" y="30.8" text-anchor="middle">LEGACY</text>
+<text class="lbl-s" x="38.0" y="33.3" text-anchor="middle">VERSION</text>
+<rect class="aud" x="44" y="28" width="22" height="6.4"/>
+<text class="lbl-s" x="55.0" y="30.8" text-anchor="middle">RANDOM</text>
+<rect class="aud" x="66" y="28" width="16" height="6.4"/>
+<text class="lbl-s" x="74.0" y="30.8" text-anchor="middle">LEGACY</text>
+<text class="lbl-s" x="74.0" y="33.3" text-anchor="middle">SESSION_ID</text>
+<rect class="aud" x="82" y="28" width="14" height="6.4"/>
+<text class="lbl-s" x="89.0" y="30.8" text-anchor="middle">CIPHER</text>
+<text class="lbl-s" x="89.0" y="33.3" text-anchor="middle">SUITES</text>
+<rect class="aud" x="96" y="28" width="10" height="6.4"/>
+<text class="lbl-s" x="101.0" y="30.8" text-anchor="middle">COMPR.</text>
+<text class="lbl-s" x="101.0" y="33.3" text-anchor="middle">METHODS</text>
+<rect class="aud" x="106" y="28" width="14" height="6.4"/>
+<text class="lbl-s" x="113.0" y="30.8" text-anchor="middle">EXTEN-</text>
+<text class="lbl-s" x="113.0" y="33.3" text-anchor="middle">SIONS</text>
+<text class="lbl-s" x="38" y="37.2" text-anchor="middle">2 B</text>
+<text class="lbl-s" x="38" y="39.6" text-anchor="middle">0x0303</text>
+<text class="lbl-s" x="55" y="37.2" text-anchor="middle">32 B</text>
+<text class="lbl-s" x="74" y="37.2" text-anchor="middle">1 + 0..32 B</text>
+<text class="lbl-s" x="89" y="37.2" text-anchor="middle">2 + 2..65534</text>
+<text class="lbl-s" x="101" y="37.2" text-anchor="middle">1 + 1 B</text>
+<text class="lbl-s" x="101" y="39.6" text-anchor="middle">0x00</text>
+<text class="lbl-s" x="113" y="37.2" text-anchor="middle">2 + 8..65535</text>
+<text class="lbl-s" x="32" y="43.4">SUPPORTED_VERSIONS (43) = 0x0304 · KEY_SHARE (51) · SIGNATURE_ALGORITHMS (13)</text>
+<text class="lbl-s" x="2" y="43.4">NOT TO SCALE</text>
+<line class="t" x1="123.6" y1="0.4" x2="123.6" y2="46"/>
+<text class="lbl-b" x="126.4" y="2.6">DETAIL A: KEY SCHEDULE, SEC 7.1</text>
+<rect class="box" x="137" y="6" width="22" height="5.4"/><text class="lbl" x="148" y="9.55" text-anchor="middle">EARLY SECRET</text>
+<text class="lbl-s" x="126" y="7.9">PSK OR 0</text><line class="wa" x1="126" y1="8.7" x2="136.6" y2="8.7"/>
+<line class="wa" x1="159" y1="8.7" x2="164" y2="8.7"/><text class="lbl-s" x="165.6" y="8.1">C E TRAFFIC</text><text class="lbl-s" x="165.6" y="10.5">BINDER KEY</text>
+<rect class="box" x="137" y="19" width="22" height="5.4"/><text class="lbl" x="148" y="22.55" text-anchor="middle">HANDSHAKE SECRET</text>
+<text class="lbl-s" x="126" y="20.9">(EC)DHE</text><line class="wa" x1="126" y1="21.7" x2="136.6" y2="21.7"/>
+<line class="wa" x1="159" y1="21.7" x2="164" y2="21.7"/><text class="lbl-s" x="165.6" y="21.1">C HS TRAFFIC</text><text class="lbl-s" x="165.6" y="23.5">S HS TRAFFIC</text>
+<rect class="box" x="137" y="32" width="22" height="5.4"/><text class="lbl" x="148" y="35.55" text-anchor="middle">MASTER SECRET</text>
+<text class="lbl-s" x="126" y="33.9">0</text><line class="wa" x1="126" y1="34.7" x2="136.6" y2="34.7"/>
+<line class="wa" x1="159" y1="34.7" x2="164" y2="34.7"/><text class="lbl-s" x="165.6" y="34.1">C/S AP TRAFFIC</text><text class="lbl-s" x="165.6" y="36.5">RES MASTER</text>
+<line class="wa" x1="148" y1="11.4" x2="148" y2="18.6"/><text class="lbl-s" x="146.8" y="15.8" text-anchor="end">"DERIVED"</text>
+<line class="wa" x1="148" y1="24.4" x2="148" y2="31.599999999999998"/><text class="lbl-s" x="146.8" y="28.799999999999997" text-anchor="end">"DERIVED"</text>
+<text class="lbl-s" x="126" y="41.4">EACH STAGE: HKDF-EXTRACT</text>
+<text class="code" x="178.6" y="47.4" text-anchor="end">TLS-502A</text>
+    </svg>
+    <figcaption><span class="n">Figure 2.7-2.</span>Record and ClientHello Layout, Key Schedule</figcaption>
+  </figure>
+
+  <div class="lower">
+    <div>
+      <section class="para">
+        <div class="num">2.7.3</div>
+        <div><h2>PERFORMANCE AND DESIGN DATA.</h2></div>
+      </section>
+      <div class="tcap">Table 2.7-1. Handshake and Record Limits</div>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Record plaintext fragment, max</td><td class="v">2<sup style="line-height:0">14</sup> bytes (16 384)</td></tr>
+          <tr><td>Record ciphertext, max</td><td class="v">2<sup style="line-height:0">14</sup> + 256 bytes</td></tr>
+                    <tr><td>legacy_record_version, all records</td><td class="v">0x0303</td></tr>
+          <tr><td>supported_versions, TLS 1.3</td><td class="v">0x0304</td></tr>
+          <tr><td>Random (client and server)</td><td class="v">32 bytes</td></tr>
+          <tr><td>Mandatory cipher suite</td><td class="v">TLS_AES_128_GCM_SHA256 {0x13,0x01}</td></tr>
+          <tr><td>Ticket lifetime, max</td><td class="v">604 800 s (7 days)</td></tr>
+          <tr><td>Round trips, full / PSK with 0-RTT</td><td class="v">1 RTT / 0-RTT early data</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="notice">
+        <span class="tag">CAUTION</span>
+        <p>0-RTT early data is not replay-protected between connections. Accept in early data only requests that are safe to replay.</p>
+      </div>
+      <div class="card">
+        <div class="bar"><span>FULL HANDSHAKE</span><span>CLIENT</span></div>
+        <ol>
+          <li><span>1</span><span>CLIENTHELLO - send, + key_share</span></li>
+          <li><span>2</span><span>SERVERHELLO - receive</span></li>
+          <li><span></span><span>√ SUPPORTED_VERSIONS - 0x0304</span></li>
+          <li><span>3</span><span>CERTIFICATEVERIFY - verify sig</span></li>
+          <li><span>4</span><span>FINISHED (SERVER) - verify</span></li>
+          <li><span>5</span><span>FINISHED - send</span></li>
+          <li><span>6</span><span>APP TRAFFIC KEYS - switch</span></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <div class="rule"></div>
+    <div class="sub">TLS 1.3 HANDSHAKE PROTOCOL</div>
+    <div class="line">
+      <span>Mission <span class="fill" style="width:20mm">&nbsp;</span></span>
+      <span>Basic Date <span class="fill" style="width:30mm">10 August 2018</span></span>
+      <span>Change Date <span class="fill" style="width:30mm">10 August 2018</span></span>
+      <span>Page <span class="fill" style="width:18mm">2.7-1</span></span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  // Fit check: room left between the last content block and the footer.
+  // .page hides overflow, so without this an overfull page fails silently.
+  // render.sh prints the result from <html data-fit>.
+  document.fonts.ready.then(() => {
+    const page = document.querySelector('.page')
+    const foot = page.querySelector('.foot')
+    let bottom = 0
+    for (const el of page.children) {
+      if (el === foot || el.classList.contains('tab')) continue
+      bottom = Math.max(bottom, el.getBoundingClientRect().bottom)
+    }
+    const free = (foot.getBoundingClientRect().top - bottom) * 25.4 / 96
+    document.documentElement.dataset.fit = free >= 0 ? `ok, ${free.toFixed(1)} mm free above the footer` : `OVERFLOW by ${(-free).toFixed(1)} mm`
+  })
+</script>
+</body>
+</html>
