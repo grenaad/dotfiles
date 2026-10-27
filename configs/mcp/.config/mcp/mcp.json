@@ -69,6 +69,18 @@
       },
       "lifecycle": "lazy"
     },
+    "zen": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@mozilla/firefox-devtools-mcp@latest",
+        "--firefox-path",
+        "/Applications/Zen.app/Contents/MacOS/zen",
+        "--profile-path",
+        "/Users/ice/.cache/zen-mcp-profile"
+      ],
+      "lifecycle": "lazy"
+    },
     "digitalocean": {
       "command": "npx",
       "args": ["-y", "@digitalocean/mcp"],

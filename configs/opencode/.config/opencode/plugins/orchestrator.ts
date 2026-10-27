@@ -91,7 +91,7 @@ const AGENTS: Record<string, Definition> = {
   },
   minion: {
     mode: "subagent",
-    model: { providerID: "anthropic", id: "claude-opus-5-5", variant: "low" },
+    model: { providerID: "xai", id: "grok-4.7", variant: "low" },
     description:
       "Subagent that executes focused tasks delegated by Orchestrator.",
     system: MINION_PROMPT,

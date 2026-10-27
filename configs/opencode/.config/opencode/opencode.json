@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["oc-auth-switcher@1.0.1", "storyink@0.6.0"],
+  "plugins": ["oc-auth-switcher@1.0.4", "storyink@0.6.0"],
   "lsp": {},
   "agent": {},
   "mcp": {
@@ -50,6 +50,19 @@
         "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "DyfBXYMo3SK2ZVreuIp08aJFqMHUl1196yS6U2fBO_0"
       }
     },
+    "zen": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@mozilla/firefox-devtools-mcp@latest",
+        "--firefox-path",
+        "/Applications/Zen.app/Contents/MacOS/zen",
+        "--profile-path",
+        "/Users/ice/.cache/zen-mcp-profile"
+      ],
+      "enabled": true
+    },
     "github": {
       "type": "remote",
       "url": "https://api.githubcopilot.com/mcp/",
@@ -84,13 +97,12 @@
       "type": "local",
       "enabled": false,
       "command": [
-        "/Users/ice/.local/bin/uv",
-        "--directory",
+        "/opt/homebrew/bin/npm",
+        "--prefix",
         "/Users/ice/projects/mcp-takealot",
         "run",
-        "fastmcp",
-        "run",
-        "server.py:mcp"
+        "-s",
+        "stdio"
       ]
     },
     "float": {
