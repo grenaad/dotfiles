@@ -37,10 +37,10 @@
       "command": ["kubefwd", "mcp"],
       "enabled": false
     },
-    "notionMCP": {
-      "type": "local",
-      "enabled": true,
-      "command": ["npx", "-y", "mcp-remote", "https://mcp.notion.com/mcp"]
+    "notion": {
+      "type": "remote",
+      "url": "https://mcp.notion.com/mcp",
+      "enabled": true
     },
     "playwright": {
       "type": "local",
