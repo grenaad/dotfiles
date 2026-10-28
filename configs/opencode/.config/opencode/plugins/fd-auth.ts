@@ -97,27 +97,27 @@ async function login(
   if (!response.ok) {
     const detail = typeof body?.message === "string" ? body.message : text;
     throw new Error(
-      `Focaldata ${env} login failed (HTTP ${response.status}, credentials from ${emailVar}/${passwordVar}): ` +
+      `fd ${env} login failed (HTTP ${response.status}, credentials from ${emailVar}/${passwordVar}): ` +
         `${detail.replaceAll(password, "<redacted>").slice(0, 300).replace(/\.$/, "")}. ` +
         "Note: dev and prod are separate Auth0 tenants; credentials are not interchangeable.",
     );
   }
   if (typeof body?.accessToken !== "string" || !body.accessToken) {
     throw new Error(
-      `Focaldata ${env} login returned HTTP ${response.status} without an accessToken.`,
+      `fd ${env} login returned HTTP ${response.status} without an accessToken.`,
     );
   }
   return body.accessToken;
 }
 
 export default {
-  id: "focaldata-auth",
+  id: "fd-auth",
   setup: async (ctx: Context) => {
     await ctx.tool.transform((editor) => {
       editor.add({
-        name: "focaldata_jwt",
+        name: "fd_jwt",
         description: [
-          "Get a Focaldata JWT access token for the dev (focaldata.dev) or prod (focaldata.com) dashboard/REST/GraphQL APIs.",
+          "Get an fd JWT access token for the dev (focaldata.dev) or prod (focaldata.com) dashboard/REST/GraphQL APIs.",
           "Use it whenever you need to call rest.focaldata.{dev|com} or graphql.focaldata.{dev|com} as the configured app user, e.g. with curl.",
           "Returns the raw token (send as `Authorization: Bearer <access_token>`) plus decoded expiry, issuer, audience, subject and scope.",
           "Tokens are cached in memory until 5 minutes before expiry; set force_refresh to log in again.",
@@ -158,7 +158,7 @@ export default {
           ];
           if (!email || !password) {
             throw new Error(
-              `Missing environment variable(s) for Focaldata ${env}: ${missing.join(", ")}. ` +
+              `Missing environment variable(s) for fd ${env}: ${missing.join(", ")}. ` +
                 "The OpenCode background service must have them in its environment " +
                 "(export them, then run `opencode service restart`).",
             );
