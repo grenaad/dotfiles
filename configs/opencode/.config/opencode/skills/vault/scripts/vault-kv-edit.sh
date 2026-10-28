@@ -55,9 +55,9 @@ unset VAULT_TOKEN
 if ! RAW_JSON=$(vault kv get -format=json "$SECRET_PATH" 2>&1); then
   echo "$RAW_JSON" >&2
   die "could not read '$SECRET_PATH'. If the secret does not exist yet, create it with:
-  vault kv put $SECRET_PATH KEY=value
+  VAULT_ADDR=$VAULT_ADDR vault kv put $SECRET_PATH KEY=value
 If you got 'permission denied', re-authenticate:
-  vault login -method=github token=\$GITHUB_TOKEN"
+  VAULT_ADDR=$VAULT_ADDR vault login -method=github token=\$GITHUB_TOKEN"
 fi
 
 CURRENT=$(jq '.data.data' <<<"$RAW_JSON")
