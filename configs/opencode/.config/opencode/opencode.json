@@ -61,7 +61,7 @@
         "--profile-path",
         "/Users/ice/.cache/zen-mcp-profile"
       ],
-      "enabled": true
+      "enabled": false
     },
     "github": {
       "type": "remote",
