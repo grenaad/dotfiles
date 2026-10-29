@@ -142,3 +142,34 @@ function ghost() {
 EOF
 }
 
+
+# chromedriver_get [VERSION]: print the path of a ChromeDriver, downloading it
+# first if it isn't cached. VERSION is a Chrome milestone (156) or a full
+# version (156.0.8078.47); default: the installed Google Chrome's milestone.
+# Downloads come from Chrome for Testing (npx @puppeteer/browsers) into
+# ${CHROMEDRIVER_CACHE:-~/.cache/chromedriver}. Progress goes to stderr, so
+#   make test-web-browser CHROMEDRIVER="$(chromedriver_get)"
+function chromedriver_get() {
+  local cache="${CHROMEDRIVER_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/chromedriver}"
+  local version="$1" platform folder pattern
+  if [[ -z "$version" ]]; then
+    version=$("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --version 2>/dev/null | awk '{print $3}' | cut -d. -f1)
+    [[ -n "$version" ]] || { echo "chromedriver_get: Google Chrome not found, pass a version" >&2; return 1; }
+  fi
+  case "$(uname -s)-$(uname -m)" in
+    Darwin-arm64) platform=mac_arm folder=chromedriver-mac-arm64 ;;
+    Darwin-x86_64) platform=mac folder=chromedriver-mac-x64 ;;
+    Linux-x86_64) platform=linux folder=chromedriver-linux64 ;;
+    *) echo "chromedriver_get: unsupported platform $(uname -sm)" >&2; return 1 ;;
+  esac
+  # A milestone matches its newest cached build; a full version only itself.
+  if [[ "$version" == *.* ]]; then pattern="$version"; else pattern="$version.*"; fi
+  local found=( "$cache"/chromedriver/$platform-${~pattern}/$folder/chromedriver(N.nOn) )
+  if (( ! ${#found} )); then
+    echo "chromedriver_get: downloading ChromeDriver $version into $cache" >&2
+    npx --yes @puppeteer/browsers install "chromedriver@$version" --path "$cache" >&2 || return 1
+    found=( "$cache"/chromedriver/$platform-${~pattern}/$folder/chromedriver(N.nOn) )
+    (( ${#found} )) || { echo "chromedriver_get: download finished but no driver found under $cache" >&2; return 1; }
+  fi
+  print -r -- "${found[1]}"
+}
