@@ -89,9 +89,8 @@
       # Tiling window manager (config: configs/omniwm)
       - omniwm
 
-      - notunes # Stops Music/iTunes from launching, need to add the login item in System Preferences
       - crmne/tap/spotifast # Spotify community
-      - vorssaint
+      - vorssaint # Menu bar toolkit, its Music app blocker replaces noTunes (config: tasks/vorssaint.yaml)
 
     homebrew_taps:
       - ankitpokhrel/jira-cli
@@ -103,3 +102,4 @@
     - homebrew
 
 - import_tasks: tasks/mpv.yaml
+- import_tasks: tasks/vorssaint.yaml
