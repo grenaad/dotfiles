@@ -1,0 +1,485 @@
+#!/usr/bin/env bash
+#
+# oc-codeforge <dev|prod> [pairing-link | session-link | status | logout] [opencode args...]
+#
+# Connect the OpenCode CLI to a remote CodeForge server.
+#
+#   oc-codeforge dev https://codeforge.focaldata.dev/auth/connect/<code>   pair, save the token, open the TUI
+#   oc-codeforge dev                                                       open the TUI with the saved token
+#   oc-codeforge dev https://codeforge.focaldata.dev/ses_<id>              open that session
+#   oc-codeforge dev run https://codeforge.focaldata.dev/ses_<id> "prompt" send a prompt to that session
+#   oc-codeforge dev status                                                show the saved pairing
+#   oc-codeforge dev logout                                                remove the saved token
+#
+# Get a pairing link from CodeForge: Pair a device. Links work once and expire
+# after 5 minutes; the token they give lasts 30 days. Tokens are saved per
+# environment in ${XDG_DATA_HOME:-~/.local/share}/opencode/codeforge-auth.json
+# (mode 600). Session links can appear anywhere in the arguments and become
+# --session <id>. Other arguments are passed to opencode.
+#
+# The TUI, mini and run start in a fresh CodeForge workspace,
+# /data/workspace/projects/dm-CLI<USER>-<user>-cli/cli-<timestamp>, so the
+# sessions appear in the CodeForge sidebar under that CLI project. The project
+# is created on first use. New sessions made inside the TUI stay in the
+# workspace. A TUI or mini session with no messages is deleted on exit, with
+# its workspace once no other session uses it. CodeForge removes workspaces
+# idle for 7 days; opening a session link restores a removed workspace and
+# marks it active. -s/--session and -c/--continue skip the fresh workspace.
+# Remote directories can't be passed as arguments, and commands that use the
+# local directory, such as session list, fail.
+
+set -euo pipefail
+
+name=oc-codeforge
+auth_file="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/codeforge-auth.json"
+token_days=30
+warn_days=27
+# Subcommands that talk to the server; --server goes after them.
+subcommands=" run mini session api models stats mcp plugin reload debug "
+# Subcommands whose own subcommand must come before --server.
+nested=" session mcp plugin debug "
+
+die() {
+    echo "$name: $*" >&2
+    exit 1
+}
+
+usage() {
+    sed -n '3,29p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+case "${1:-}" in
+    dev) server=https://codeforge.focaldata.dev ;;
+    prod) server=https://codeforge.focaldata.com ;;
+    -h | --help) usage; exit 0 ;;
+    "") usage >&2; exit 1 ;;
+    *) die "unknown environment '$1'; use dev or prod" ;;
+esac
+env_name=$1
+shift
+alias_name="oc_$env_name"
+
+for tool in curl jq opencode; do
+    command -v "$tool" > /dev/null 2>&1 || die "$tool is not installed or not in PATH"
+done
+
+server_re=${server//./\\.}
+pairing_re="^${server_re}/auth/connect/[A-Za-z0-9_-]+$"
+session_re="^${server_re}(/[^?#]*)?/(ses_[A-Za-z0-9]+)/?([?#].*)?$"
+codeforge_re='^https://codeforge\.focaldata\.(dev|com)(/|$)'
+
+reject_other_environment() {
+    if [[ $1 =~ $codeforge_re && ${1#"$server"} == "$1" ]]; then
+        local other=dev
+        [[ ${BASH_REMATCH[1]} == com ]] && other=prod
+        die "that link is for $other; use oc_$other"
+    fi
+}
+
+read_entry() {
+    [[ -f $auth_file ]] || return 0
+    jq -r --arg env "$env_name" ".[\$env].$1 // empty" "$auth_file"
+}
+
+# Rewrite the auth file through a private temporary file, so other entries
+# survive and an interrupted write never leaves a broken file. The filter sees
+# the current file as $file and stdin as $token.
+write_auth() {
+    local filter=$1
+    shift
+    local dir tmp current=$auth_file
+    dir=$(dirname "$auth_file")
+    mkdir -p "$dir"
+    [[ -f $current ]] || current=/dev/null
+    tmp=$(mktemp "$dir/.codeforge-auth.XXXXXX")
+    chmod 600 "$tmp"
+    if ! jq -n --slurpfile current "$current" --rawfile token /dev/stdin --arg env "$env_name" "$@" \
+        "(\$current[0] // {}) as \$file | $filter" > "$tmp"; then
+        rm -f "$tmp"
+        die "could not update $auth_file"
+    fi
+    mv -f "$tmp" "$auth_file"
+}
+
+save_token() {
+    printf '%s' "$1" | write_auth \
+        '$file + {($env): {server: $server, token: $token, paired_at: $paired_at}}' \
+        --arg server "$server" --arg paired_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+}
+
+remove_token() {
+    [[ -f $auth_file ]] || return 0
+    write_auth '$file | del(.[$env])' < /dev/null
+}
+
+# Print the HTTP status of an authenticated /api/info request. The credential
+# goes to curl on stdin so it never appears in the process list.
+api_status() {
+    local escaped=${1//\\/\\\\}
+    escaped=${escaped//\"/\\\"}
+    printf 'user = "opencode:%s"\n' "$escaped" |
+        curl -K - -sS -o /dev/null -w '%{http_code}' --max-time 15 "$server/api/info" 2> /dev/null ||
+        true
+}
+
+redeem() {
+    local response token
+    response=$(curl -fsS --max-time 20 -H 'Accept: application/json' "$1" 2> /dev/null) ||
+        die "could not redeem the pairing link. Links work once and expire after 5 minutes; get a new one from CodeForge: Pair a device"
+    token=$(printf '%s' "$response" | jq -er '.token | strings') ||
+        die "the pairing response did not contain a token"
+    [[ $token =~ ^[!-~]+$ ]] || die "the pairing response contained an unexpected token"
+    printf '%s' "$token"
+}
+
+age_days() {
+    [[ -n $1 ]] || return 0
+    jq -nr --arg at "$1" '(now - ($at | fromdateiso8601)) / 86400 | floor' 2> /dev/null || true
+}
+
+not_paired() {
+    die "not paired with $server. In CodeForge click Pair a device, then run: $alias_name <pairing-link>"
+}
+
+show_status() {
+    local token paired_at age code
+    token=$(read_entry token)
+    [[ -n $token ]] || not_paired
+    paired_at=$(read_entry paired_at)
+    age=$(age_days "$paired_at")
+    code=$(api_status "$token")
+    echo "Server:    $server"
+    echo "Paired at: ${paired_at:-unknown}${age:+ ($age days ago; tokens last $token_days days)}"
+    case $code in
+        200) echo "Token:     valid" ;;
+        401 | 403) echo "Token:     rejected (HTTP $code); pair again with $alias_name <pairing-link>" ;;
+        *) echo "Token:     could not check (HTTP $code)" ;;
+    esac
+    echo "Saved in:  $auth_file"
+}
+
+case "${1:-}" in
+    status)
+        show_status
+        exit 0
+        ;;
+    logout)
+        remove_token
+        echo "Removed the saved $env_name CodeForge token."
+        exit 0
+        ;;
+esac
+
+paired=
+if [[ ${1:-} =~ $pairing_re ]]; then
+    paired=$1
+    shift
+elif [[ ${1:-} == "$server/auth/connect/"* ]]; then
+    die "that does not look like a complete pairing link: $1"
+fi
+
+args=()
+for arg in "$@"; do
+    if [[ $arg =~ $session_re ]]; then
+        args+=(--session "${BASH_REMATCH[2]}")
+    else
+        reject_other_environment "$arg"
+        args+=("$arg")
+    fi
+done
+
+if [[ -n $paired ]]; then
+    token=$(redeem "$paired")
+    save_token "$token"
+    echo "Paired with $server; token saved in $auth_file." >&2
+else
+    token=$(read_entry token)
+    [[ -n $token ]] || not_paired
+    age=$(age_days "$(read_entry paired_at)")
+    if [[ -n $age && $age -ge $warn_days ]]; then
+        echo "$name: the $env_name token is $age days old and lasts $token_days days; pair again soon." >&2
+    fi
+fi
+
+code=$(api_status "$token")
+case $code in
+    200) ;;
+    401 | 403)
+        die "the saved $env_name token was rejected (HTTP $code); it has probably expired. In CodeForge click Pair a device, then run: $alias_name <pairing-link>"
+        ;;
+    *) echo "$name: could not verify the token (HTTP $code); trying anyway." >&2 ;;
+esac
+
+export OPENCODE_PASSWORD=$token
+unset token
+
+# --- Remote CodeForge workspaces -------------------------------------------
+
+workspace_root=/data/workspace/projects
+project_name_re='^(channel|dm)-([A-Za-z0-9]+)(-[A-Za-z0-9_-]+)?$'
+workspace_name_re='^[A-Za-z0-9_][A-Za-z0-9_-]*-[0-9]+$'
+cli_workspace_re='^cli-[0-9]{19}$'
+session_id_re='^ses_[A-Za-z0-9]+$'
+
+# api METHOD PATH [JSON-BODY]: print the response body; fail unless HTTP 2xx.
+# The credential reaches curl through a process-substitution config file.
+api() {
+    local method=$1 path=$2 out code escaped
+    local -a data=()
+    (($# > 2)) && data=(-H 'Content-Type: application/json' --data-binary @-)
+    escaped=${OPENCODE_PASSWORD//\\/\\\\}
+    escaped=${escaped//\"/\\\"}
+    out=$(printf '%s' "${3-}" | curl -K <(printf 'user = "opencode:%s"\n' "$escaped") \
+        -sS --max-time 60 -X "$method" -H 'Accept: application/json' "${data[@]}" \
+        -w '\n%{http_code}' "$server$path" 2> /dev/null) || return 1
+    code=${out##*$'\n'}
+    out=${out%$'\n'*}
+    printf '%s' "$out"
+    [[ $code == 2?? ]]
+}
+
+uri() {
+    jq -rn --arg v "$1" '$v | @uri'
+}
+
+# remote SCRIPT [ARGS...]: run SCRIPT with bash on the server as root, with
+# ARGS as $1... Sets remote_out and remote_exit; fails if the shell API fails.
+remote() {
+    local script=$1 command response id status i cursor=0 page
+    shift
+    command="set -- $(printf '%q ' "$@"); $script"
+    response=$(api POST /api/shell "$(jq -cn --arg c "$command" '{command: $c}')") || return 1
+    id=$(jq -r '.data.id // empty' <<< "$response")
+    [[ $id =~ ^sh_[A-Za-z0-9]+$ ]] || return 1
+    status=running
+    for ((i = 0; i < 300; i++)); do
+        response=$(api GET "/api/shell/$id") || break
+        status=$(jq -r '.data.status' <<< "$response")
+        [[ $status == running ]] || break
+        sleep 0.2
+    done
+    remote_exit=$(jq -r '.data.exit // 1' <<< "$response")
+    remote_out=
+    while page=$(api GET "/api/shell/$id/output?cursor=$cursor"); do
+        remote_out+=$(jq -j '.data.output // ""' <<< "$page"; printf x)
+        remote_out=${remote_out%x}
+        local next size
+        next=$(jq -r '.data.cursor // 0' <<< "$page")
+        size=$(jq -r '.data.size // 0' <<< "$page")
+        ((next > cursor && next < size)) || break
+        cursor=$next
+    done
+    api DELETE "/api/shell/$id" > /dev/null || true
+    [[ $status == exited ]]
+}
+
+# Shared shell fragment: mark workspace $ws active, as CodeForge's GC expects.
+touch_marker='
+mark() {
+    m=$1/.codeforge-activity
+    (umask 077; touch "$m") && chmod 600 "$m" && touch "$m" || return 1
+    mkdir -p "$1/.git/info"
+    grep -qxF /.codeforge-activity "$1/.git/info/exclude" 2> /dev/null ||
+        printf "%s\n" /.codeforge-activity >> "$1/.git/info/exclude"
+}'
+
+# Create the CLI project folder if missing, or check its origin. Then register
+# it, which is safe once it is a git repository, and set project_id.
+ensure_cli_project() {
+    local response
+    remote '
+set -u
+p=$1 o=$2
+if [ -L "$p" ]; then echo "$p is a symlink"; exit 3; fi
+if [ ! -e "$p" ]; then
+    mkdir "$p" && git -C "$p" init -q && git -C "$p" remote add origin "$o" || { echo "could not create $p"; exit 4; }
+    echo created; exit 0
+fi
+[ -d "$p" ] || { echo "$p is not a directory"; exit 3; }
+[ -d "$p/.git" ] || { echo "$p is not a git repository"; exit 3; }
+cur=$(git -C "$p" remote get-url origin 2> /dev/null) || { echo "$p has no origin remote"; exit 3; }
+[ "$cur" = "$o" ] || { echo "$p has origin $cur, expected $o"; exit 3; }
+echo ok' "$cli_project" "$cli_origin" ||
+        die "could not run a command on $server"
+    if [[ $remote_exit != 0 ]]; then
+        die "refusing to use the CLI project: ${remote_out%$'\n'}; fix or remove it on the server"
+    fi
+    [[ $remote_out == created* ]] && echo "$name: created the CLI project $cli_project" >&2
+    response=$(api GET "/api/location?location%5Bdirectory%5D=$(uri "$cli_project")") ||
+        die "could not register the CLI project $cli_project"
+    project_id=$(jq -r --arg d "$cli_project" 'select(.project.canonical == $d or .project.directory == $d) | .project.id // empty' <<< "$response")
+    [[ -n $project_id ]] || die "the server did not return a project for $cli_project"
+}
+
+# Remove an empty CLI workspace folder. Only cli-<19 digits> directly inside
+# the CLI project qualifies.
+remove_workspace() {
+    local ws=$1 base=${1##*/}
+    [[ $ws == "$cli_project/$base" && $base =~ $cli_workspace_re ]] || return 1
+    remote '
+w=$1
+case ${w##*/} in cli-*) ;; *) exit 3 ;; esac
+[[ ${w##*/} =~ ^cli-[0-9]{19}$ && $w == "$2/${w##*/}" ]] || exit 3
+[ -d "$w" ] && [ ! -L "$w" ] && [ ! -L "$2" ] || exit 0
+rm -rf -- "$w"' "$ws" "$cli_project" && [[ $remote_exit == 0 ]]
+}
+
+delete_session() {
+    api DELETE "/api/session/$1" > /dev/null
+}
+
+# Create a fresh workspace in the CLI project and a session in it. Sets
+# workspace and session_id.
+fresh_workspace() {
+    local response base
+    remote "$touch_marker"'
+set -u
+p=$1 o=$2
+[ -d "$p/.git" ] && [ ! -L "$p" ] || exit 3
+w=$p/cli-$(date +%s%N)
+mkdir "$w" && git -C "$w" init -q && git -C "$w" remote add origin "$o" && mark "$w" || { rm -rf -- "$w"; exit 4; }
+printf "%s\n" "$w"' "$cli_project" "$cli_origin" || die "could not run a command on $server"
+    workspace=${remote_out%$'\n'}
+    base=${workspace##*/}
+    [[ $remote_exit == 0 && $workspace == "$cli_project/$base" && $base =~ $cli_workspace_re ]] ||
+        die "could not create a workspace in $cli_project"
+    if ! response=$(api POST /api/session "$(jq -cn --arg d "$workspace" '{location: {directory: $d}}')") ||
+        ! session_id=$(jq -er '.data.id' <<< "$response") || [[ ! $session_id =~ $session_id_re ]]; then
+        remove_workspace "$workspace" || true
+        die "could not create a session in $workspace"
+    fi
+    if ! api POST "/api/session/$session_id/move" "$(jq -cn --arg d "$workspace" '{directory: $d}')" > /dev/null ||
+        ! response=$(api GET "/api/session/$session_id"); then
+        delete_session "$session_id" || true
+        remove_workspace "$workspace" || true
+        die "could not move session $session_id to $workspace"
+    fi
+    local got_project got_dir
+    got_project=$(jq -r '.data.projectID // empty' <<< "$response")
+    got_dir=$(jq -r '.data.location.directory // .data.directory // empty' <<< "$response")
+    if [[ $got_project != "$project_id" || ($got_dir != "" && $got_dir != "$workspace") ]]; then
+        delete_session "$session_id" || true
+        remove_workspace "$workspace" || true
+        die "session $session_id got project ${got_project:-none} in ${got_dir:-unknown}, expected $project_id in $workspace; removed it"
+    fi
+}
+
+# After the TUI or mini exits: drop an unused session, then the workspace if
+# no session is left in it.
+cleanup_workspace() {
+    local response count
+    if response=$(api GET "/api/session/$session_id/message?limit=200"); then
+        count=$(jq '[.data[]? | select(.type == "user" or .type == "shell" or .type == "assistant")] | length' <<< "$response")
+        if [[ $count == 0 ]]; then
+            delete_session "$session_id" || echo "$name: could not delete the empty session $session_id" >&2
+        fi
+    fi
+    response=$(api GET "/api/session?directory=$(uri "$workspace")&limit=1") || return 0
+    count=$(jq '.data | length' <<< "$response")
+    if [[ $count == 0 ]]; then
+        remove_workspace "$workspace" || echo "$name: could not remove the empty workspace $workspace" >&2
+    fi
+}
+
+# For an existing session: restore its workspace if CodeForge's GC removed it,
+# or mark it active. Never registers a location or creates a project.
+revive_session() {
+    local id=$1 response dir rel project ws kind conversation
+    [[ $id =~ $session_id_re ]] || return 0
+    response=$(api GET "/api/session/$id") || return 0
+    dir=$(jq -r '.data.location.directory // .data.directory // empty' <<< "$response")
+    [[ $dir == "$workspace_root"/* ]] || return 0
+    rel=${dir#"$workspace_root"/}
+    project=${rel%%/*}
+    ws=${rel#*/}
+    [[ $rel == */* && $ws != */* && $project =~ $project_name_re ]] || return 0
+    kind=${BASH_REMATCH[1]}
+    conversation=${BASH_REMATCH[2]}
+    [[ $ws =~ $workspace_name_re && $ws != _anchor ]] || return 0
+    remote "$touch_marker"'
+set -u
+root=$1 p=$1/$2 w=$1/$2/$3 kind=$4 id=$5
+if [ -e "$w" ] || [ -L "$w" ]; then
+    if [ -d "$w/.git" ] && [ ! -L "$w" ] && [ ! -L "$p" ]; then mark "$w" && echo touched; fi
+    exit 0
+fi
+[ -d "$p" ] && [ ! -L "$p" ] && [ "$(cd "$root" && pwd -P)/$2" = "$(cd "$p" && pwd -P)" ] || exit 0
+if [ -d "$p/.git" ]; then g=$p; elif [ -d "$p/_anchor/.git" ]; then g=$p/_anchor; else exit 0; fi
+o=$(git -C "$g" remote get-url origin 2> /dev/null) || exit 0
+re="^https://[a-z0-9-]+\.invalid/(channel|dm)/([A-Za-z0-9%_-]+)\.git$"
+[[ $o =~ $re && ${BASH_REMATCH[1]} == "$kind" && ${BASH_REMATCH[2]} == "$id" ]] || exit 0
+mkdir "$w" && git -C "$w" init -q && git -C "$w" remote add origin "$o" && mark "$w" || exit 4
+echo restored' "$workspace_root" "$project" "$ws" "$kind" "$conversation" || return 0
+    if [[ $remote_out == restored* ]]; then
+        echo "$name: restored the workspace $dir" >&2
+    elif [[ $remote_exit != 0 ]]; then
+        echo "$name: could not restore the workspace $dir" >&2
+    fi
+}
+
+# --- Decide what to run ------------------------------------------------------
+
+mode=other
+if ((${#args[@]} == 0)) || [[ ${args[0]} == -* ]]; then
+    mode=tui
+elif [[ ${args[0]} == mini || ${args[0]} == run ]]; then
+    mode=${args[0]}
+fi
+
+given_session=
+if [[ $mode != other ]]; then
+    for ((i = 0; i < ${#args[@]}; i++)); do
+        case ${args[i]} in
+            -s | --session) mode=existing; given_session=${args[i + 1]:-} ;;
+            --session=*) mode=existing; given_session=${args[i]#--session=} ;;
+            -c | --continue) mode=existing ;;
+            -h | --help | -v | --version) mode=other ;;
+        esac
+        [[ $mode == other ]] && break
+    done
+fi
+
+if [[ $mode == existing && -n $given_session ]]; then
+    revive_session "$given_session"
+elif [[ $mode == tui || $mode == mini || $mode == run ]]; then
+    cli_user=$(id -un)
+    cli_upper=$(printf '%s' "$cli_user" | tr -cd 'A-Za-z0-9' | tr '[:lower:]' '[:upper:]')
+    cli_lower=$(printf '%s' "$cli_upper" | tr '[:upper:]' '[:lower:]')
+    [[ -n $cli_upper ]] || die "cannot derive a CLI project name from the username '$cli_user'"
+    cli_project=$workspace_root/dm-CLI$cli_upper-$cli_lower-cli
+    cli_origin=https://cli.invalid/dm/CLI$cli_upper.git
+    [[ ${cli_project##*/} =~ $project_name_re ]] || die "invalid CLI project name ${cli_project##*/}"
+    ensure_cli_project
+    fresh_workspace
+    if [[ $mode == tui ]]; then
+        args=(--session "$session_id" "${args[@]}")
+    else
+        args=("${args[0]}" --session "$session_id" "${args[@]:1}")
+    fi
+fi
+
+command=(opencode --server "$server" "${args[@]}")
+if ((${#args[@]} > 0)) && [[ $subcommands == *" ${args[0]} "* ]]; then
+    split=1
+    if [[ $nested == *" ${args[0]} "* && ${#args[@]} -gt 1 && ${args[1]} != -* ]]; then
+        split=2
+    fi
+    command=(opencode "${args[@]:0:split}" --server "$server" "${args[@]:split}")
+fi
+
+if [[ $mode != tui && $mode != mini ]]; then
+    exec "${command[@]}"
+fi
+
+OPENCODE_CLI_CONFIG_CONTENT=$(jq -cn --arg c "${OPENCODE_CLI_CONFIG_CONTENT:-}" \
+    '(if $c == "" then {} else ($c | fromjson) end) * {session: {new_location: "inherit"}}') ||
+    die "OPENCODE_CLI_CONFIG_CONTENT is not valid JSON"
+export OPENCODE_CLI_CONFIG_CONTENT
+# Handlers (not ignores), so Ctrl+C reaches opencode but this cleanup still runs.
+trap : INT HUP TERM
+rc=0
+"${command[@]}" || rc=$?
+# Ignore them while cleaning up, so a second Ctrl+C cannot interrupt it.
+trap "" INT HUP TERM
+cleanup_workspace
+exit "$rc"

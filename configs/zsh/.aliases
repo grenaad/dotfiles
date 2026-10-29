@@ -64,5 +64,7 @@ export PATH="$PATH":"$HOME/Library/Android/sdk/emulator"
 export MCP_OAUTH_CALLBACK_PORT=19876
 
 alias oc_serve="opencode serve --hostname 0.0.0.0 --port 4000"
+alias oc_dev="oc-codeforge dev"
+alias oc_prod="oc-codeforge prod"
 
 alias collie="~/.config/herdr/plugins/github/herdr.collie-1edf0e1e987e/bin/collie"
