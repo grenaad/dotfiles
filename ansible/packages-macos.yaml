@@ -83,7 +83,6 @@
       - font-meslo-lg-nerd-font
       - ghostty
       - zen
-      - raycast
       - font-jetbrains-mono-nerd-font
 
       # Tiling window manager (config: configs/omniwm)
@@ -91,6 +90,8 @@
 
       - crmne/tap/spotifast # Spotify community
       - vorssaint # Menu bar toolkit, its Music app blocker replaces noTunes (config: tasks/vorssaint.yaml)
+
+      - anomalyco/tap/hex
 
     homebrew_taps:
       - ankitpokhrel/jira-cli

@@ -56,7 +56,7 @@ top = 0.0
 [general]
 animationSpeed = 1.0
 animationsEnabled = true
-defaultLayoutType = "niri"
+defaultLayoutType = "dwindle"
 hotkeysEnabled = true
 hyperKeyModifiers = "Control+Option+Shift+Command"
 ipcEnabled = false
@@ -1049,7 +1049,7 @@ type = "main"
 
 [[workspaces]]
 id = "454CECD4-5E9D-4ED1-95D7-979D48817F5F"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "2"
 
 [workspaces.monitorAssignment]
@@ -1057,7 +1057,7 @@ type = "main"
 
 [[workspaces]]
 id = "BEB842B5-E894-4791-9FD1-397C3CDD3538"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "3"
 
 [workspaces.monitorAssignment]
@@ -1065,7 +1065,7 @@ type = "main"
 
 [[workspaces]]
 id = "248AA883-2261-4D45-943C-79C0E46A232B"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "4"
 
 [workspaces.monitorAssignment]
@@ -1073,7 +1073,7 @@ type = "main"
 
 [[workspaces]]
 id = "8B8C45D6-CE9E-41D9-BD50-BE4989D5E3DE"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "5"
 
 [workspaces.monitorAssignment]
@@ -1082,7 +1082,7 @@ type = "main"
 [[workspaces]]
 displayName = "❤️"
 id = "5953F2BF-A378-4266-91B2-287174C4FA4D"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "6"
 
 [workspaces.monitorAssignment]
@@ -1091,7 +1091,7 @@ type = "secondary"
 [[workspaces]]
 displayName = "🚀"
 id = "A7D5E104-6985-4516-8ED5-07F144F2A33D"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "7"
 
 [workspaces.monitorAssignment]
@@ -1099,7 +1099,7 @@ type = "secondary"
 
 [[workspaces]]
 id = "0E18F6B0-345A-4078-8B21-33641F07A861"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "8"
 
 [workspaces.monitorAssignment]
@@ -1107,7 +1107,7 @@ type = "main"
 
 [[workspaces]]
 id = "8D4D711C-2B2F-4FEC-86BF-FA952037738A"
-layoutType = "niri"
+layoutType = "dwindle"
 name = "9"
 
 [workspaces.monitorAssignment]
