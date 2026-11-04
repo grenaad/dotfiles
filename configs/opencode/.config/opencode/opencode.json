@@ -46,6 +46,7 @@
       "type": "local",
       "command": ["npx", "@playwright/mcp@latest", "--extension"],
       "enabled": true,
+      "timeout": 120000,
       "environment": {
         "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "DyfBXYMo3SK2ZVreuIp08aJFqMHUl1196yS6U2fBO_0"
       }
