@@ -168,6 +168,11 @@
         "MCP_XERO_DELIVERY": "chrome",
         "MCP_XERO_BRIDGE_PORT": "8765"
       }
+    },
+    "composio": {
+      "type": "remote",
+      "url": "https://connect.composio.dev/mcp",
+      "enabled": false
     }
   },
   "provider": {}
