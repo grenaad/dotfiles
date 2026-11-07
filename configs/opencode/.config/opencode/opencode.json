@@ -173,6 +173,15 @@
       "type": "remote",
       "url": "https://connect.composio.dev/mcp",
       "enabled": false
+    },
+    "servers": {
+      "browse": {
+        "type": "local",
+        "command": ["browse", "mcp"],
+        "environment": {
+          "OPENCODE_BROWSER_RUNTIME": "auto-update"
+        }
+      }
     }
   },
   "provider": {}
