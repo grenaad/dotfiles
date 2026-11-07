@@ -8,173 +8,167 @@
     "subagent_depth": 2
   },
   "lsp": {},
-  "agent": {},
+  "agents": {},
   "mcp": {
-    "purespectrum": {
-      "type": "remote",
-      "url": "https://purespectrum-mcp-prod.purespectrum.workers.dev/mcp",
-      "enabled": true
-    },
-    "fd-forge-local": {
-      "type": "remote",
-      "enabled": false,
-      "url": "http://localhost:8080/mcp"
-    },
-    "fd-forge": {
-      "type": "remote",
-      "enabled": false,
-      "url": "https://forge.focaldata.com/mcp",
-      "oauth": false,
-      "headers": {
-        "Authorization": "ApiKey {env:FD_FORGE_MCP_API_KEY}"
-      }
-    },
-    "fd-forge-dev": {
-      "type": "remote",
-      "url": "https://forge.focaldata.dev/mcp",
-      "enabled": false,
-      "oauth": false,
-      "headers": {
-        "Authorization": "ApiKey {env:FD_FORGE_MCP_API_KEY}"
-      }
-    },
-    "kubefwd": {
-      "type": "local",
-      "command": ["kubefwd", "mcp"],
-      "enabled": false
-    },
-    "notion": {
-      "type": "remote",
-      "url": "https://mcp.notion.com/mcp",
-      "enabled": true
-    },
-    "playwright": {
-      "type": "local",
-      "command": ["npx", "@playwright/mcp@latest", "--extension"],
-      "enabled": true,
-      "timeout": 120000,
-      "environment": {
-        "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "DyfBXYMo3SK2ZVreuIp08aJFqMHUl1196yS6U2fBO_0"
-      }
-    },
-    "zen": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@mozilla/firefox-devtools-mcp@latest",
-        "--firefox-path",
-        "/Applications/Zen.app/Contents/MacOS/zen",
-        "--profile-path",
-        "/Users/ice/.cache/zen-mcp-profile"
-      ],
-      "enabled": false
-    },
-    "github": {
-      "type": "remote",
-      "url": "https://api.githubcopilot.com/mcp/",
-      "enabled": true,
-      "headers": {
-        "Authorization": "Bearer {env:GITHUB_TOKEN}"
-      }
-    },
-    "datadog": {
-      "type": "remote",
-      "enabled": true,
-      "url": "https://mcp.datadoghq.eu/v1/mcp",
-      "headers": {
-        "DD_API_KEY": "{env:DD_API_KEY}",
-        "DD_APPLICATION_KEY": "{env:DD_APP_KEY}"
-      }
-    },
-    "mempalace": {
-      "type": "local",
-      "enabled": false,
-      "command": [
-        "docker",
-        "run",
-        "-i",
-        "--rm",
-        "-v",
-        "mempalace-data:/data",
-        "mempalace"
-      ]
-    },
-    "takealot": {
-      "type": "local",
-      "enabled": false,
-      "command": [
-        "/opt/homebrew/bin/npm",
-        "--prefix",
-        "/Users/ice/projects/mcp-takealot",
-        "run",
-        "-s",
-        "stdio"
-      ]
-    },
-    "float": {
-      "type": "local",
-      "enabled": false,
-      "command": [
-        "/Users/ice/.local/bin/uv",
-        "--directory",
-        "/Users/ice/projects/mcp-float",
-        "run",
-        "fastmcp",
-        "run",
-        "server.py:mcp"
-      ],
-      "environment": {
-        "FLOAT_EMAIL": "{env:FLOAT_EMAIL}",
-        "FLOAT_PASSWORD": "{env:FLOAT_PASSWORD}"
-      }
-    },
-    "open": {
-      "type": "remote",
-      "enabled": false,
-      "url": "http://127.0.0.1:18081/mcp"
-    },
-    "linear": {
-      "type": "remote",
-      "url": "https://mcp.linear.app/mcp",
-      "enabled": true
-    },
-    "grep-app": {
-      "type": "remote",
-      "url": "https://mcp.grep.app",
-      "enabled": true
-    },
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "enabled": true
-    },
-    "cloudflare": {
-      "type": "remote",
-      "url": "https://mcp.cloudflare.com/mcp",
-      "enabled": true
-    },
-    "xero": {
-      "type": "local",
-      "command": [
-        "uv",
-        "--directory",
-        "/Users/ice/projects/mcp-xero",
-        "run",
-        "mcp-xero"
-      ],
-      "enabled": false,
-      "environment": {
-        "MCP_XERO_DELIVERY": "chrome",
-        "MCP_XERO_BRIDGE_PORT": "8765"
-      }
-    },
-    "composio": {
-      "type": "remote",
-      "url": "https://connect.composio.dev/mcp",
-      "enabled": false
-    },
     "servers": {
+      "purespectrum": {
+        "type": "remote",
+        "url": "https://purespectrum-mcp-prod.purespectrum.workers.dev/mcp"
+      },
+      "fd-forge-local": {
+        "type": "remote",
+        "disabled": true,
+        "url": "http://localhost:8080/mcp"
+      },
+      "fd-forge": {
+        "type": "remote",
+        "disabled": true,
+        "url": "https://forge.focaldata.com/mcp",
+        "oauth": false,
+        "headers": {
+          "Authorization": "ApiKey {env:FD_FORGE_MCP_API_KEY}"
+        }
+      },
+      "fd-forge-dev": {
+        "type": "remote",
+        "url": "https://forge.focaldata.dev/mcp",
+        "disabled": true,
+        "oauth": false,
+        "headers": {
+          "Authorization": "ApiKey {env:FD_FORGE_MCP_API_KEY}"
+        }
+      },
+      "kubefwd": {
+        "type": "local",
+        "command": ["kubefwd", "mcp"],
+        "disabled": true
+      },
+      "notion": {
+        "type": "remote",
+        "url": "https://mcp.notion.com/mcp"
+      },
+      "playwright": {
+        "type": "local",
+        "command": ["npx", "@playwright/mcp@latest", "--extension"],
+        "timeout": {
+          "catalog": 120000,
+          "execution": 120000
+        },
+        "environment": {
+          "PLAYWRIGHT_MCP_EXTENSION_TOKEN": "DyfBXYMo3SK2ZVreuIp08aJFqMHUl1196yS6U2fBO_0"
+        }
+      },
+      "zen": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@mozilla/firefox-devtools-mcp@latest",
+          "--firefox-path",
+          "/Applications/Zen.app/Contents/MacOS/zen",
+          "--profile-path",
+          "/Users/ice/.cache/zen-mcp-profile"
+        ],
+        "disabled": true
+      },
+      "github": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp/",
+        "headers": {
+          "Authorization": "Bearer {env:GITHUB_TOKEN}"
+        }
+      },
+      "datadog": {
+        "type": "remote",
+        "url": "https://mcp.datadoghq.eu/v1/mcp",
+        "headers": {
+          "DD_API_KEY": "{env:DD_API_KEY}",
+          "DD_APPLICATION_KEY": "{env:DD_APP_KEY}"
+        }
+      },
+      "mempalace": {
+        "type": "local",
+        "disabled": true,
+        "command": [
+          "docker",
+          "run",
+          "-i",
+          "--rm",
+          "-v",
+          "mempalace-data:/data",
+          "mempalace"
+        ]
+      },
+      "takealot": {
+        "type": "local",
+        "disabled": true,
+        "command": [
+          "/opt/homebrew/bin/npm",
+          "--prefix",
+          "/Users/ice/projects/mcp-takealot",
+          "run",
+          "-s",
+          "stdio"
+        ]
+      },
+      "float": {
+        "type": "local",
+        "disabled": true,
+        "command": [
+          "/Users/ice/.local/bin/uv",
+          "--directory",
+          "/Users/ice/projects/mcp-float",
+          "run",
+          "fastmcp",
+          "run",
+          "server.py:mcp"
+        ],
+        "environment": {
+          "FLOAT_EMAIL": "{env:FLOAT_EMAIL}",
+          "FLOAT_PASSWORD": "{env:FLOAT_PASSWORD}"
+        }
+      },
+      "open": {
+        "type": "remote",
+        "disabled": true,
+        "url": "http://127.0.0.1:18081/mcp"
+      },
+      "linear": {
+        "type": "remote",
+        "url": "https://mcp.linear.app/mcp"
+      },
+      "grep-app": {
+        "type": "remote",
+        "url": "https://mcp.grep.app"
+      },
+      "context7": {
+        "type": "remote",
+        "url": "https://mcp.context7.com/mcp"
+      },
+      "cloudflare": {
+        "type": "remote",
+        "url": "https://mcp.cloudflare.com/mcp"
+      },
+      "xero": {
+        "type": "local",
+        "command": [
+          "uv",
+          "--directory",
+          "/Users/ice/projects/mcp-xero",
+          "run",
+          "mcp-xero"
+        ],
+        "disabled": true,
+        "environment": {
+          "MCP_XERO_DELIVERY": "chrome",
+          "MCP_XERO_BRIDGE_PORT": "8765"
+        }
+      },
+      "composio": {
+        "type": "remote",
+        "url": "https://connect.composio.dev/mcp",
+        "disabled": true
+      },
       "browse": {
         "type": "local",
         "command": ["browse", "mcp"],
@@ -184,5 +178,5 @@
       }
     }
   },
-  "provider": {}
+  "providers": {}
 }
