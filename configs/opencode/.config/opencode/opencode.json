@@ -48,6 +48,7 @@
         "url": "https://mcp.notion.com/mcp"
       },
       "playwright": {
+        "disabled": true,
         "type": "local",
         "command": ["npx", "@playwright/mcp@latest", "--extension"],
         "timeout": {
@@ -171,10 +172,7 @@
       },
       "browse": {
         "type": "local",
-        "command": ["browse", "mcp"],
-        "environment": {
-          "OPENCODE_BROWSER_RUNTIME": "auto-update"
-        }
+        "command": ["npx", "-y", "@opencode/browse@latest", "mcp"]
       }
     }
   },
