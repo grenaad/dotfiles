@@ -12,6 +12,7 @@
   "mcp": {
     "servers": {
       "purespectrum": {
+        "disabled": true,
         "type": "remote",
         "url": "https://purespectrum-mcp-prod.purespectrum.workers.dev/mcp"
       },
