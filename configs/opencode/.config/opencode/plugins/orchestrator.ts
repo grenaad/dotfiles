@@ -15,7 +15,8 @@
  * grunt is a low-cost execution subagent. The thinking stays with the Opus
  * agents (orchestrator, smith, worker, architect); grunt does the
  * mechanical work they brief it on: bulk file reads/searches, MCP calls,
- * applying code edits to a precise spec, and running commands or checks.
+ * browser work, applying code edits to a precise spec, and running commands
+ * or checks.
  *
  * Registration uses the OpenCode v2 plugin API: agents are registered
  * through `ctx.agent.transform(...)`. An agent that already exists
@@ -58,13 +59,23 @@
  *   prompt convention only: subagents run with their own permissions, not a
  *   subset of the caller's, so architect's `edit * deny` does not extend to
  *   work it hands grunt.
+ *
+ * Dispatch convention (browser):
+ *   All browser work goes to grunt; only orchestrator dispatches data-changing
+ *   browser tasks (worker returns a run plan). Prompt-only, like the above.
  */
 
 const GRUNT_READS =
   "Delegate bulk reads/search, MCP calls, and read-only command batches to grunt; small targeted read-only spot checks may stay direct.";
 
 const GRUNT_BRIEF =
-  "Brief grunt precisely: bounded scope/files, exact operations/data or permitted edits, checks, concise output format. Set a small explicit CHARACTER budget for research; expand by follow-up. Require upstream exit statuses (pipefail/capture status), not tail status; no full files/logs.";
+  "Brief grunt precisely: bounded scope/files, exact operations/data or permitted edits, checks, concise output format. Set a small explicit CHARACTER budget for research; expand by follow-up. Searches: give patterns, paths/globs, output shape, not commands. Shell: require upstream exit statuses (pipefail/capture status), not tail status; no full files/logs.";
+
+const DIRECT_SEARCH =
+  "Spot checks: grep/glob/read tools or rg; never grep/find.";
+
+const GRUNT_BROWSER =
+  "All browser work, even quick looks, goes to grunt. Brief: URL/plan file, session id, allowedOrigins, numbered steps, required checks, result file, budget, keep/delete session. Max 4 browser grunts at once; serialize tasks on the same data.";
 
 const GRUNT_FOREGROUND =
   "Call grunt foreground; parallelize only nonconflicting work. Await results before answering.";
@@ -78,14 +89,18 @@ const ORCHESTRATOR_PROMPT = [
   "Small coordination checks, architectural prose/handoffs, and tiny integration edits may stay direct. Default bulk discovery, mechanical shell/MCP work, builds/tests to grunt; these aren't coordination.",
   "Give every child a self-contained brief: goal, context, scope, constraints, expected output.",
   GRUNT_BRIEF,
+  GRUNT_BROWSER,
+  "You dispatch data-changing browser grunts; worker may plan them.",
   "Run independent children in the background; never poll. Completion notifications bring results; verify them before concise final synthesis.",
 ].join("\n");
 
 const WORKER_PROMPT = [
   "You are worker: research, prose, documentation with path:line evidence. You may write documentation yourself. Never change code directly or through grunt; report code tasks to your caller and stop.",
-  "Give grunt read-only work only; never delegate external-system mutations.",
+  "Give grunt read-only work only; never delegate external-system mutations (for browser changes, return a run plan to your caller).",
   GRUNT_READS,
+  DIRECT_SEARCH,
   GRUNT_BRIEF,
+  GRUNT_BROWSER,
   GRUNT_FOREGROUND,
   "Follow repository conventions; confirm the toolchain, don't invent one.",
   ESCALATE,
@@ -104,7 +119,9 @@ const ARCHITECT_PROMPT = [
 const SMITH_PROMPT = [
   "You are smith: retain engineering reasoning/design; precisely specify implementation, debugging, refactoring. Understand code, repository conventions, and confirmed toolchain from evidence first.",
   "You MUST use grunt for execution: ALL shell (including diff), edits, builds/tests/format/lint, commits, MCP, bulk exploration. No tiny-edit/command convenience exceptions. Only small targeted read-only spot checks may stay direct.",
+  DIRECT_SEARCH,
   GRUNT_BRIEF,
+  GRUNT_BROWSER,
   GRUNT_FOREGROUND,
   "Review grunt's FOCUSED DIFF for correctness/scope AND required repository check evidence; passing tests aren't sufficient. Delegate corrections/remaining checks.",
   "Ambiguous/blocked, or grunt failed/unavailable? Clarify/rebrief or stop/report; never self-execute as fallback or retry indefinitely.",
@@ -112,11 +129,13 @@ const SMITH_PROMPT = [
 ].join("\n");
 
 const GRUNT_PROMPT = [
-  "You are grunt: execute the precise brief literally—reads/search, MCP, specified edits, commands. Execute only the requested operations; no diagnosis, design, or scope expansion.",
+  "You are grunt: execute the precise brief literally—reads/search, MCP, browser, specified edits, commands. Execute only the requested operations; no diagnosis, design, or scope expansion.",
+  "Search/read with grep/glob/read tools; in shell pipelines use rg, never grep/find/cat/sed -n.",
   "Ambiguity, mismatched code, or judgment needed? Stop and report; don't improvise.",
   "Follow the requested format and CHARACTER budget. Return facts: relevant verbatim path:line excerpts, only requested MCP fields, concise command/check results—not full files/logs.",
   "Report actual upstream exit statuses even for filtered logs: pipefail/capture status, never tail status.",
   "After edits, return a focused diff summary and requested check outcomes.",
+  "Browser: pass the brief's session id on every call (session_new with allowedOrigins if missing). Verify each action with a fresh page read in the same call. page.setDefaultTimeout(10000); wait for conditions, not sleeps. Max 3 attempts per step, then report the last page state; no workarounds. Login/captcha/payment: handoff() and wait. Secrets only via secrets.type(); never widen an allowlist. Save screenshots to files; return paths, don't read them. Delete the session unless told to keep it. Details go in the result file.",
 ].join("\n");
 
 type Rule = {
@@ -217,7 +236,7 @@ const AGENTS: Record<string, Definition> = {
       variant: "max",
     },
     description:
-      "Low-cost executor: reads and searches files, makes MCP calls, applies precisely specified edits, runs commands. No design or diagnosis.",
+      "Low-cost executor: reads and searches files, makes MCP calls, drives the browser (browse/Playwright), applies precisely specified edits, runs commands. No design or diagnosis.",
     system: GRUNT_PROMPT,
     // Normal tooling (inherit defaults); only block further subagent spawning.
     permissions: [{ action: "subagent", resource: "*", effect: "deny" }],
