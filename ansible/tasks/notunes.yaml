@@ -1,0 +1,48 @@
+---
+# noTunes closes Music whenever it launches, including when macOS launches it
+# because Bluetooth headphones connected, and opens the replacement app instead.
+# Restart noTunes after changing the replacement so it picks the new value up.
+- name: Set Spotifast as the noTunes replacement for Music
+  community.general.osx_defaults:
+    domain: digital.twisted.noTunes
+    key: replacement
+    type: string
+    value: /Applications/Spotifast.app
+    state: present
+  tags:
+    - install
+    - dotfiles
+    - notunes
+
+# Needs the terminal to be allowed to control System Events (macOS asks once).
+- name: Open noTunes at login
+  ansible.builtin.command:
+    argv:
+      - osascript
+      - -e
+      - |
+        tell application "System Events"
+          if exists login item "noTunes" then return "present"
+          make login item at end with properties {path:"/Applications/noTunes.app", hidden:false}
+          return "added"
+        end tell
+  register: notunes_login_item
+  changed_when: notunes_login_item.stdout == "added"
+  tags:
+    - install
+    - dotfiles
+    - notunes
+
+# The first launch after install shows the macOS "downloaded from the Internet"
+# prompt, and `open` waits until you click Open. Give up after two minutes
+# instead of hanging the play.
+- name: Start noTunes
+  ansible.builtin.shell: pgrep -xq noTunes && echo running || { open -g -a /Applications/noTunes.app && echo started; }
+  register: notunes_start
+  changed_when: "'started' in notunes_start.stdout"
+  async: 120
+  poll: 2
+  tags:
+    - install
+    - dotfiles
+    - notunes

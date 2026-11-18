@@ -89,7 +89,8 @@
       - omniwm
 
       - crmne/tap/spotifast # Spotify community
-      - vorssaint # Menu bar toolkit, its Music app blocker replaces noTunes (config: tasks/vorssaint.yaml)
+      - notunes # Stops Music launching, even when headphones connect (config: tasks/notunes.yaml)
+      - vorssaint # Menu bar toolkit, its Music app blocker is off in favour of noTunes (config: tasks/vorssaint.yaml)
 
       - anomalyco/tap/hex
 
@@ -103,4 +104,5 @@
     - homebrew
 
 - import_tasks: tasks/mpv.yaml
+- import_tasks: tasks/notunes.yaml
 - import_tasks: tasks/vorssaint.yaml

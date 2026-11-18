@@ -1,9 +1,9 @@
 ---
-# Vorssaint's Music app blocker replaces noTunes. It only stops Music launches
-# triggered by media keys (not headphones/Siri) and needs the Accessibility
-# permission, which has to be granted by hand in System Settings.
+# noTunes (tasks/notunes.yaml) blocks Music. Vorssaint's Music app blocker only
+# stops launches triggered by media keys, not the ones macOS makes when
+# headphones connect, so keep it off and let noTunes handle every launch.
 # Restart Vorssaint after a change so it picks the new values up.
-- name: Configure Vorssaint Music app blocker
+- name: Turn off the Vorssaint Music app blocker
   community.general.osx_defaults:
     domain: com.vorssaint.utils
     key: "{{ item.key }}"
@@ -11,9 +11,8 @@
     value: "{{ item.value }}"
     state: present
   loop:
-    - { key: featureAvailable.musicBlock, type: bool, value: true }
-    - { key: musicBlockEnabled, type: bool, value: true }
-    - { key: musicBlockReplacementPath, type: string, value: /Applications/Spotifast.app }
+    - { key: featureAvailable.musicBlock, type: bool, value: false }
+    - { key: musicBlockEnabled, type: bool, value: false }
   loop_control:
     label: "{{ item.key }}"
   tags:
