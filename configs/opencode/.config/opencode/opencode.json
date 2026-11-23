@@ -5,7 +5,7 @@
     "buffer": "20%"
   },
   "experimental": {
-    "subagent_depth": 2
+    "subagent_depth": 3
   },
   "lsp": {},
   "agents": {},
