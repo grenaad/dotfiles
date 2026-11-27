@@ -93,6 +93,7 @@
       - vorssaint # Menu bar toolkit, its Music app blocker is off in favour of noTunes (config: tasks/vorssaint.yaml)
 
       - anomalyco/tap/hex
+      - antigravity-cli
 
     homebrew_taps:
       - ankitpokhrel/jira-cli

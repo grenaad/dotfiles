@@ -1,6 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["oc-auth-switcher@1.0.4", "storyink@0.6.0"],
+  "plugins": [
+    "oc-auth-switcher@1.0.4",
+    "storyink@0.6.0",
+    "@cortexkit/opencode-antigravity-auth@3.2.1"
+  ],
   "compaction": {
     "buffer": "20%"
   },
