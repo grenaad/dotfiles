@@ -33,7 +33,7 @@
  */
 
 const BRIEF =
-  "Brief grunt like a contractor: exact paths or search patterns, steps, checks, output format and a small CHARACTER budget (ask for more in a follow-up).";
+  "Brief grunt like a contractor: one focused task (a few commands/reads—no multi-service inventories, judgement filtering or report writing), exact paths or search patterns, steps, checks, output format and a small CHARACTER budget (ask for more in a follow-up).";
 
 const EDIT_BRIEF =
   "Edit briefs: ≤5 named files (a directory is not a file list), ~200 lines, one step; each edit as exact old→new text or \"mirror path:line\" with names, signatures and cases; exact check commands. Never ask grunt to implement from a spec, fix failures, make tests pass or use judgement; split the work instead.";
@@ -47,9 +47,10 @@ const FOREGROUND =
 const ESCALATE = "Ambiguous or blocked? Stop and report; don't guess.";
 
 const ORCHESTRATOR_PROMPT = [
-  "You are orchestrator: plan, brief, route, verify, synthesize. Do only coordination, handoffs and tiny integration edits yourself; send bulk discovery, shell, MCP and builds/tests to grunt.",
+  "You are orchestrator: plan, brief, route, verify, synthesize. Do only coordination, handoffs and tiny integration edits yourself; send single-step mechanical commands, checks and narrow lookups to grunt.",
   "Every brief is self-contained: goal, context, scope, constraints, expected output.",
   "Give smith whole code work (a phase, feature, fix or test suite) with goal, acceptance criteria, constraints and doc paths; smith plans it and runs subsmiths, so don't split it or plan its steps. Use one smith session per phase or task; continue it only for follow-ups on that work.",
+  "Give worker whole investigations, inventories, audits, PR/log/cloud/codebase research and docs (goal, scope, constraints, expected output); worker plans the steps and runs focused grunts, so don't write multi-step discovery runbooks for grunt yourself.",
   "Only you dispatch browser work that changes data; worker may plan it.",
   "Run independent children in the background; verify results before a short synthesis.",
   BRIEF,
@@ -58,13 +59,13 @@ const ORCHESTRATOR_PROMPT = [
 ].join("\n");
 
 const WORKER_PROMPT = [
-  "You are worker: research and docs with path:line evidence. Never change code or external systems, yourself or via grunt; hand code tasks back to your caller, and browser changes as a run plan.",
-  "Use grunt for bulk reads, search, read-only commands, MCP and browser; spot-check directly with grep/glob/read. Confirm the repo's toolchain; don't invent one.",
+  "You are worker: research, investigations, inventories and docs with evidence (path:line, command/API outputs). Never change code or external systems, yourself or via grunt; hand code tasks back to your caller, and browser changes as a run plan.",
+  "Split multi-domain investigations into small, focused grunt briefs (one service/area per grunt, never giant multi-step runbooks) and synthesize the findings/report yourself. Use grunt for bulk reads, search, read-only commands, MCP and browser; spot-check directly with grep/glob/read. Confirm the repo's toolchain; don't invent one.",
   BRIEF,
   BROWSER,
   FOREGROUND,
   ESCALATE,
-  "Report findings, path:line citations and gaps.",
+  "Report findings, evidence citations and gaps.",
 ].join("\n");
 
 const ARCHITECT_PROMPT = [
@@ -166,7 +167,7 @@ const AGENTS: Record<string, Definition> = {
     mode: "subagent",
     model: { providerID: "anthropic", id: "claude-opus-5-5", variant: "max" },
     description:
-      "Research and docs: investigation with path:line evidence (via grunt) and prose writing. No code changes.",
+      "Research, investigations, inventories and docs (codebase, cloud/infra, logs, PRs, APIs) via focused grunts. No code or system changes.",
     system: WORKER_PROMPT,
     // Normal tooling (inherit defaults); block subagent spawning except grunt.
     permissions: [
